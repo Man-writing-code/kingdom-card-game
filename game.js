@@ -148,6 +148,11 @@ function showScreen(name){
   if(name==='deck')renderDeckBuilder(); if(name==='collection')renderCollection();
   window.scrollTo(0,0);
 }
+function setHallMode(mode){
+  const chosen=mode==='online'?'online':'solo';localStorage.setItem('kingdom-hall-mode',chosen);
+  $$('[data-play-mode]').forEach(button=>{const active=button.dataset.playMode===chosen;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+  $$('[data-mode-panel]').forEach(panel=>{const active=panel.dataset.modePanel===chosen;panel.classList.toggle('active',active);panel.hidden=!active});
+}
 
 const RESOURCE_NAMES={food:'Food',material:'Wood',metal:'Metal',gold:'Gold'};
 function resourceIcon(type){const art={food:'<path d="M8 14V2M8 5C5 5 4 3 3 2c3 0 5 1 5 3Zm0 4c3 0 4-2 5-3-3 0-5 1-5 3Zm0 3c-3 0-4-2-5-3 3 0 5 1 5 3Z"/>',material:'<path d="M3 5h10v7H3zM3 8h10M5 5V3h6v2"/><circle cx="5" cy="8" r="1.5"/>',metal:'<path d="m4 4 8-1 3 9H1l3-8Z"/><path d="M4 4h8l-2 4H6L4 4Z"/>',gold:'<circle cx="8" cy="8" r="6"/><path d="m8 4 1.2 2.8L12 8 9.2 9.2 8 12 6.8 9.2 4 8l2.8-1.2L8 4Z"/>'};return `<svg class="resource-icon" viewBox="0 0 16 16" aria-hidden="true">${art[type]}</svg>`}
@@ -204,7 +209,7 @@ function renderCountdown(){
 function renderDeckOptions(){
   const active=activeDeck();
   const opts=meta.decks.map(d=>`<option value="${d.id}"${d.id===active.id?' selected':''}>${esc(d.name)} · ${d.cards.length}/${DECK_SIZE}${deckIsPlayable(d)?'':' · incomplete'}</option>`).join('');
-  ['#deckSelect','#homeDeckSelect'].forEach(sel=>{const el=$(sel);if(el)el.innerHTML=opts});
+  ['#deckSelect','#homeDeckSelect','#onlineDeckSelect'].forEach(sel=>{const el=$(sel);if(el)el.innerHTML=opts});
   const del=$('#deleteDeck');if(del)del.disabled=meta.decks.length<2;
   const add=$('#newDeck');if(add)add.disabled=meta.decks.length>=12;
 }
@@ -565,9 +570,11 @@ $('#resetDeck').onclick=()=>{activeDeck().cards=[];saveMeta();renderDeckBuilder(
 $('#saveDeck').onclick=()=>{saveMeta();$('#deckMessage').textContent=`“${activeDeck().name}” saved to the royal archive.`};
 $('#deckSelect').onchange=e=>selectDeck(e.target.value);
 $('#homeDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
+$('#onlineDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
 $('#deckNameInput').oninput=e=>{activeDeck().name=deckName(e.target.value);saveMeta();renderDeckOptions()};
 $('#newDeck').onclick=()=>{if(meta.decks.length>=12)return;const d=makeDeck(`Banner ${meta.decks.length+1}`,[]);meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`New banner started — add ${DECK_SIZE} cards.`};
 $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeDeck(),d=makeDeck(`${a.name} copy`,a.cards.slice());meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Banner duplicated.'};
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
 $('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$('#handSizeToggle').onclick=()=>{const compact=$('#handArea').classList.toggle('compact');$('#handSizeToggle').textContent=compact?'EXPAND CARDS ↑':'COMPACT HAND ↓';$('#handSizeToggle').setAttribute('aria-pressed',String(compact))};
-setupRuleSelector();setupMetaRule();renderDeckBuilder();renderCollection();showScreen('home');
+$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
+setupRuleSelector();setupMetaRule();renderDeckBuilder();renderCollection();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');

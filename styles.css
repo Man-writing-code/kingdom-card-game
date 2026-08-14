@@ -205,3 +205,21 @@
 .room-divider{align-self:center;color:#809386;font:italic 9px Georgia;text-align:center}
 #onlineStatus{grid-column:1/-1;min-height:14px;margin:0;color:#d9d5c4;font:9px/1.4 "DM Sans"}#onlineStatus.error{color:#ffad91}
 @media(max-width:760px){.multiplayer-setup{grid-template-columns:1fr auto}.multiplayer-title,#onlineStatus{grid-column:1/-1}.room-divider{grid-column:1/-1}.multiplayer-setup label{min-width:0}}
+
+/* Hall mode chooser: keep solo and online setup distinct and make the launch path obvious. */
+.home-screen.active{align-items:start;padding-top:5vh}
+.duel-launcher{width:min(650px,100%);margin:30px 0 30px;border:1px solid #c8bda5;background:#f8f2e4;box-shadow:5px 5px 0 #c7b78e42;position:relative;z-index:2}
+.mode-heading{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid #d7cbb2;color:#876126}
+.mode-heading>span{font:bold 9px "DM Sans";letter-spacing:1.45px}.mode-heading small{font:8px "DM Sans";color:#8a8172}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr;background:#e8deca;border-bottom:1px solid #cfc1a3}
+.mode-tab{display:flex;align-items:center;gap:11px;padding:14px 16px;border:0;border-right:1px solid #cfc1a3;background:transparent;color:#6b675e;text-align:left;cursor:pointer;position:relative}
+.mode-tab:last-child{border-right:0}.mode-tab>b{display:grid;place-items:center;width:31px;height:31px;background:#d5c9b0;color:#625c4f;font-size:15px;border-radius:50%}
+.mode-tab>span{font:700 11px "DM Sans"}.mode-tab small{display:block;margin-top:3px;color:#898174;font:8px "DM Sans"}
+.mode-tab.active{background:#fffaf0;color:#203f2d}.mode-tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--gold)}.mode-tab.active>b{background:var(--forest);color:#e6bd67}
+.mode-panel{padding:15px}.mode-panel[hidden]{display:none}.mode-panel.active{display:block}
+.launch-row{display:flex;align-items:end;gap:12px;margin-bottom:12px}.launch-row label{display:grid;gap:5px;color:#7a7163;font:bold 7px "DM Sans";letter-spacing:.9px;text-transform:uppercase}.launch-row select{height:35px;border:1px solid #bcae91;background:#fffaf0;color:var(--ink);padding:0 30px 0 9px;font:600 11px "DM Sans";cursor:pointer}
+.deck-launch label{flex:1}.deck-launch select{width:100%}.deck-launch .small-link{padding:0 0 10px;color:#8e6629}.opponent-launch label:first-child{flex:1}.opponent-launch select{width:100%}.launch-button{width:100%;margin-top:3px}
+.duel-launcher .multiplayer-setup{display:grid;grid-template-columns:minmax(140px,1fr) auto auto minmax(105px,.75fr) auto;align-items:end;gap:9px;margin:0;padding:0;border:0;background:none;color:var(--ink);box-shadow:none}
+.duel-launcher .multiplayer-setup label{color:#7a7163}.duel-launcher .multiplayer-setup input{background:#fffaf0;color:var(--ink);border-color:#bcae91}.duel-launcher #onlineStatus{color:#5f6f61}.duel-launcher #onlineStatus.error{color:#a84d32}
+.duel-launcher .decree-setup{display:flex;align-items:center;gap:10px;margin:0;padding:10px 15px;border-top:1px solid #d7cbb2;background:#eee5d2;color:#645d50}.duel-launcher .decree-setup>span{font:bold 8px "DM Sans";letter-spacing:1.2px;color:#8e6629}.duel-launcher .decree-setup label{display:flex;align-items:center;gap:7px;font:bold 7px "DM Sans";letter-spacing:.8px;text-transform:uppercase}.duel-launcher .decree-setup select{height:29px;min-width:245px;border:1px solid #bdae91;background:#faf5e8;color:var(--ink);padding:0 25px 0 8px;font:600 10px "DM Sans"}
+@media(max-width:760px){.mode-heading{align-items:flex-start;gap:8px}.mode-heading small{text-align:right}.duel-launcher .multiplayer-setup{grid-template-columns:1fr auto}.duel-launcher .room-divider,.duel-launcher #onlineStatus{grid-column:1/-1}.duel-launcher .decree-setup{align-items:flex-start;flex-direction:column}.duel-launcher .decree-setup select{min-width:0;max-width:100%}}

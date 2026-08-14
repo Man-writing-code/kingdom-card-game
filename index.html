@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <div class="grain"></div>
@@ -32,32 +32,41 @@
         <p class="eyebrow">A WEEKLY DECKBUILDING DUEL</p>
         <h1>Build a realm.<br><em>Outwit a rival.</em></h1>
         <p class="hero-intro">Plan in secret, command four lanes, and adapt your twenty-card kingdom to a rule that changes every week.</p>
-        <div class="hero-actions">
-          <button id="playButton" class="button primary">Enter the battlefield <span>→</span></button>
-          <button class="button ghost" data-screen="deck">Shape your deck</button>
-        </div>
-        <div class="multiplayer-setup" aria-label="Online multiplayer">
-          <div class="multiplayer-title"><span>ONLINE DUEL</span><small>Private two-player rooms · Beta</small></div>
-          <label>Ruler name<input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Your name"></label>
-          <button id="createRoom" class="button online-button">Create room</button>
-          <span class="room-divider">or</span>
-          <label>Room code<input id="roomCode" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
-          <button id="joinRoom" class="button online-button">Join room</button>
-          <p id="onlineStatus" role="status"></p>
-        </div>
-        <div class="opponent-setup deck-setup" aria-label="Deck selection">
-          <span>YOUR DECK</span>
-          <label>Banner<select id="homeDeckSelect"></select></label>
-          <button class="small-link" data-screen="deck">EDIT DECKS →</button>
-        </div>
-        <div class="opponent-setup" aria-label="Test opponent settings">
-          <span>TEST OPPONENT</span>
-          <label>Personality<select id="aiDeckSelect"><option value="general">General</option><option value="wood">Wood architect</option><option value="food">Food commons</option><option value="metal">Metal iron crown</option></select></label>
-          <label>Difficulty<select id="aiDifficultySelect"><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
-        </div>
-        <div id="devRuleSetup" class="opponent-setup decree-setup" aria-label="Development weekly decree override">
-          <span>DEVELOPMENT DECREE</span>
-          <label>Modifier<select id="devRuleSelect"></select></label>
+        <div class="duel-launcher">
+          <div class="mode-heading"><span>CHOOSE YOUR BATTLE</span><small>Your banner is selected separately for each mode</small></div>
+          <div class="mode-tabs" role="tablist" aria-label="Game mode">
+            <button class="mode-tab active" role="tab" aria-selected="true" data-play-mode="solo"><b>⚔</b><span>Single player<small>Battle an AI kingdom</small></span></button>
+            <button class="mode-tab" role="tab" aria-selected="false" data-play-mode="online"><b>♚</b><span>Multiplayer<small>Private online room</small></span></button>
+          </div>
+          <section class="mode-panel active" data-mode-panel="solo" role="tabpanel">
+            <div class="launch-row deck-launch" aria-label="Single-player deck selection">
+              <label>Your banner<select id="homeDeckSelect"></select></label>
+              <button class="small-link" data-screen="deck">EDIT DECKS →</button>
+            </div>
+            <div class="launch-row opponent-launch" aria-label="Computer opponent settings">
+              <label>Opponent<select id="aiDeckSelect"><option value="general">General</option><option value="wood">Wood architect</option><option value="food">Food commons</option><option value="metal">Metal iron crown</option></select></label>
+              <label>Difficulty<select id="aiDifficultySelect"><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
+            </div>
+            <button id="playButton" class="button primary launch-button">Play single player <span>→</span></button>
+          </section>
+          <section class="mode-panel" data-mode-panel="online" role="tabpanel" hidden>
+            <div class="launch-row deck-launch" aria-label="Multiplayer deck selection">
+              <label>Your banner<select id="onlineDeckSelect"></select></label>
+              <button class="small-link" data-screen="deck">EDIT DECKS →</button>
+            </div>
+            <div class="multiplayer-setup" aria-label="Online multiplayer">
+              <label>Ruler name<input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Your name"></label>
+              <button id="createRoom" class="button online-button">Create room</button>
+              <span class="room-divider">or</span>
+              <label>Room code<input id="roomCode" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
+              <button id="joinRoom" class="button online-button">Join room</button>
+              <p id="onlineStatus" role="status"></p>
+            </div>
+          </section>
+          <div id="devRuleSetup" class="decree-setup" aria-label="Development weekly decree override">
+            <span>DEVELOPMENT DECREE</span>
+            <label>Modifier<select id="devRuleSelect"></select></label>
+          </div>
         </div>
         <div class="stats-row">
           <div><strong>20</strong><span>cards per deck</span></div>
@@ -172,7 +181,7 @@
 
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=17"></script>
+  <script src="game.js?v=18"></script>
   <script src="multiplayer.js?v=3"></script>
 </body>
 </html>
