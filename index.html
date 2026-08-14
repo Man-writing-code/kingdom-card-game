@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
   <div class="grain"></div>
@@ -35,6 +35,15 @@
         <div class="hero-actions">
           <button id="playButton" class="button primary">Enter the battlefield <span>→</span></button>
           <button class="button ghost" data-screen="deck">Shape your deck</button>
+        </div>
+        <div class="multiplayer-setup" aria-label="Online multiplayer">
+          <div class="multiplayer-title"><span>ONLINE DUEL</span><small>Private two-player rooms · Beta</small></div>
+          <label>Ruler name<input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Your name"></label>
+          <button id="createRoom" class="button online-button">Create room</button>
+          <span class="room-divider">or</span>
+          <label>Room code<input id="roomCode" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
+          <button id="joinRoom" class="button online-button">Join room</button>
+          <p id="onlineStatus" role="status"></p>
         </div>
         <div class="opponent-setup deck-setup" aria-label="Deck selection">
           <span>YOUR DECK</span>
@@ -162,6 +171,8 @@
   </main>
 
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
-  <script src="game.js?v=16"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game.js?v=17"></script>
+  <script src="multiplayer.js?v=3"></script>
 </body>
 </html>

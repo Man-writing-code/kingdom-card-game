@@ -265,6 +265,24 @@ function startGame(){
   $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
   drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(true);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
 }
+function startOnlineGame(state,seat,names={}){
+  game=JSON.parse(JSON.stringify(state));
+  const rule=META_RULES.find(r=>r.id===game.decreeId);if(rule)currentRule=rule;
+  if(seat==='guest')[game.player,game.ai]=[game.ai,game.player];
+  game.onlineSeat=seat;game.locked=false;selectedUid=null;
+  $('#aiProfileLabel').textContent=`${String((seat==='host'?names.guest:names.host)||'Opponent').toUpperCase()} · ONLINE`;
+  showScreen('game');setLog(true);renderGame();
+}
+function onlineCanonicalState(){
+  const state=JSON.parse(JSON.stringify(game));
+  if(game.onlineSeat==='guest')[state.player,state.ai]=[state.ai,state.player];
+  delete state.onlineSeat;state.locked=false;return state;
+}
+function resolveOnlinePlans(hostSide,guestSide){
+  game.player=JSON.parse(JSON.stringify(hostSide));game.ai=JSON.parse(JSON.stringify(guestSide));game.onlineSeat='host';
+  game.locked=true;selectedUid=null;commitReplacements(game.player);commitReplacements(game.ai);
+  log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
+}
 function laneIsActive(lane){return game?.blockedLane!==lane}
 function drawCard(side){if(!side.deck.length){side.deck=shuffle(side.discard);side.discard=[]}return side.deck.pop()}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
@@ -375,7 +393,7 @@ function resolveOnBuild(side,label){
   })
 }
 function commitTurn(){
-  if(game.locked)return;game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
+  if(game.locked)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
 }
 function isPureMetalUnit(card){return card.type==='unit'&&card.cost.metal>0&&Object.keys(card.cost).length===1}
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
@@ -465,7 +483,8 @@ function resolveRound(){
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival',aCharges[lane]);
   }
   harvest(p,'Your');harvest(a,'Rival');renderGame(true);
-  if(p.health<=0||a.health<=0){setTimeout(()=>endGame(a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw'),450);return}
+  if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
+  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},700);
   setTimeout(nextRound,700);
 }
 function discardUnit(side,lane){const unit=side.board[lane].unit;if(unit&&!unit.handCard?.bonus)side.discard.push(unit.cardId);side.board[lane].unit=null}
