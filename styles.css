@@ -682,3 +682,87 @@ body[data-screen="game"] .hand-area{background:#ece1cbdc;backdrop-filter:blur(12
   .keep-pips{grid-template-columns:repeat(5,6px)}
   .health strong{font-size:20px}
 }
+
+/* The whole hand is the player's command table. Pale cards now sit on the same
+   forest cloth used by the wider battle UI, restoring the strong dark/light
+   relationship without putting the resource ledger back inside a box. */
+body[data-screen="game"] .hand-area{
+  color:#f3ead7;
+  background:
+    radial-gradient(circle at 18% -70%,#49694f52 0%,transparent 48%),
+    linear-gradient(178deg,#203b2aee 0%,#14291de8 100%);
+  border-top:1px solid #d0ad6266;
+  box-shadow:inset 0 1px 0 #ffffff0a,0 -13px 32px #050c086e;
+  backdrop-filter:blur(13px)
+}
+.hand-area .hand-heading small{color:#d7d0bf;text-shadow:0 1px 2px #07100a}
+.hand-area .hand-heading button{color:#d8b767}
+.hand-area .hand-heading button:hover{color:#f3d88f;background:#ffffff0d}
+.hand-area .dock-keep{border-right-color:#d1b26752}
+.hand-area .dock-keep .health .keep-caption{color:#b9c3b7}
+.hand-area .dock-keep .health strong{color:#efc987}
+.hand-area .dock-keep .keep-pips i{background:#d76a4f}
+.hand-area .dock-keep .keep-pips i.fallen{background:#a38f81;opacity:.25}
+.hand-area .game-card{border-color:#d1c4a4;box-shadow:0 4px 10px #07110b8c,0 1px 0 #f8edcf}
+.hand-area .game-card.selected{outline-color:#e5bd61;box-shadow:0 8px 18px #050c088f,0 0 0 3px #e5bd6133}
+.hand-area .commit.button.primary{
+  border:1px solid #f1d48a66;background:linear-gradient(#dfbd70,#c79d47);
+  color:#17271d;box-shadow:0 5px 14px #07110b73,inset 0 1px 0 #fff1c47a
+}
+.hand-area .commit.button.primary:hover{background:linear-gradient(#eccf8a,#d1aa58)}
+.hand-area .commit.button.primary:disabled{background:#9f8b63;color:#344338;opacity:.62}
+.hand-area .draw-prompt{border-color:#d3ad5d61;background:#0c1c13a6;box-shadow:inset 0 0 18px #07100a55}
+.hand-area .draw-prompt-head small,.hand-area .draw-pile small{color:#c5bead}
+.hand-area .draw-pile{border-color:#d3ad5d52;background:#ffffff0a;color:#f3e6c8}
+.hand-area .draw-pile:hover:not(:disabled){background:#d3ad5d20;border-color:#e1bd69}
+.hand-area .hand{scrollbar-width:thin;scrollbar-color:#c9a75b #0c1b13}
+.hand-area .hand::-webkit-scrollbar{height:8px}
+.hand-area .hand::-webkit-scrollbar-track{background:#0c1b13;border-radius:4px}
+.hand-area .hand::-webkit-scrollbar-thumb{background:#c9a75b;border-radius:4px;border:2px solid #0c1b13}
+
+@media(max-width:640px){
+  .hand-area .dock-keep{border-right-color:#d1b26752}
+}
+
+/* Draw selection is a momentary decision, not another row in the hand. It sits
+   over the battle as a compact command dialog and leaves the dock height untouched. */
+.draw-prompt:not([hidden]){
+  position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+  max-width:none;margin:0;padding:22px;border:0;border-radius:0;
+  background:#050c08b8;box-shadow:none;backdrop-filter:blur(7px)
+}
+.draw-dialog{
+  position:relative;width:min(520px,100%);padding:28px 30px 30px;
+  border:1px solid #d3ad5d7a;background:
+    radial-gradient(circle at 50% -35%,#4a695052 0%,transparent 52%),
+    linear-gradient(165deg,#213d2a,#102219);
+  box-shadow:0 24px 70px #020604c9,inset 0 0 0 1px #fff6df0b,7px 7px 0 #aa81362b;
+  color:#f3ead7
+}
+.draw-dialog:before{content:"";position:absolute;inset:9px;border:1px solid #e0c2731c;pointer-events:none}
+.draw-dialog .draw-prompt-head{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;margin:0 0 22px;text-align:center}
+.draw-dialog .draw-prompt-head span{font:400 25px/1 "MedievalSharp",serif;letter-spacing:.7px;color:#f2d58b}
+.draw-dialog .draw-prompt-head small{font:italic var(--t-small)/1.4 Georgia,serif;color:#c8c3b5}
+.draw-dialog .draw-piles{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.draw-dialog .draw-pile{
+  min-height:104px;padding:17px 13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  border:1px solid #d4b66a59;border-radius:3px;background:#f4ecd9;color:#1b3022;
+  box-shadow:0 4px 12px #03080580,inset 0 1px 0 #fff;transition:transform .16s,border-color .16s,background .16s
+}
+.draw-dialog .draw-pile b{font:20px/1.1 "MedievalSharp",serif;color:#203d2a}
+.draw-dialog .draw-pile small{font:var(--t-small)/1.3 "DM Sans",sans-serif;color:#716653}
+.draw-dialog .draw-pile:hover:not(:disabled){transform:translateY(-3px);border-color:#e1b957;background:#fff7e5}
+.draw-dialog .draw-pile:focus-visible{outline:2px solid #f0cd78;outline-offset:3px}
+
+@media(max-width:520px){
+  .draw-prompt:not([hidden]){padding:16px}
+  .draw-dialog{padding:25px 20px 22px}
+  .draw-dialog .draw-prompt-head span{font-size:22px}
+  .draw-dialog .draw-piles{gap:9px}
+  .draw-dialog .draw-pile{min-height:92px;padding:13px 8px}
+  .draw-dialog .draw-pile b{font-size:17px}
+}
+
+/* Deck screens use a light card on a dark room backdrop. The quantity sits inside
+   the card, so it must declare its own ink colour instead of inheriting the room. */
+.deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}

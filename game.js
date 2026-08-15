@@ -128,11 +128,12 @@ function sanitizeDevDeck(deck){
 }
 let devDeck=[];
 function readDevDeck(){
-  try{const saved=sanitizeDevDeck(JSON.parse(localStorage.getItem('kingdom-dev-deck')||'null'));if(saved.length===DECK_SIZE)return saved}catch(e){}
+  try{const stored=JSON.parse(localStorage.getItem('kingdom-dev-deck')||'null');if(Array.isArray(stored))return sanitizeDevDeck(stored)}catch(e){}
   const active=sanitizeDevDeck(activeDeck().cards);return active.length===DECK_SIZE?active:buildDefaultDeck(meta.unlocked);
 }
 const saveDevDeck=()=>{try{localStorage.setItem('kingdom-dev-deck',JSON.stringify(devDeck))}catch(e){}};
 const resetDevDeck=()=>{const active=sanitizeDevDeck(activeDeck().cards);devDeck=active.length===DECK_SIZE?active:buildDefaultDeck(meta.unlocked);saveDevDeck()};
+const clearDevDeck=()=>{devDeck=[];saveDevDeck()};
 const availableDesigns=()=>devMode?COLLECTIBLE_IDS:meta.unlocked;
 const deckCards=d=>devMode?devDeck:d.cards;
 const deckIsPlayable=d=>{const cards=deckCards(d);return cards.length===DECK_SIZE&&cards.every(id=>devMode?COLLECTIBLE_IDS.includes(id):meta.unlocked.includes(id))};
@@ -832,7 +833,7 @@ $$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{deckFilter=b.data
 $('#deckCards').addEventListener('click',e=>{const plus=e.target.dataset.plus,minus=e.target.dataset.minus;if(plus)adjustDeck(plus,1);if(minus)adjustDeck(minus,-1)});
 $$('[data-collection]').forEach(b=>b.addEventListener('click',()=>{collectionView=b.dataset.collection;renderCollection()}));
 $('#devModeToggle').onclick=()=>{devMode=!devMode;if(devMode)resetDevDeck();localStorage.setItem('kingdom-dev-mode',devMode?'1':'0');applyDevMode()};
-$('#resetDeck').onclick=()=>{if(devMode)resetDevDeck();else{activeDeck().cards=[];saveMeta()}renderDeckBuilder();$('#deckMessage').textContent=devMode?'Dev deck restored from the active banner.':'Deck emptied — choose 20 cards for this banner.'};
+$('#resetDeck').onclick=()=>{if(devMode)clearDevDeck();else{activeDeck().cards=[];saveMeta()}renderDeckBuilder();$('#deckMessage').textContent='Deck emptied — choose 20 cards for this banner.'};
 $('#saveDeck').onclick=()=>{if(devMode)saveDevDeck();else saveMeta();$('#deckMessage').textContent=devMode?'Dev deck saved. Your normal banner is unchanged.':`“${activeDeck().name}” saved to the royal archive.`};
 $('#deckSelect').onchange=e=>selectDeck(e.target.value);
 $('#homeDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
