@@ -246,6 +246,70 @@ body.in-battle{overflow:hidden}
   .hand-count{display:none}
 }
 
+/* ================================================================
+   BATTLE THEATRE
+   The clash is staged, not stated: armies lunge, the fallen linger
+   as fading ghosts, damage floats up in numbers, palisades flash
+   when they hold. Nothing here changes an outcome — resolveRound
+   reports what happened and this block performs it.
+   ================================================================ */
+
+/* The wind-up: opposing unit rows lunge at each other across the clash line. */
+.clashing .enemy-board .slot.unit .slot-card{animation:lungeDown .75s cubic-bezier(.36,.07,.19,.97) .3s}
+.clashing .player-board .slot.unit .slot-card{animation:lungeUp .75s cubic-bezier(.36,.07,.19,.97) .3s}
+@keyframes lungeDown{0%{transform:none}50%{transform:translateY(18px) scale(1.04)}70%{transform:translateY(11px)}100%{transform:none}}
+@keyframes lungeUp{0%{transform:none}50%{transform:translateY(-18px) scale(1.04)}70%{transform:translateY(-11px)}100%{transform:none}}
+.clashing .clash-line b{animation:clashFlash .8s ease .5s}
+.clashing .clash-line span{animation:clashLineGlow .8s ease .5s}
+@keyframes clashFlash{0%{transform:none}35%{transform:scale(2.1) rotate(-8deg);color:#ffdf9e;text-shadow:0 0 22px #ffc95e,0 0 6px #fff}100%{transform:none}}
+@keyframes clashLineGlow{0%{box-shadow:none}35%{box-shadow:0 0 14px 1px #ffc95e66}100%{box-shadow:none}}
+
+/* The fallen: a ghost of the card holds its slot for a moment, names itself, and fades. */
+.fx-slain{position:absolute;inset:3px;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#131f16ea;border:1px solid #a84d3266;border-radius:3px;animation:fxSlain 1.55s ease forwards;pointer-events:none}
+.fx-slain i{font-size:22px;font-style:normal;color:#c96b52;text-shadow:0 0 10px #a84d3255}
+.fx-slain b{font:bold 11px "DM Sans";letter-spacing:.4px;color:#e8dcc4;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-slain small{font:italic 9.5px Georgia,serif;color:#cf6a48;letter-spacing:1.1px;text-transform:uppercase}
+@keyframes fxSlain{0%{opacity:0;transform:scale(.88)}10%{opacity:1;transform:scale(1.05)}20%{transform:scale(1) rotate(-1.2deg)}72%{opacity:1;transform:rotate(-1.2deg)}100%{opacity:0;transform:translateY(12px) rotate(2.5deg)}}
+.fx-burnout{background:radial-gradient(circle at 50% 62%,#5c1f0aee 0%,#131f16f2 68%);border-color:#e0703d99}
+.fx-burnout i{color:#ff9a4d;text-shadow:0 0 14px #ff7a2a}
+
+/* Damage numbers rise from the lane that dealt them; the ruler's health recoils. */
+.fx-dmg{position:absolute;left:50%;top:34%;z-index:7;font:28px "MedievalSharp",serif;color:#ff8b66;text-shadow:0 2px 0 #40160a,0 0 16px #a8330f99;animation:fxDmg 1.55s ease-out forwards;pointer-events:none}
+@keyframes fxDmg{0%{opacity:0;transform:translate(-50%,10px) scale(.55)}14%{opacity:1;transform:translate(-50%,0) scale(1.3)}28%{transform:translate(-50%,-4px) scale(1)}78%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px) scale(.95)}}
+.fx-absorb{position:absolute;left:50%;top:50%;z-index:7;transform:translate(-50%,-50%);font-size:26px;color:#a9cde2;text-shadow:0 0 14px #6fa8cc;animation:fxAbsorb 1.25s ease forwards;pointer-events:none}
+@keyframes fxAbsorb{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}55%{opacity:.9;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25)}}
+.hp-hit{animation:hpHit .85s}
+@keyframes hpHit{0%{transform:none}12%{transform:translateX(-5px) scale(1.18);color:#ff5a3c}26%{transform:translateX(5px) scale(1.18);color:#ff5a3c}40%{transform:translateX(-3px)}54%{transform:translateX(3px)}100%{transform:none}}
+.game-screen.quake{animation:quake .42s}
+@keyframes quake{0%,100%{transform:none}18%{transform:translate(-3px,2px)}36%{transform:translate(3px,-2px)}54%{transform:translate(-2px,-1px)}72%{transform:translate(2px,1px)}}
+
+/* Board jazz: slots invite, valid targets breathe, standing cards lift to meet the cursor. */
+.slot{transition:border-color .16s ease,background .16s ease}
+.slot:hover{border-color:#ffffff36;background:#ffffff0d}
+.slot.valid{animation:validPulse 1.15s ease-in-out infinite}
+@keyframes validPulse{0%,100%{box-shadow:0 0 0 0 #d3ad5d30;border-color:#d3ad5d88;background:#d3ad5d10}50%{box-shadow:0 0 16px 3px #d3ad5d55;border-color:#eccf8f;background:#d3ad5d1f}}
+.slot-card{transition:transform .18s ease,box-shadow .18s ease}
+.slot .slot-card:hover{transform:translateY(-3px) scale(1.02);z-index:4;box-shadow:inset 0 0 0 1px #f5dfac70,inset 0 -24px 35px #0b140db3,0 10px 22px #07110bb0}
+
+/* Power wears a shield now, not a whisper in the corner. */
+.hand-area .power,.slot-card.board-painted .slot-power{display:grid;place-items:center;clip-path:polygon(50% 0,100% 13%,100% 60%,50% 100%,0 60%,0 13%);background:linear-gradient(165deg,#9a4630,#571f12);color:#ffe9c4;border:0;border-radius:0;text-shadow:0 1px 2px #300f06;filter:drop-shadow(0 0 1px #e5c87e88) drop-shadow(0 2px 3px #07110b88);box-shadow:none;padding:2px 0 0}
+.hand-area .power{left:9px;right:auto;bottom:6px;width:36px;height:40px;font:bold 13px "DM Sans"}
+.slot-card.board-painted .slot-power{right:auto;left:6px;bottom:6px;width:31px;height:35px;font:bold 12px "DM Sans"}
+
+/* Hand cards spend their whitespace on telling you what the card does. */
+.hand-area .game-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-height:3em;font:italic 10.5px/1.45 Georgia,serif;color:#6f6553;margin:4px 0 0;padding:0 10px}
+.hand-area .game-card{padding-bottom:46px}
+
+/* The chronicle of a card, on hover: name, cost, power, and what it does. */
+.card-tip{position:fixed;z-index:60;width:288px;padding:13px 15px 14px;background:#f6efdf;color:#2a2417;border:1px solid #c9a961;box-shadow:0 16px 44px #07130c88,5px 5px 0 #c99b4830;pointer-events:none}
+.card-tip .tip-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+.card-tip .tip-head b{font:bold 14px "DM Sans"}
+.card-tip .tip-head span{font:bold 8px "DM Sans";letter-spacing:1.6px;color:#8b6428;text-transform:uppercase}
+.card-tip .tip-power{font:bold 12px "DM Sans";color:#8c3b2b;margin:0 0 5px}
+.card-tip .tip-cost{display:flex;gap:5px;margin:0 0 8px}
+.card-tip .tip-cost.free{font:italic 11px Georgia,serif;color:#776f60}
+.card-tip p{font:italic 12.5px/1.55 Georgia,serif;color:#4a4234;margin:0}
+
 /* Draw step: a round opens here and planning stays locked until every draw is spent. */
 .draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
 .draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}

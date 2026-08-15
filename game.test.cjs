@@ -14,10 +14,12 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,40,'global collectible pool');
-assert.equal(Object.keys(CARDS).length,41,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,38,'global collectible pool (Charge designs shelved)');
+assert.equal(Object.keys(CARDS).length,39,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
-for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard','lancer','bannercaptain'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
+for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
+for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
+assert.deepEqual(sanitizeDeck(['lancer','soldier','bannercaptain','archer'],['soldier','archer']),['soldier','archer'],'old saves shed shelved designs');
 
 resetGame(1);game.player.board[0].unit=testSlot('rabblerouser',1);resolveOnBuild(game.player,'Your');
 assert.equal(game.player.hand.length,1);assert.equal(game.player.hand[0].cardId,'peasant');assert.equal(game.player.hand[0].bonus,true);
@@ -35,10 +37,8 @@ resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('pal
 resetGame();const hunter=testSlot('huntsman');game.player.board[0].unit=hunter;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1);
 game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1,'defeated Huntsman earns nothing');
 
-resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your',0);assert.equal(game.ai.health,8);assert.equal(game.player.resources.food,1);
-resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your',0);assert.equal(game.ai.health,10);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
-
-resetGame();game.player.board[0].unit=testSlot('lancer',2);assert.equal(chargeBonus(game.player,0),2);game.player.board[1].unit=testSlot('bannercaptain',1);assert.equal(chargeBonus(game.player,0),3);game.player.board[2].unit=testSlot('bannercaptain',1);assert.equal(chargeBonus(game.player,0),3,'Captain bonuses do not stack');game.player.board[0].unit.round=1;assert.equal(chargeBonus(game.player,0),0,'Charge is deployment-round only');
+resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,8);assert.equal(game.player.resources.food,1);
+resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,10);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
 
 resetGame();game.player.board[1].unit=testSlot('boarriders',1);assert.equal(unitPower(game.player,1),3,'Boar Riders alone hold base power');
 game.player.board[0].unit=testSlot('peasant',1);assert.equal(unitPower(game.player,1),4,'one flank adds 1');

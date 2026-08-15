@@ -36,9 +36,9 @@ Then visit `http://127.0.0.1:4173`.
 - The Archer costs 3 wood and has a flat 2 power, following normal tie rules.
 - Village Commons generate temporary Peasants to refill empty unit lanes. Peasant Mobs and Boar Riders each gain 1 power per friendly unit in an adjacent lane, so a contiguous line beats a scattered one.
 - Metal decks gain 3-power Men-at-Arms, healing Reinforced Gatehouses, and 4-power Battering Rams. A Ram only breaks the opposing building when its lane holds no defending unit, damaging itself to 1 power in the process; blocked, it simply fights.
-- The 40-design global pool now supports six identities: Food swarms and Boar Rider finishers; Wood Palisade defence; pure-Metal elites; Food–Wood hunting engines; Metal–Wood Ballista and Pavise fortifications; and Metal–Food Charge attacks.
-- Charge adds direct damage only on the unit's deployment round. Ballistas fire before normal combat, while Palisades blunt the first direct strike through their lane each round.
-- The numbers behind those: a Palisade absorbs 2, a Ballista removes one opposing unit of 4 or more power and collapses, the Lancer carries Charge 2, and a Banner Captain grants Charge 1 to the other units deployed alongside it.
+- The 38-design global pool supports five identities: Food swarms and Boar Rider finishers; Wood Palisade defence; pure-Metal elites; Food–Wood hunting engines; and Metal–Wood Ballista and Pavise fortifications. (The Metal–Food Charge identity is shelved for now; old saves shed those cards automatically.)
+- Ballistas fire before normal combat, while Palisades blunt the first direct strike through their lane each round.
+- The numbers behind those: a Palisade absorbs 2, and a Ballista removes one opposing unit of 4 or more power and collapses.
 - Other lane pairings: the Armoury adds 2 power to a metal-only unit beside it, the Hunting Lodge pays food when its lane connects, Wall Wardens gain 2 power beside any friendly building, Huntsmen salvage wood for winning a clash, and Rabble-Rousers add a Peasant to hand when revealed.
 - Gold automatically substitutes for missing food, metal, or wood.
 - The weekly decree is chosen deterministically from the calendar week.

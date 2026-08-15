@@ -37,10 +37,10 @@ const CARDS = {
   huntsman:{name:'Huntsman',type:'unit',icon:'➶',accent:'#557448',cost:{food:1,material:1},power:2,text:'After winning a unit clash and surviving, gain 1 wood.',special:'huntsman'},
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
   ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
-  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'},
-  lancer:{name:'Lancer',type:'unit',icon:'♞',accent:'#7a594d',cost:{food:2,metal:2},power:3,text:'Charge 2 — when newly deployed and unblocked, deals +2 direct damage.',special:'lancer',charge:2},
-  bannercaptain:{name:'Banner Captain',type:'unit',icon:'⚑',accent:'#845341',cost:{food:2,metal:1},power:2,text:'Other friendly units deployed this round gain non-stacking Charge 1.',special:'bannercaptain'}
+  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'}
 };
+// The Lancer and Banner Captain (the Charge mechanic) are shelved for now; their art stays under
+// assets/cards/ and normaliseCollection/sanitizeDeck already scrub them from old saves.
 
 const WORKERS=['farmer','lumberjack','miner'];
 const TIER_TWO=['lumbermill','foundry','granary'];
@@ -190,7 +190,7 @@ const CARD_ART={
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
   wallwarden:'assets/cards/wall-warden.webp',royalguard:'assets/cards/royal-guard.webp',armoury:'assets/cards/armoury.webp',
   huntsman:'assets/cards/huntsman.webp',huntinglodge:'assets/cards/hunting-lodge.webp',ballista:'assets/cards/ballista-emplacement.webp',
-  paviseguard:'assets/cards/pavise-guard.webp',lancer:'assets/cards/lancer.webp',bannercaptain:'assets/cards/banner-captain.webp'
+  paviseguard:'assets/cards/pavise-guard.webp'
 };
 function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
@@ -349,7 +349,13 @@ function onlineCanonicalState(){
 function resolveOnlinePlans(hostSide,guestSide){
   game.player=JSON.parse(JSON.stringify(hostSide));game.ai=JSON.parse(JSON.stringify(guestSide));game.onlineSeat='host';
   game.locked=true;selectedUid=null;commitReplacements(game.player);commitReplacements(game.ai);
-  log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
+  log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);beginClash();
+}
+// The armies visibly lunge at each other before the outcome lands: the pause is the wind-up.
+function beginClash(){
+  const wrap=$('#battlefieldWrap');
+  if(wrap){wrap.classList.add('clashing');setTimeout(()=>wrap.classList.remove('clashing'),1150)}
+  setTimeout(resolveRound,1100);
 }
 function laneIsActive(lane){return game?.blockedLane!==lane}
 const PILES=['structures','units'];
@@ -435,9 +441,9 @@ function slotClick(lane,type){
 function aiVisiblePlayerSlot(lane,type){const slot=game.player.board[lane][type];return slot?.round===game.round?(slot.replaced||null):slot}
 function aiCardValue(id){
   const c=CARDS[id];
-  if(['ram','boarriders','lancer'].includes(c.special))return 5;
+  if(['ram','boarriders'].includes(c.special))return 5;
   if(['sapper','mob','gatehouse','pavise'].includes(c.special)||id==='royalguard')return 3.5;
-  if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista','bannercaptain'].includes(c.special))return 3;
+  if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
 // Hard and Hardcore both take the best-scoring line rather than a random pick off the top of the list.
@@ -484,8 +490,6 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
-    if(c.special==='lancer'&&!enemy)score+=5;
-    if(c.special==='bannercaptain')score+=side.board.filter(x=>x.unit?.round===game.round).length*1.5;
     if(c.special==='pavise')score+=enemy?3:1;
     // Mob units want a neighbour on each side, so value the lane by how many flanks are already held.
     if(MOB_SPECIALS.includes(c.special))score+=adjacentAllies(side,lane)*2.5;
@@ -505,7 +509,7 @@ function aiActionScore(hc,lane,difficulty){
   }
   if(game.aiProfile==='wood'&&['logging','lumbermill','university','townhall','archer','firesapper','palisade','wallwarden','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
-  if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard','lancer','bannercaptain'].includes(hc.cardId))score+=2;
+  if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='timber'){
     // Sawmills carry the only food cost in the banner, so a Farm has to land before they can.
     // Protecting that Farm afterwards is left to the generic last-producer rule above.
@@ -561,7 +565,7 @@ function resolveOnBuild(side,label){
   })
 }
 function commitTurn(){
-  if(game.locked||game.player.pendingDraws)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
+  if(game.locked||game.player.pendingDraws)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);beginClash();
 }
 function isPureMetalUnit(card){return card.type==='unit'&&card.cost.metal>0&&Object.keys(card.cost).length===1}
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
@@ -580,7 +584,7 @@ function unitPower(side,lane){
   if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
 }
-function discardBuilding(side,lane){const building=side.board[lane].building;if(building&&!building.handCard?.bonus)side.discard.push(building.cardId);side.board[lane].building=null}
+function discardBuilding(side,lane){const building=side.board[lane].building;if(building){fx.push({t:'razed',who:fxSide(side),lane,cardId:building.cardId});if(!building.handCard?.bonus)side.discard.push(building.cardId)}side.board[lane].building=null}
 function resolveRam(attacker,defender,lane,label){const ram=attacker.board[lane].unit;if(!ram||CARDS[ram.cardId].special!=='ram'||!defender.board[lane].building)return false;const target=CARDS[defender.board[lane].building.cardId].name;discardBuilding(defender,lane);ram.damaged=true;log(`Lane ${lane+1}: ${label} Battering Ram destroys ${target} and is reduced to 1 power.`);return true}
 function resolveBallistas(p,a,pPowers,aPowers){
   const shots=[];
@@ -603,27 +607,19 @@ function combatDefeat(side,lane){
 function rewardClashWinner(side,unit,lane,label){
   if(CARDS[unit?.cardId]?.special==='huntsman'&&side.board[lane].unit===unit){side.resources.material++;log(`Lane ${lane+1}: ${label} Huntsman salvages 1 wood.`)}
 }
-function chargeBonus(side,lane){
-  const unit=side.board[lane].unit;if(!unit||unit.round!==game.round)return 0;
-  let bonus=CARDS[unit.cardId].charge||0;
-  if(side.board.some((x,i)=>i!==lane&&CARDS[x.unit?.cardId]?.special==='bannercaptain'))bonus++;
-  return bonus
-}
-function directStrike(attacker,defender,lane,power,label,ramLabel,chargeAtClash){
+function directStrike(attacker,defender,lane,power,label,ramLabel){
   const unit=attacker.board[lane].unit,card=CARDS[unit.cardId];
   if(resolveRam(attacker,defender,lane,ramLabel))return;
-  const amount=power+chargeAtClash;
-  const dmg=dealDamage(defender,amount,lane);
+  const dmg=dealDamage(defender,power,lane);
   if(card.special==='merchant')attacker.resources.gold++;
   if(dmg>0&&CARDS[attacker.board[lane].building?.cardId]?.special==='huntinglodge'){
     attacker.resources.food++;log(`Lane ${lane+1}: ${label==='You'?'Your':'The rival’s'} Hunting Lodge supplies 1 food.`)
   }
-  log(`Lane ${lane+1}: ${label.toLowerCase()} ${label==='You'?'strike':'strikes'} for ${dmg} damage${amount>power?` (${amount-power} bonus)`:''}.`)
+  log(`Lane ${lane+1}: ${label.toLowerCase()} ${label==='You'?'strike':'strikes'} for ${dmg} damage.`)
 }
 function resolveRound(){
   const p=game.player,a=game.ai;
   const pPowers=[0,1,2,3].map(lane=>unitPower(p,lane)),aPowers=[0,1,2,3].map(lane=>unitPower(a,lane));
-  const pCharges=[0,1,2,3].map(lane=>chargeBonus(p,lane)),aCharges=[0,1,2,3].map(lane=>chargeBonus(a,lane));
   resolveBallistas(p,a,pPowers,aPowers);
   for(let lane=0;lane<4;lane++){
     if(!laneIsActive(lane))continue;
@@ -647,15 +643,46 @@ function resolveRound(){
         const survivors=[!pFell?'your Pavise Guard':null,!aFell?'the rival Pavise Guard':null].filter(Boolean);
         log(`Lane ${lane+1}: ${survivors.length?`${survivors.join(' and ')} endure at 1 power after a ${pp}–${ap} tie`:`both units fall at ${pp} power`}.`)
       }
-    }else if(pu)directStrike(p,a,lane,pp,'You','your',pCharges[lane]);
-    else if(au)directStrike(a,p,lane,ap,'The rival','the rival',aCharges[lane]);
+    }else if(pu)directStrike(p,a,lane,pp,'You','your');
+    else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
   }
-  harvest(p,'Your');harvest(a,'Rival');renderGame(true);
+  harvest(p,'Your');harvest(a,'Rival');renderGame(true);playFx();
   if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
-  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},700);
-  setTimeout(nextRound,700);
+  // The aftermath holds long enough for the ghosts and damage numbers to finish telling it;
+  // nextRound's re-render wipes any overlay still standing.
+  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},1800);
+  setTimeout(nextRound,1800);
 }
-function discardUnit(side,lane){const unit=side.board[lane].unit;if(unit&&!unit.handCard?.bonus)side.discard.push(unit.cardId);side.board[lane].unit=null}
+// ---- Battle effects. The resolvers below report what happened as they compute it;
+// playFx then tells the story on the freshly rendered board: fallen cards linger as
+// fading ghosts, damage floats up in numbers, palisades flash when they absorb. ----
+let fx=[];
+const fxSide=side=>side===game.player?'player':'ai';
+function playFx(){
+  if(!fx.length)return;
+  const boards={player:'#playerBoard',ai:'#aiBoard'},hurt={player:0,ai:0};
+  for(const e of fx){
+    const slotType=e.t==='razed'||e.t==='absorb'?'building':'unit';
+    const slot=$(`${boards[e.who]} .slot.${slotType}[data-lane="${e.lane}"]`);
+    if(e.t==='slain'||e.t==='razed'){
+      if(!slot)continue;const c=CARDS[e.cardId],burn=c.special==='sapper';
+      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':burn?'burns out':'falls'}</small></span>`);
+    }else if(e.t==='hit'){
+      hurt[e.who]+=e.dmg;
+      if(slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-dmg">−${e.dmg}</span>`);
+    }else if(e.t==='absorb'&&slot)slot.insertAdjacentHTML('beforeend','<span class="fx-absorb">◈</span>');
+  }
+  for(const who of ['player','ai']){
+    if(!hurt[who])continue;
+    const el=$(who==='player'?'#playerHealth':'#aiHealth');
+    if(el){el.classList.add('hp-hit');setTimeout(()=>el.classList.remove('hp-hit'),900)}
+  }
+  const gs=$('#gameScreen');
+  if(gs&&(hurt.player||hurt.ai)){gs.classList.add('quake');setTimeout(()=>gs.classList.remove('quake'),450)}
+  setTimeout(()=>$$('.fx-slain,.fx-dmg,.fx-absorb').forEach(x=>x.remove()),1700);
+  fx=[];
+}
+function discardUnit(side,lane){const unit=side.board[lane].unit;if(unit){fx.push({t:'slain',who:fxSide(side),lane,cardId:unit.cardId});if(!unit.handCard?.bonus)side.discard.push(unit.cardId)}side.board[lane].unit=null}
 // Per-round damage reduction. Palisades stamp the building instance; High Walls support remains
 // compatible with decree rotations that include it without adding it back to the current archive.
 function adjustedDamage(side,amount,lane){
@@ -670,6 +697,8 @@ function adjustedDamage(side,amount,lane){
 function dealDamage(side,amount,lane){
   const palisade=side.board[lane]?.building,dmg=adjustedDamage(side,amount,lane);side.health-=dmg;
   const target=side===game.player?'player':'ai';
+  if(dmg<amount)fx.push({t:'absorb',who:target,lane});
+  if(dmg>0)fx.push({t:'hit',who:target,lane,dmg});
   if(currentRule.id==='walls')game.wallUsed[target]=true;
   if(CARDS[palisade?.cardId]?.special==='palisade'&&palisade.usedRound!==game.round)palisade.usedRound=game.round;
   return dmg
@@ -704,11 +733,11 @@ function damageForecastHtml(side,lane,reveal){
   const slot=side.board[lane].unit,card=CARDS[slot?.cardId];if(!slot||card.special==='sapper')return'';
   const defender=side===game.player?game.ai:game.player;if(defender.board[lane].unit)return'';
   if(card.special==='ram'&&defender.board[lane].building)return'<span class="forecast-chip siege-forecast" title="Destroys the opposing building after the clash"><b>♜×</b><i>SIEGE</i></span>';
-  const amount=unitPower(side,lane)+chargeBonus(side,lane);
+  const amount=unitPower(side,lane);
   const damage=adjustedDamage(defender,amount,lane),uncertain=reveal?'':'?';
   return `<span class="forecast-chip damage-forecast" title="${reveal?'Will deal':'Potential'} ${damage} ruler damage if this lane remains unblocked"><b>♥−${damage}${uncertain}</b><i>${reveal?'HIT':'IF CLEAR'}</i></span>`;
 }
-function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" title="${name}: ${c.text}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power">⚔ ${power}</span>`:''}</div>`}
+function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" data-card="${slot.cardId}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power">⚔ ${power}</span>`:''}</div>`}
 function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round)}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),workerForecastHtml(lane.unit)+damageForecastHtml(side,i,reveal))}</div></div>`:'').join('')}
 // The realm sigil: three resources at the points of a triangle, gold at its heart.
 // The spokes are the rule made visible — gold flows out to stand in for any of the three.
@@ -795,4 +824,23 @@ $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDec
 $('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
 // The realm sigil doubles as the game's mark in the top bar.
 $$('.brand-mark').forEach(el=>{el.textContent='';el.innerHTML=resourceEmblemHtml({food:'',material:'',metal:'',gold:''},{logo:true})});
+// ---- Card tooltip: hover any card on the battlefield or in hand and it tells you what it does. ----
+function cardTipHtml(id){
+  const c=CARDS[id],cost=effectiveCost(id);
+  return `<div class="tip-head"><b>${esc(c.name)}</b><span>${c.token?'token':c.type}</span></div>
+    ${c.power!==undefined?`<div class="tip-power">⚔ ${c.power} power</div>`:''}
+    ${Object.keys(cost).length?`<div class="tip-cost">${costsHtml(cost)}</div>`:'<div class="tip-cost free">Free to play</div>'}
+    <p>${esc(c.text)}</p>`;
+}
+document.addEventListener('mouseover',ev=>{
+  const tip=$('#cardTip');if(!tip||!document.body.classList.contains('in-battle'))return;
+  const t=ev.target.closest?.('[data-card]');
+  if(!t||t.classList.contains('hidden')||!CARDS[t.dataset.card]){tip.hidden=true;return}
+  tip.innerHTML=cardTipHtml(t.dataset.card);tip.hidden=false;
+  const r=t.getBoundingClientRect(),tw=tip.offsetWidth;
+  tip.style.left=Math.min(Math.max(10,r.left+r.width/2-tw/2),innerWidth-tw-10)+'px';
+  const above=r.top-tip.offsetHeight-10;
+  tip.style.top=(above<8?r.bottom+10:above)+'px';
+});
+document.addEventListener('mouseout',ev=>{const tip=$('#cardTip');if(tip&&!ev.relatedTarget?.closest?.('[data-card]'))tip.hidden=true});
 setupRuleSelector();applyDevMode();renderDeckBuilder();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');
