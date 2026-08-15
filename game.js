@@ -53,9 +53,10 @@ const AI_DECKS={
   general:DEFAULT_DECK.slice(),
   wood:['logging','logging','logging','farm','farm','goldmine','townhall','university','lumbermill','lumbermill','palisade','palisade','wallwarden','wallwarden','archer','archer','firesapper','huntsman','huntsman','huntinglodge'],
   food:['farm','farm','farm','farm','villagecommons','villagecommons','villagecommons','villagecommons','peasantmob','peasantmob','peasantmob','farmer','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','boarriders','boarriders','boarriders'],
-  metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard']
+  metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
+  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','lumbermill','goldmine','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
 };
-const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN'};
+const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
   {id:'guilds',icon:'⚙',name:'Guild Charters',text:'Mills, Forges, and Sawmills cost one less wood.',flavour:'“The crown signs once; a hundred workshops answer.”'},
@@ -412,6 +413,21 @@ function aiActionScore(hc,lane,difficulty){
   if(game.aiProfile==='wood'&&['logging','lumbermill','university','townhall','archer','firesapper','palisade','wallwarden','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard','lancer','bannercaptain'].includes(hc.cardId))score+=2;
+  if(game.aiProfile==='timber'){
+    // The banner runs no farm, so the lone Gold Mine is the only thing paying the food on a Sawmill.
+    if(hc.cardId==='goldmine')score+=side.resources.gold?2:5;
+    if(['logging','lumbermill'].includes(hc.cardId))score+=game.round<6?4:2;
+    if(c.special==='university')score+=game.round<6?5:2;
+    // Archers are the whole clock: worth most pointed at an open lane.
+    if(hc.cardId==='archer')score+=aiVisiblePlayerSlot(lane,'unit')?1:3;
+    if(c.special==='sapper'){
+      const enemy=aiVisiblePlayerSlot(lane,'unit');
+      // A Sapper waits in hand for something worth trading up into. The exception is a thin castle,
+      // where an unseen attacker has to be answered before it lands rather than after.
+      if(enemy)score+=aiCardValue(enemy.cardId)>=3?4:0;
+      else score+=side.health<=5?7:-4;
+    }
+  }
   if(currentRule.id==='winter'){if(c.special==='worker')score+=3;if(c.produce&&c.type==='building'&&!c.produce.gold)score-=2}
   if(currentRule.id==='tradefair'&&['goldmine','market','merchant'].includes(hc.cardId))score+=3;
   if(currentRule.id==='guilds'&&TIER_TWO.includes(hc.cardId))score+=2;

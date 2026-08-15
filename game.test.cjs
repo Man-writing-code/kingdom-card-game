@@ -71,6 +71,27 @@ localStorage.getItem=()=>JSON.stringify({version:SAVE_VERSION,unlocked:INITIAL_U
 loadMeta();assert.equal(activeDeck().cards.length,0,'a deliberately emptied saved banner stays empty after reload');
 localStorage.getItem=()=>null;
 
+for(const [profile,deck] of Object.entries(AI_DECKS)){
+  assert.equal(deck.length,DECK_SIZE,profile+' fields a legal 20-card banner');
+  assert(AI_PROFILE_NAMES[profile],profile+' has a display name');
+  const counts=deck.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{});
+  for(const [id,n] of Object.entries(counts)){assert(COLLECTIBLE_IDS.includes(id),id+' is a real design');assert(n<=4,profile+' keeps '+id+' to four copies')}
+}
+assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
+  {logging:4,lumbermill:4,goldmine:1,university:2,lumberjack:1,archer:4,firesapper:4},'Timber Scholars runs the requested list');
+
+resetGame();game.aiProfile='timber';game.ai.resources={food:0,metal:0,material:3,gold:0};
+const timberSapper={uid:'ts',cardId:'firesapper',bonus:false};
+assert(aiActionScore(timberSapper,0,'hard')<0,'a healthy Timber AI holds the Fire Sapper for value');
+game.ai.health=4;assert(aiActionScore(timberSapper,0,'hard')>0,'a thin castle deploys it proactively');
+game.ai.health=10;game.player.board[0].unit=testSlot('knight',1);
+assert(aiActionScore(timberSapper,0,'hard')>0,'a visible threat draws the Sapper out regardless of health');
+const timberArcher={uid:'ta',cardId:'archer',bonus:false};
+resetGame();game.aiProfile='timber';game.ai.resources={food:0,metal:0,material:3,gold:0};
+const openLane=aiActionScore(timberArcher,0,'hard');game.player.board[0].unit=testSlot('knight',1);
+assert(openLane>aiActionScore(timberArcher,0,'hard'),'Archers prefer an undefended lane');
+game.aiProfile=null;
+
 assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
 assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');
 `;

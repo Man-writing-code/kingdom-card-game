@@ -19,7 +19,8 @@ Then visit `http://127.0.0.1:4173`.
 - Keep several named decks ("banners"), up to twelve. Create, rename, duplicate, and delete them on the Deck screen, and pick which one you are taking into battle from the Hall.
 - Each player has four building slots and four corresponding unit slots.
 - Plan against an AI rival whose choices remain hidden until commitment.
-- For testing, choose a General, Wood Architect, Food Commons, or Metal Iron Crown opponent and Normal or Hard decision-making before entering battle.
+- For testing, choose a General, Wood Architect, Food Commons, Metal Iron Crown, or Timber Scholars opponent and Normal or Hard decision-making before entering battle.
+- Timber Scholars ramps wood through Logging Camps and Sawmills, converts it into Archer damage, and banks Universities for card advantage. Its Fire Sappers stay in hand until a worthwhile target appears, or come down pre-emptively once the castle drops to 5 health or less.
 - Development builds expose the weekly decree pool, including Guild Charters, The Grand Fair, The Long Winter, The Lean Court, The Long Muster, and The River Runs High. Choose Calendar Rotation or override it while balancing.
 - Units clash lane by lane. Higher power survives; ties destroy both, except where a card says otherwise — the Pavise Guard survives its first defeat permanently damaged at 1 power.
 - An unblocked unit deals its power as direct damage. Rulers begin at 10 health.
