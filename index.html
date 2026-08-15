@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <div class="grain"></div>
@@ -23,6 +23,7 @@
       <button class="nav-link" data-screen="collection">Collection</button>
       <button class="nav-link" data-screen="rules">How to play</button>
     </nav>
+    <button id="devModeToggle" class="dev-toggle" aria-pressed="true" title="Toggle developer tools" hidden>DEV</button>
     <div class="season-pill"><span></span> Season I · Week <b id="weekNumber">1</b></div>
   </header>
 
@@ -63,7 +64,7 @@
               <p id="onlineStatus" role="status"></p>
             </div>
           </section>
-          <div id="devRuleSetup" class="decree-setup" aria-label="Development weekly decree override">
+          <div id="devRuleSetup" class="decree-setup" data-dev-only aria-label="Development weekly decree override" hidden>
             <span>DEVELOPMENT DECREE</span>
             <label>Modifier<select id="devRuleSelect"></select></label>
           </div>
@@ -120,6 +121,7 @@
         </div>
       </div>
       <div id="packStatus" class="notice"></div>
+      <div id="devCollectionNote" class="notice dev-note" hidden></div>
       <div class="filter-row"><button class="chip active" data-collection="owned">Your collection</button><button class="chip" data-collection="all">Every card in Kingdom</button></div>
       <div id="collectionCards" class="card-grid collection-grid"></div>
     </section>
@@ -181,7 +183,7 @@
 
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=18"></script>
-  <script src="multiplayer.js?v=3"></script>
+  <script src="game.js?v=19"></script>
+  <script src="multiplayer.js?v=4"></script>
 </body>
 </html>

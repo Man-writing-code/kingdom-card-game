@@ -33,7 +33,7 @@
   async function initializeMatch(row){
     if(ctx.initializing||!row.guest_deck||row.game_state)return;ctx.initializing=true;
     try{
-      const rule=META_RULES.find(r=>r.id===row.decree_id)||calendarRule();currentRule=rule;
+      const rule=ruleById(row.decree_id)||calendarRule();currentRule=rule;
       game={round:1,player:createSide(row.host_deck),ai:createSide(row.guest_deck),aiProfile:'online',aiDifficulty:'online',decreeId:rule.id,blockedLane:rule.id==='river'?3:null,locked:false,logs:[]};
       drawOpeningHand(game.player);drawOpeningHand(game.ai);log('Two rulers enter the realm and begin planning in secret.');
       const state=JSON.parse(JSON.stringify(game));

@@ -222,4 +222,20 @@
 .duel-launcher .multiplayer-setup{display:grid;grid-template-columns:minmax(140px,1fr) auto auto minmax(105px,.75fr) auto;align-items:end;gap:9px;margin:0;padding:0;border:0;background:none;color:var(--ink);box-shadow:none}
 .duel-launcher .multiplayer-setup label{color:#7a7163}.duel-launcher .multiplayer-setup input{background:#fffaf0;color:var(--ink);border-color:#bcae91}.duel-launcher #onlineStatus{color:#5f6f61}.duel-launcher #onlineStatus.error{color:#a84d32}
 .duel-launcher .decree-setup{display:flex;align-items:center;gap:10px;margin:0;padding:10px 15px;border-top:1px solid #d7cbb2;background:#eee5d2;color:#645d50}.duel-launcher .decree-setup>span{font:bold 8px "DM Sans";letter-spacing:1.2px;color:#8e6629}.duel-launcher .decree-setup label{display:flex;align-items:center;gap:7px;font:bold 7px "DM Sans";letter-spacing:.8px;text-transform:uppercase}.duel-launcher .decree-setup select{height:29px;min-width:245px;border:1px solid #bdae91;background:#faf5e8;color:var(--ink);padding:0 25px 0 8px;font:600 10px "DM Sans"}
+.duel-launcher .decree-setup[hidden]{display:none}
 @media(max-width:760px){.mode-heading{align-items:flex-start;gap:8px}.mode-heading small{text-align:right}.duel-launcher .multiplayer-setup{grid-template-columns:1fr auto}.duel-launcher .room-divider,.duel-launcher #onlineStatus{grid-column:1/-1}.duel-launcher .decree-setup{align-items:flex-start;flex-direction:column}.duel-launcher .decree-setup select{min-width:0;max-width:100%}}
+
+/* Developer tools: a topbar switch that reveals the decree override and the collection editor. */
+.dev-toggle{margin-left:auto;border:1px solid #c9bea5;background:transparent;color:#8a8172;border-radius:30px;padding:7px 14px;font:bold 9px "DM Sans";letter-spacing:1.4px;cursor:pointer}
+.dev-toggle:hover{color:var(--ink);border-color:#a89c80}
+.dev-toggle.on{background:var(--rust);border-color:var(--rust);color:#fff4e4}
+.dev-toggle:not([hidden])+.season-pill{margin-left:12px}
+.dev-note{border-color:#c8a98f;background:#f2e4d6;color:#6b503f}
+.dev-note>span{display:inline-block;font:bold 8px "DM Sans";letter-spacing:1.4px;color:var(--rust);margin-right:8px}
+.dev-note b{color:#8c3f28}
+.dev-note .small-link{padding:0;margin-left:8px;color:var(--rust)}
+.collection-swap{position:absolute;bottom:8px;right:8px;border:1px solid #bcae91;background:#eee4ce;color:var(--ink);padding:4px 8px;font:bold 8px "DM Sans";letter-spacing:.8px;cursor:pointer;z-index:2}
+.collection-swap:hover{border-color:var(--rust);color:var(--rust)}
+.collection-swap.drop{background:#f0ded5;border-color:#cfa992}
+.collection-grid .locked .collection-swap{filter:none}
+@media(max-width:600px){.dev-toggle{padding:6px 10px;margin-left:8px}}

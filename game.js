@@ -77,7 +77,17 @@ const COLLECTION_SIZE=20, DECK_SIZE=20, MAX_COPIES=4;
 const startOfDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const weekKey=()=>{const d=startOfDay(new Date()),jan=new Date(d.getFullYear(),0,1),days=Math.round((d-jan)/86400000);return `${d.getFullYear()}-${Math.ceil((days+jan.getDay()+1)/7)}`};
 const weekIndex=()=>Number(weekKey().split('-')[1]);
+// A blank modifier for testing cards without a decree distorting the result. Deliberately kept out of
+// META_RULES so it never comes up in the calendar rotation, but it must still resolve by id for
+// multiplayer, where the guest looks the host's chosen decree back up.
+const NO_RULE={id:'none',icon:'○',name:'No Decree',text:'No weekly modifier is in effect.',flavour:'“A quiet week. The realm holds its breath.”'};
+const ALL_RULES=[...META_RULES,NO_RULE];
+const ruleById=id=>ALL_RULES.find(rule=>rule.id===id);
 const calendarRule=()=>META_RULES[weekIndex()%META_RULES.length];
+// DEV_BUILD gates whether the tools exist at all; devMode is the runtime toggle within a dev build,
+// so the panel can be closed without losing the override you set.
+const storedDevMode=localStorage.getItem('kingdom-dev-mode');
+let devMode=DEV_BUILD&&(storedDevMode===null?true:storedDevMode==='1');
 let currentRule=calendarRule(),game=null,selectedUid=null,deckFilter='all',meta=null,countdownTimer=null;
 const readStore=()=>{try{return JSON.parse(localStorage.getItem('kingdom-meta')||'{}')||{}}catch(e){return {}}};
 const saveMeta=()=>{try{localStorage.setItem('kingdom-meta',JSON.stringify(meta))}catch(e){}};
@@ -128,6 +138,7 @@ function migrateSave(stored){
 }
 function loadMeta(){
   const stored=readStore();
+  const hasSavedDeckState=Array.isArray(stored.decks)||Array.isArray(stored.deck);
   const legacy=stored.version===SAVE_VERSION?null:migrateSave(stored);
   const unlocked=normaliseCollection(legacy?legacy.unlocked:stored.unlocked);
   // Saves before v5 held a single deck; fold it into the deck list as the first banner.
@@ -135,6 +146,9 @@ function loadMeta(){
   meta={version:SAVE_VERSION,unlocked,decks:[],activeDeckId:stored.activeDeckId||null,packWeek:stored.packWeek||null,winWeek:stored.winWeek||null};
   meta.decks=rawDecks.slice(0,12).map((d,i)=>({id:typeof d?.id==='string'&&d.id?d.id:newDeckId(),name:deckName(d?.name||`Banner ${i+1}`),cards:sanitizeDeck(d?.cards,unlocked)}));
   if(!meta.decks.length)meta.decks=[makeDeck('First Banner',buildDefaultDeck(unlocked))];
+  // A first run has no stored deck, so the opening banner must be dealt a legal 20 or the player
+  // lands on an empty deck and cannot start a game.
+  if(!hasSavedDeckState&&!meta.decks[0].cards.length)meta.decks[0].cards=buildDefaultDeck(unlocked);
   if(!meta.decks.some(d=>d.id===meta.activeDeckId))meta.activeDeckId=meta.decks[0].id;
   // Existing call sites keep using meta.deck; it proxies to the active deck and stays out of storage.
   Object.defineProperty(meta,'deck',{get:()=>activeDeck().cards,set(v){activeDeck().cards=v},enumerable:false,configurable:true});
@@ -181,14 +195,25 @@ function effectiveCost(id){
   return c;
 }
 
+const selectedRule=value=>value==='calendar'?calendarRule():ruleById(value)||calendarRule();
 function setupRuleSelector(){
-  const wrap=$('#devRuleSetup'),select=$('#devRuleSelect');if(!wrap||!select)return;
-  wrap.hidden=!DEV_BUILD;if(!DEV_BUILD){currentRule=calendarRule();return}
-  select.innerHTML=`<option value="calendar">Calendar rotation — ${calendarRule().name}</option>`+META_RULES.map(rule=>`<option value="${rule.id}">${rule.icon} ${rule.name}</option>`).join('');
+  const select=$('#devRuleSelect');if(!select)return;
+  if(!DEV_BUILD){currentRule=calendarRule();return}
+  select.innerHTML=`<option value="calendar">Calendar rotation — ${calendarRule().name}</option>`
+    +[...META_RULES,NO_RULE].map(rule=>`<option value="${rule.id}">${rule.icon} ${rule.name}</option>`).join('');
   const saved=localStorage.getItem('kingdom-dev-rule')||'calendar';
-  select.value=saved==='calendar'||META_RULES.some(rule=>rule.id===saved)?saved:'calendar';
-  currentRule=select.value==='calendar'?calendarRule():META_RULES.find(rule=>rule.id===select.value)||calendarRule();
-  select.onchange=()=>{localStorage.setItem('kingdom-dev-rule',select.value);currentRule=select.value==='calendar'?calendarRule():META_RULES.find(rule=>rule.id===select.value)||calendarRule();setupMetaRule();if($('#deckCards'))renderDeckBuilder();if($('#collectionCards'))renderCollection()};
+  select.value=saved==='calendar'||ruleById(saved)?saved:'calendar';
+  currentRule=devMode?selectedRule(select.value):calendarRule();
+  select.onchange=()=>{localStorage.setItem('kingdom-dev-rule',select.value);currentRule=selectedRule(select.value);refreshRuleViews()};
+}
+function refreshRuleViews(){setupMetaRule();if($('#deckCards'))renderDeckBuilder();if($('#collectionCards'))renderCollection()}
+// Leaving dev mode drops any override so the build behaves exactly like a player's.
+function applyDevMode(){
+  const toggle=$('#devModeToggle');
+  if(toggle){toggle.hidden=!DEV_BUILD;toggle.setAttribute('aria-pressed',String(devMode));toggle.classList.toggle('on',devMode);toggle.textContent=devMode?'DEV ON':'DEV'}
+  $$('[data-dev-only]').forEach(el=>{el.hidden=!devMode});
+  currentRule=devMode?selectedRule($('#devRuleSelect')?.value||'calendar'):calendarRule();
+  refreshRuleViews();
 }
 
 function setupMetaRule(){
@@ -202,7 +227,7 @@ function setupMetaRule(){
 function renderCountdown(){
   const now=new Date(),end=new Date(now.getFullYear(),now.getMonth(),now.getDate()+(7-now.getDay()));
   const ms=Math.max(0,end-now),el=$('#weekCountdown');
-  if(el)el.textContent=DEV_BUILD&&$('#devRuleSelect')?.value!=='calendar'?'DEV OVERRIDE':`${Math.floor(ms/86400000)}d ${Math.floor(ms/3600000)%24}h`;
+  if(el)el.textContent=devMode&&$('#devRuleSelect')?.value!=='calendar'?'DEV OVERRIDE':`${Math.floor(ms/86400000)}d ${Math.floor(ms/3600000)%24}h`;
 }
 
 // Both deck pickers (deck screen and hall) share one option list so they never disagree.
@@ -243,9 +268,32 @@ function renderCollection(){
     :`Every design in Kingdom: ${owned.length} in your collection, ${undiscovered} still undiscovered.`;
   const ids=collectionView==='owned'?owned:COLLECTIBLE_IDS;
   $('#collectionCards').innerHTML=ids.map(id=>{const has=meta.unlocked.includes(id);
-    return cardHtml(id,{className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>`})}).join('');
+    const swap=devMode?`<button class="collection-swap ${has?'drop':'take'}" data-swap="${id}">${has?'− REMOVE':'+ ADD'}</button>`:'';
+    return cardHtml(id,{className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>${swap}`})}).join('');
   $$('[data-collection]').forEach(b=>b.classList.toggle('active',b.dataset.collection===collectionView));
   $$('.collection-grid .locked').forEach(el=>{el.style.filter='grayscale(1)';el.style.opacity='.48'});
+  renderDevCollectionNote(owned);
+}
+// Dev swaps can leave a saved deck holding designs that are no longer in the collection. Rather than
+// silently stripping those decks, name them so the mismatch is visible and fixable.
+function renderDevCollectionNote(owned){
+  const note=$('#devCollectionNote');if(!note)return;
+  note.hidden=!devMode;if(!devMode)return;
+  const broken=meta.decks.filter(d=>!deckIsPlayable(d));
+  note.innerHTML=`<span>DEV · COLLECTION EDITOR</span> Swap any design in or out, up to ${COLLECTION_SIZE}. `
+    +(broken.length?`<b>${broken.length} deck${broken.length>1?'s':''} no longer legal:</b> ${broken.map(d=>esc(d.name)).join(', ')}. Reset them on the Deck screen.`:'All decks still legal.')
+    +` <button id="devRestoreCollection" class="small-link">RESTORE STARTING 20</button>`;
+  $('#devRestoreCollection').onclick=()=>{meta.unlocked=normaliseCollection(INITIAL_UNLOCKED);saveMeta();renderCollection();renderDeckBuilder()};
+}
+function swapCollection(id){
+  if(!devMode||!CARDS[id]||CARDS[id].token)return;
+  const has=meta.unlocked.includes(id);
+  if(has)meta.unlocked=meta.unlocked.filter(x=>x!==id);
+  else if(meta.unlocked.length>=COLLECTION_SIZE){
+    const note=$('#devCollectionNote');if(note)note.innerHTML=`<span>DEV · COLLECTION EDITOR</span> Collection is full at ${COLLECTION_SIZE}. Remove a design before adding ${CARDS[id].name}.`;
+    return;
+  }else meta.unlocked.push(id);
+  saveMeta();renderCollection();renderDeckBuilder();
 }
 
 function openPack(){
@@ -272,7 +320,7 @@ function startGame(){
 }
 function startOnlineGame(state,seat,names={}){
   game=JSON.parse(JSON.stringify(state));
-  const rule=META_RULES.find(r=>r.id===game.decreeId);if(rule)currentRule=rule;
+  const rule=ruleById(game.decreeId);if(rule)currentRule=rule;
   if(seat==='guest')[game.player,game.ai]=[game.ai,game.player];
   game.onlineSeat=seat;game.locked=false;selectedUid=null;
   $('#aiProfileLabel').textContent=`${String((seat==='host'?names.guest:names.host)||'Opponent').toUpperCase()} · ONLINE`;
@@ -566,6 +614,8 @@ $$('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.datas
 $$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{deckFilter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderDeckBuilder()}));
 $('#deckCards').addEventListener('click',e=>{const plus=e.target.dataset.plus,minus=e.target.dataset.minus;if(plus)adjustDeck(plus,1);if(minus)adjustDeck(minus,-1)});
 $$('[data-collection]').forEach(b=>b.addEventListener('click',()=>{collectionView=b.dataset.collection;renderCollection()}));
+$('#collectionCards').addEventListener('click',e=>{const id=e.target.dataset?.swap;if(id){e.stopPropagation();swapCollection(id)}});
+$('#devModeToggle').onclick=()=>{devMode=!devMode;localStorage.setItem('kingdom-dev-mode',devMode?'1':'0');applyDevMode()};
 $('#resetDeck').onclick=()=>{activeDeck().cards=[];saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Deck emptied — choose 20 cards for this banner.'};
 $('#saveDeck').onclick=()=>{saveMeta();$('#deckMessage').textContent=`“${activeDeck().name}” saved to the royal archive.`};
 $('#deckSelect').onchange=e=>selectDeck(e.target.value);
@@ -577,4 +627,4 @@ $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeD
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
 $('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$('#handSizeToggle').onclick=()=>{const compact=$('#handArea').classList.toggle('compact');$('#handSizeToggle').textContent=compact?'EXPAND CARDS ↑':'COMPACT HAND ↓';$('#handSizeToggle').setAttribute('aria-pressed',String(compact))};
 $$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
-setupRuleSelector();setupMetaRule();renderDeckBuilder();renderCollection();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');
+setupRuleSelector();applyDevMode();renderDeckBuilder();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');

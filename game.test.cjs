@@ -62,6 +62,17 @@ resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].u
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('firesapper');resolveRound();assert.equal(game.player.board[0].unit,null,'Fire Sapper bypasses Pavise resilience');
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
+
+loadMeta();assert.equal(meta.unlocked.length,COLLECTION_SIZE,'a first run opens with a full collection');
+assert.equal(meta.decks.length,1);assert.equal(activeDeck().cards.length,DECK_SIZE,'a first run is dealt a playable opening banner');
+assert(deckIsPlayable(activeDeck()),'the opening banner only uses owned designs');
+
+localStorage.getItem=()=>JSON.stringify({version:SAVE_VERSION,unlocked:INITIAL_UNLOCKED,decks:[{id:'empty',name:'Empty Banner',cards:[]}],activeDeckId:'empty'});
+loadMeta();assert.equal(activeDeck().cards.length,0,'a deliberately emptied saved banner stays empty after reload');
+localStorage.getItem=()=>null;
+
+assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
+assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');
 `;
 
 const context={assert,fs,console:{log:()=>{},warn:()=>{},error:console.error},setTimeout:()=>{},clearTimeout:()=>{},localStorage:{getItem:()=>null,setItem:()=>{}},document:{querySelector:()=>null,querySelectorAll:()=>[]},window:{scrollTo:()=>{}},Date,Math};
