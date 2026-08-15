@@ -155,7 +155,7 @@ body.in-battle{overflow:hidden}
 .round-badge strong{font:bold 18px/1 "MedievalSharp";color:var(--gold);margin-left:7px;vertical-align:-2px}
 
 /* Ruler bars — identity, health and resources on one readable line. */
-.player-bar{height:64px;gap:14px;padding:0 max(3vw,20px)}
+.player-bar{height:64px;gap:14px;padding:0 var(--gutter)}
 .avatar{width:38px;height:38px;font-size:17px;flex:0 0 38px}
 .ruler-id{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ruler-id b{font:bold 10px/1 "DM Sans";letter-spacing:1.5px;color:#c3cdbe;white-space:nowrap}
@@ -173,35 +173,49 @@ body.in-battle{overflow:hidden}
 .res.gold{border-color:#d39b3c5c;background:#d39b3c1c}
 .res.gold b{color:#eec173}
 
-/* Battlefield — wider lanes and taller slots; the art can finally be seen. */
-.battlefield-wrap{max-width:980px;padding:0 22px;margin:4px auto 0}
+/* Battlefield — the stage tracks the viewport instead of sitting at a fixed 980px
+   island on a wide monitor. Every row below aligns to the same width, so health,
+   resources, board edge and hand all share one column rather than drifting to
+   opposite corners of the screen. */
+.game-screen{--inset:clamp(26px,5vw,96px);--stage:min(1560px,calc(100vw - var(--rail) - var(--inset)));--gutter:max(calc((100vw - var(--rail) - var(--stage))/2),13px)}
+.battlefield-wrap{width:var(--stage);max-width:none;padding:0;margin:4px auto 0}
 .battle-label{font:bold 9px/1 "DM Sans";letter-spacing:2.2px;color:#7d8a80;margin:9px 2px 7px}
 .board{gap:10px}
 .lane{gap:8px}
-.slot{height:clamp(72px,11.2vh,112px);border-radius:4px;border-color:#ffffff17}
+.slot{height:clamp(72px,13.5vh,164px);border-radius:4px;border-color:#ffffff17}
 .slot.valid{border-color:#d3ad5d99;background:#d3ad5d14}
 .clash-line{height:26px;margin:2px 0}
 
 /* Hand dock — the cards and the commit button share a row instead of
    the button floating over the hand behind a 145px margin. */
-.hand-area{position:static;right:auto;left:auto;padding:9px max(3vw,18px) 13px;box-shadow:0 -10px 26px #08120c47}
+.hand-area{position:static;right:auto;left:auto;padding:9px var(--gutter) 13px;box-shadow:0 -10px 26px #08120c47}
 .hand-heading{max-width:none;margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:14px}
 .hand-heading small{font:italic 12px/1.35 Georgia,serif;letter-spacing:0;color:#7b7160;text-transform:none}
 .hand-heading button{border:0;background:transparent;color:#8b6428;font:15px/1 "DM Sans";cursor:pointer;padding:3px 5px;border-radius:4px}
 .hand-heading button:hover{color:var(--rust);background:#17271d0d}
-.hand-dock-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
-.hand{margin:0;gap:8px;justify-content:flex-start;overflow-x:auto;padding:2px 0 4px}
+/* min-width:0 on both, or the hand's content width forces the dock wider than the
+   viewport instead of scrolling inside it. */
+.hand-dock-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;min-width:0}
+.hand{margin:0;gap:8px;justify-content:flex-start;overflow-x:auto;padding:2px 0 4px;min-width:0}
 .commit{position:static;width:auto;min-width:132px;padding:13px 18px;white-space:nowrap}
 
-/* Hand cards keep the board's proportions so the two read as one system. */
-.hand-area.compact .game-card{width:128px;min-width:128px;height:112px;min-height:112px;padding:7px}
-.hand-area.compact .game-card.illustrated{min-height:112px}
-.hand-area.compact .card-art,.hand-area.compact .card-art.painted{height:58px;margin:-7px -7px 6px}
-.hand-area.compact .game-card h3{font-size:11px}
-.hand-area.compact .costs,.hand-area.compact .illustrated .costs{top:48px;right:5px}
-.hand-area.compact .cost{width:18px;height:18px}
-.hand-area.compact .power{right:6px;bottom:5px;font-size:8px}
-.hand-area.compact .commit{bottom:auto}
+/* One hand card size, sized to be read. The old compact/expand toggle existed
+   because the resting size was too small to play from; scaling the card with the
+   viewport removes the need for the control rather than papering over it. */
+/* The bottom padding reserves a strip for the cost pips and power badge, which are
+   absolutely positioned and would otherwise sit on top of the card name. */
+.hand-area .game-card{width:clamp(138px,11.5vw,188px);min-width:clamp(138px,11.5vw,188px);height:auto;min-height:0;padding:0 0 34px;display:flex;flex-direction:column}
+.hand-area .game-card.illustrated{min-height:0}
+.hand-area .card-art,.hand-area .card-art.painted{height:clamp(66px,7.4vh,104px);margin:0 0 7px;border-radius:0}
+.hand-area .game-card h3{font-size:clamp(12px,.92vw,15px);line-height:1.2;margin:0;padding:0 10px;white-space:normal;overflow:visible}
+.hand-area .game-card p{display:none}
+.hand-area .costs,.hand-area .illustrated .costs{top:auto;bottom:9px;right:9px;gap:4px}
+.hand-area .cost{width:22px;height:22px;border-width:1px}
+.hand-area .cost .resource-icon{width:11px;height:11px}
+.hand-area .cost b{width:11px;height:11px;font-size:8px;right:-3px;bottom:-3px}
+.hand-area .power{right:auto;left:9px;bottom:9px;font-size:11px}
+.hand-area .game-card.selected{transform:translateY(-6px)}
+.hand-area .card-type{font-size:8px;letter-spacing:1.2px}
 
 /* The rail scales with the viewport and the board shrinks into what is left, so the
    chronicle keeps its own ground. Only on a phone is there nothing to give, and
