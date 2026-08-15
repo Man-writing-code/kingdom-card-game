@@ -59,7 +59,9 @@ const AI_DECKS={
 const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
-  {id:'guilds',icon:'⚙',name:'Guild Charters',text:'Mills, Forges, and Sawmills cost one less of the resource they harvest.',flavour:'“The crown signs once; a hundred workshops answer.”'},
+// Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
+// land on it and change nothing at all for a collection that held none of them. A decree should
+// reshape the week for every banner, not just the ones holding the right three cards.
   {id:'winter',icon:'❄',name:'The Long Winter',text:'Food, Metal, and Wood buildings produce 1 less; surviving workers produce 1 extra.',flavour:'“Storehouses empty. Calloused hands endure.”'},
   {id:'tradefair',icon:'¤',name:'The Grand Fair',text:'Markets produce +1 Gold, Gold Mines pay every round, and Merchants gain +1 power.',flavour:'“Every road leads to the royal market.”'},
   {id:'leancourt',icon:'Ⅰ',name:'The Lean Court',text:'Each ruler draws only 1 base card at the start of a new round.',flavour:'“Every summons must earn its place at court.”'},
@@ -196,17 +198,9 @@ function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
   return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span></div><div class="costs">${costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3><p>${c.text}</p>${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
 }
-function effectiveCost(id){
-  const card=CARDS[id],c={...card.cost};
-  // Guild Charters shave a tier-two's primary material — the resource it was raised to make.
-  // Written against wood back when every tier-two was built of it; now each is bought with its
-  // own harvest, so the charter follows the card rather than one resource.
-  if(currentRule.id==='guilds'&&TIER_TWO.includes(id)){
-    const primary=Object.keys(card.produce||{})[0];
-    if(primary&&c[primary]){c[primary]--;if(!c[primary])delete c[primary]}
-  }
-  return c;
-}
+// No decree currently rewrites a printed cost, but every purchase reads through here, so this
+// is where one would.
+function effectiveCost(id){return {...CARDS[id].cost}}
 
 const selectedRule=value=>value==='calendar'?calendarRule():ruleById(value)||calendarRule();
 function setupRuleSelector(){
@@ -544,7 +538,6 @@ function aiActionScore(hc,lane,difficulty){
   }
   if(currentRule.id==='winter'){if(c.special==='worker')score+=3;if(c.produce&&c.type==='building'&&!c.produce.gold)score-=2}
   if(currentRule.id==='tradefair'&&['goldmine','market','merchant'].includes(hc.cardId))score+=3;
-  if(currentRule.id==='guilds'&&TIER_TWO.includes(hc.cardId))score+=2;
   if(currentRule.id==='leancourt'&&c.special==='university')score+=2;
   // Hardcore takes no jitter at all, so its ranking is purely the evaluation.
   return score+Math.random()*(difficulty==='hardcore'?0:aiPlaysBest(difficulty)?0.35:4.5);

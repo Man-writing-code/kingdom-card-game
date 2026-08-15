@@ -7,7 +7,7 @@ source=source.slice(0,source.indexOf("$$('[data-screen]')"));
 
 const tests=`
 renderGame=()=>{};renderLog=()=>{};
-currentRule={id:'guilds'};
+currentRule={id:'none'};
 
 function testSide(){return {health:10,resources:{food:0,metal:0,material:0,gold:0},structures:[],units:[],discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}}
 function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return side}
@@ -32,7 +32,7 @@ game.player.board[0].unit=testSlot('manatarms');game.player.board[0].building=te
 game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),3,'Armoury excludes mixed-cost units');
 
 resetGame();game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,3,0),1);assert.equal(dealDamage(game.player,3,0),3);game.round++;assert.equal(dealDamage(game.player,3,0),1,'Palisade refreshes next round');
-resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');assert.equal(dealDamage(game.player,4,0),4);game.round++;assert.equal(dealDamage(game.player,4,0),1);currentRule={id:'guilds'};
+resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');assert.equal(dealDamage(game.player,4,0),4);game.round++;assert.equal(dealDamage(game.player,4,0),1);currentRule={id:'none'};
 
 resetGame();const hunter=testSlot('huntsman');game.player.board[0].unit=hunter;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1);
 game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1,'defeated Huntsman earns nothing');
@@ -72,11 +72,20 @@ for(const [id,resource] of [['granary','food'],['lumbermill','material'],['found
   const secondary=Object.keys(CARDS[id].cost).find(r=>r!==resource);own[secondary]=(own[secondary]||0)+1;
   assert(canAfford({resources:own},effectiveCost(id)),'a realm on its own harvest can raise '+id);
 }
-// The charter follows the card: each tier-two sheds one of its own harvest, none is skipped.
-currentRule={id:'guilds'};
-assert.deepEqual(effectiveCost('granary'),{food:1,material:1},'Mill sheds a food');
-assert.deepEqual(effectiveCost('lumbermill'),{material:1,food:1},'Sawmill sheds a wood');
-assert.deepEqual(effectiveCost('foundry'),{metal:1,food:1},'Forge sheds a metal rather than being passed over');
+// Costs are printed costs: no decree rewrites them, and effectiveCost hands back a copy so a
+// caller cannot scribble on the card definition itself.
+for(const rule of [...META_RULES,{id:'none'}]){
+  currentRule=rule;
+  for(const id of TIER_TWO)assert.deepEqual(effectiveCost(id),CARDS[id].cost,id+' costs its printed price under '+rule.id);
+}
+currentRule={id:'none'};
+const scribble=effectiveCost('granary');scribble.food=99;
+assert.equal(CARDS.granary.cost.food,2,'effectiveCost returns a copy, not the card');
+
+// Every decree must bite for any collection; none may hinge on holding particular designs.
+assert(!META_RULES.some(r=>r.id==='guilds'),'Guild Charters is retired from the rotation');
+assert(META_RULES.length>=5,'the calendar still has a full rotation to draw from');
+for(const rule of META_RULES)assert(rule.name&&rule.text&&rule.icon&&rule.flavour,rule.id+' is fully described');
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
 
@@ -131,8 +140,12 @@ assert(aiActionScore(logCamp,2,'hardcore')>0,'but it still wants the empty lane'
 assert(aiActionScore(logCamp,2,'hardcore')>aiActionScore(logCamp,0,'hardcore'),'empty ground beats a downgrade');
 const millUp={uid:'mu',cardId:'lumbermill',bonus:false};
 resetGame();game.aiProfile='timber';game.ai.resources={food:9,metal:9,material:9,gold:9};
-game.ai.board[0].building=testSlot('logging');
+// A banner with more timber to draw can afford to trade its camp up; with none left it should not,
+// so the pile is stocked deliberately rather than left empty.
+pileUp(game.ai,['logging','logging']);game.ai.board[0].building=testSlot('logging');
 assert(aiActionScore(millUp,0,'hardcore')>0,'a genuine Sawmill upgrade over a Logging Camp still goes ahead');
+game.ai.structures=[];
+assert(aiActionScore(millUp,0,'hardcore')<0,'but not when that camp is the last wood in the realm');
 assert(aiActionScore(logCamp,0,'hardcore')<0,'and a Logging Camp will not pave an identical Logging Camp');
 
 // Deck awareness: the same replacement is judged against what is left to draw.
