@@ -13,7 +13,7 @@ const CARDS = {
   knight:{name:'Knight',type:'unit',icon:'♞',accent:'#475b73',cost:{food:1,metal:2},power:3,text:'Armoured cavalry with 3 power.'},
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{material:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
-  granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{material:2,metal:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
+  granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:3},power:2,text:'A ranged fighter with 2 power.'},

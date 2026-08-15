@@ -31,7 +31,7 @@ Then visit `http://127.0.0.1:4173`.
 - Choosing an exhausted pile reshuffles that pile's own discards first, and falls back to the other pile if there is genuinely nothing left, so a draw is never lost. A banner with no structures or no units is legal and simply always draws from the pile it has.
 - A hand holds at most ten cards. Draws into a full hand are negated — the card stays on its pile — and generated workers and Peasants are turned away the same; a full hand skips the draw step entirely.
 - Occupied unit and building slots may be replaced; the old card is sacrificed to the discard pile on commitment.
-- Tier-two resource buildings produce two per round: the Mill costs 2 wood + 1 metal, while the Forge and Sawmill cost 2 wood + 1 food.
+- Tier-two resource buildings produce two per round. The Mill and the Sawmill are mirrors, each bought mostly with what it makes — the Mill costs 2 food + 1 wood, the Sawmill 2 wood + 1 food — so a food or wood realm can ramp on its own harvest. The Forge costs 2 wood + 1 food.
 - Farmers, Lumberjacks, and Miners are 1-power workers that produce their matching resource after surviving a full round, then every second round.
 - The 1-building-material Fire Sapper burns itself out at the clash and destroys any opposing unit in its lane.
 - The Archer costs 3 wood and has a flat 2 power, following normal tie rules.

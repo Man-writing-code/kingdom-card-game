@@ -62,6 +62,16 @@ resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(comba
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();assert(game.player.board[0].unit?.damaged);assert.equal(game.ai.board[0].unit,null,'Pavise Guard survives a normal tie');
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('firesapper');resolveRound();assert.equal(game.player.board[0].unit,null,'Fire Sapper bypasses Pavise resilience');
 
+// Tier-two engines are bought with the resource they make, so an archetype can ramp itself.
+assert.deepEqual(CARDS.granary.cost,{food:2,material:1},'the Mill is paid for in food');
+assert.deepEqual(CARDS.lumbermill.cost,{material:2,food:1},'and the Sawmill mirrors it in wood');
+currentRule={id:'none'};
+const foodOnly={food:2,metal:0,material:1,gold:0};
+assert(canAfford({resources:foodOnly},effectiveCost('granary')),'a farm-fed realm can raise a Mill');
+assert(!canAfford({resources:{food:2,metal:0,material:0,gold:0}},effectiveCost('granary')),'but it still owes the timber');
+currentRule={id:'guilds'};
+assert.deepEqual(effectiveCost('granary'),{food:2},'Guild Charters waive the Mill timber entirely');
+
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
 
 loadMeta();assert.equal(meta.unlocked.length,COLLECTION_SIZE,'a first run opens with a full collection');
