@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <div class="grain"></div>
@@ -149,25 +149,25 @@
       </div>
 
       <div class="opponent-bar player-bar">
-        <div class="avatar enemy">R</div><div><span>THE RIVAL · <b id="aiProfileLabel">GENERAL · NORMAL</b></span><div id="aiHealth" class="health">♥ 10</div></div>
-        <div id="aiResources" class="resources"></div><div id="aiHandCount" class="hand-count">5 cards</div>
+        <div class="avatar enemy">R</div><div class="ruler-id"><b id="aiProfileLabel">GENERAL · NORMAL</b><div id="aiHealth" class="health">♥ 10</div></div>
+        <div id="aiResources" class="resources"></div><div id="aiHandCount" class="hand-count">5</div>
       </div>
 
       <div id="battlefieldWrap" class="battlefield-wrap">
-        <div class="battle-label">RIVAL'S REALM <span>PLANNING IN SECRET</span></div>
+        <div class="battle-label">RIVAL'S REALM</div>
         <div id="riverNotice" class="river-lane" hidden><span>≈</span><b>FLOWING RIVER</b><small>EASTERN LANE CLOSED</small><span>≈</span></div>
         <div id="aiBoard" class="board enemy-board"></div>
         <div class="clash-line"><span></span><b>⚔</b><span></span></div>
         <div id="playerBoard" class="board player-board"></div>
-        <div class="battle-label yours">YOUR REALM <span>BUILDING ROW · UNIT ROW</span></div>
+        <div class="battle-label yours">YOUR REALM</div>
       </div>
 
       <div class="player-bar bottom-bar">
-        <div class="avatar">Y</div><div><span>YOUR KINGDOM</span><div id="playerHealth" class="health">♥ 10</div></div>
+        <div class="avatar">Y</div><div class="ruler-id"><b>YOUR KINGDOM</b><div id="playerHealth" class="health">♥ 10</div></div>
         <div id="playerResources" class="resources"></div>
       </div>
       <div id="handArea" class="hand-area compact">
-        <div class="hand-heading"><span>YOUR HAND</span><div class="hand-heading-actions"><small id="handHint">Select a card, then choose a valid slot</small><button id="handSizeToggle" aria-pressed="true">EXPAND CARDS ↑</button></div></div>
+        <div class="hand-heading"><small id="handHint">Select a card, then choose a slot</small><button id="handSizeToggle" aria-pressed="true" title="Toggle card size">⤢</button></div>
         <div id="drawPrompt" class="draw-prompt" hidden>
           <div class="draw-prompt-head"><span>CHOOSE YOUR DRAW</span><small id="drawRemaining"></small></div>
           <div class="draw-piles">
@@ -175,12 +175,14 @@
             <button class="draw-pile" data-pile="units"><b>⚔ Units</b><small></small></button>
           </div>
         </div>
-        <div id="playerHand" class="hand"></div>
-        <button id="commitButton" class="button primary commit">Commit plans <span>⚔</span></button>
+        <div class="hand-dock-row">
+          <div id="playerHand" class="hand"></div>
+          <button id="commitButton" class="button primary commit">Commit plans <span>⚔</span></button>
+        </div>
       </div>
-      <aside id="gameLog" class="game-log" aria-label="Battle chronicle" aria-hidden="false">
+      <aside id="gameLog" class="game-log" aria-label="Battle chronicle" aria-hidden="true">
         <div class="log-header">
-          <div><span>BATTLE CHRONICLE</span><small id="logRoundLabel">ROUND 1</small></div>
+          <div><span>CHRONICLE</span><small id="logRoundLabel">ROUND 1</small></div>
           <button id="logClose" aria-label="Close battle chronicle">×</button>
         </div>
         <div id="gameLogEntries" class="log-entries"><p class="log-empty">The scribes await the first move.</p></div>
@@ -190,7 +192,7 @@
 
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=19"></script>
+  <script src="game.js?v=20"></script>
   <script src="multiplayer.js?v=4"></script>
 </body>
 </html>

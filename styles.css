@@ -118,6 +118,111 @@
 .hand-area.compact .commit{bottom:24px}
 @media(max-width:900px){.hand-heading-actions small{display:none}.hand-area.compact .game-card{min-width:96px;width:96px}}
 
+/* ================================================================
+   BATTLEFIELD UI PACK
+   Last block in the file on purpose: it settles the layout after
+   several rounds of iteration rather than adding another patch.
+   Three rules drive it — nothing overlaps anything, every label is
+   at a readable size, and the hand relates to the board it feeds.
+   ================================================================ */
+
+/* A battle claims the viewport. Losing the site nav removes a row of chrome no
+   one reads mid-plan and buys the board back its vertical space. */
+body.in-battle .topbar{display:none}
+
+/* The battle screen is one flex column — header, rulers, board, dock. Nothing is
+   pinned into another element's space, so no arrangement of them can overlap.
+   The board takes the slack, which is why the slot height is fluid below. */
+body.in-battle{overflow:hidden}
+.game-screen.active{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.game-header,.player-bar,.hand-area{flex:0 0 auto}
+/* width is explicit because the auto side margins that centre this block would
+   otherwise cancel flex stretch and shrink it to its content. */
+.battlefield-wrap{flex:1 1 auto;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center}
+
+/* The chronicle opens as a rail that the screen makes room for, instead of
+   floating over the rival's resources the way it used to. */
+.game-screen{--rail:0px;padding-right:var(--rail);padding-bottom:0;transition:padding-right .24s ease}
+.game-screen.log-open{--rail:min(352px,32vw)}
+.game-log{top:56px;right:0;bottom:0;width:352px;max-height:none;border-right:0;border-top:0;box-shadow:-14px 0 40px #07130c5c}
+.log-header{height:54px}
+.log-header span{font:bold 10px "DM Sans";letter-spacing:2px}
+.log-header small{font-size:9px;letter-spacing:1.4px;opacity:.72}
+
+/* Header — the round number is the one number that matters up here. */
+.game-header{height:56px}
+.round-badge{font:bold 9px/1 "DM Sans";letter-spacing:2.2px;color:#93a094}
+.round-badge strong{font:bold 18px/1 "MedievalSharp";color:var(--gold);margin-left:7px;vertical-align:-2px}
+
+/* Ruler bars — identity, health and resources on one readable line. */
+.player-bar{height:64px;gap:14px;padding:0 max(3vw,20px)}
+.avatar{width:38px;height:38px;font-size:17px;flex:0 0 38px}
+.ruler-id{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ruler-id b{font:bold 10px/1 "DM Sans";letter-spacing:1.5px;color:#c3cdbe;white-space:nowrap}
+.opponent-bar #aiProfileLabel{font-size:10px;letter-spacing:1.5px;color:#d6b86c}
+.health{font:bold 19px/1 Georgia,serif;color:#e8836a;letter-spacing:.5px}
+.hand-count{margin-left:12px;padding:5px 11px;border:1px solid #ffffff1c;border-radius:999px;background:#ffffff0a;font:bold 12px/1 "DM Sans";color:#c3cdbe;flex:0 0 auto}
+.hand-count:after{content:" ♠";opacity:.5}
+
+/* Resources — a flat chip row, sized to actually be read mid-plan. */
+.resources{display:flex;align-items:center;gap:6px;width:auto;height:auto;flex:0 0 auto;margin:0 0 0 auto;transform:none}
+.res{display:inline-flex;align-items:center;gap:6px;padding:5px 11px 5px 9px;border:1px solid #ffffff20;border-radius:999px;background:#ffffff0d;transition:opacity .2s ease}
+.res .resource-icon{width:16px;height:16px;stroke-width:1.4}
+.res b{font:bold 14px/1 "DM Sans";color:#f2ecda;min-width:8px;text-align:right}
+.res.empty{opacity:.38}
+.res.gold{border-color:#d39b3c5c;background:#d39b3c1c}
+.res.gold b{color:#eec173}
+
+/* Battlefield — wider lanes and taller slots; the art can finally be seen. */
+.battlefield-wrap{max-width:980px;padding:0 22px;margin:4px auto 0}
+.battle-label{font:bold 9px/1 "DM Sans";letter-spacing:2.2px;color:#7d8a80;margin:9px 2px 7px}
+.board{gap:10px}
+.lane{gap:8px}
+.slot{height:clamp(72px,11.2vh,112px);border-radius:4px;border-color:#ffffff17}
+.slot.valid{border-color:#d3ad5d99;background:#d3ad5d14}
+.clash-line{height:26px;margin:2px 0}
+
+/* Hand dock — the cards and the commit button share a row instead of
+   the button floating over the hand behind a 145px margin. */
+.hand-area{position:static;right:auto;left:auto;padding:9px max(3vw,18px) 13px;box-shadow:0 -10px 26px #08120c47}
+.hand-heading{max-width:none;margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.hand-heading small{font:italic 12px/1.35 Georgia,serif;letter-spacing:0;color:#7b7160;text-transform:none}
+.hand-heading button{border:0;background:transparent;color:#8b6428;font:15px/1 "DM Sans";cursor:pointer;padding:3px 5px;border-radius:4px}
+.hand-heading button:hover{color:var(--rust);background:#17271d0d}
+.hand-dock-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
+.hand{margin:0;gap:8px;justify-content:flex-start;overflow-x:auto;padding:2px 0 4px}
+.commit{position:static;width:auto;min-width:132px;padding:13px 18px;white-space:nowrap}
+
+/* Hand cards keep the board's proportions so the two read as one system. */
+.hand-area.compact .game-card{width:128px;min-width:128px;height:112px;min-height:112px;padding:7px}
+.hand-area.compact .game-card.illustrated{min-height:112px}
+.hand-area.compact .card-art,.hand-area.compact .card-art.painted{height:58px;margin:-7px -7px 6px}
+.hand-area.compact .game-card h3{font-size:11px}
+.hand-area.compact .costs,.hand-area.compact .illustrated .costs{top:48px;right:5px}
+.hand-area.compact .cost{width:18px;height:18px}
+.hand-area.compact .power{right:6px;bottom:5px;font-size:8px}
+.hand-area.compact .commit{bottom:auto}
+
+/* The rail scales with the viewport and the board shrinks into what is left, so the
+   chronicle keeps its own ground. Only on a phone is there nothing to give, and
+   there it becomes a sheet over the top. */
+.game-log{width:min(352px,32vw)}
+@media(max-width:760px){
+  .game-screen.log-open{--rail:0px}
+  .game-log{width:min(340px,88vw)}
+}
+@media(max-width:640px){
+  /* Side by side, the button would leave the hand about a card and a half wide. */
+  .hand-dock-row{grid-template-columns:1fr;gap:9px}
+  .commit{width:100%}
+}
+@media(max-width:900px){
+  .resources{gap:4px}
+  .res{padding:4px 8px 4px 7px;gap:4px}
+  .res b{font-size:12px}
+  .hand-count{display:none}
+}
+
 /* Draw step: a round opens here and planning stays locked until every draw is spent. */
 .draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
 .draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
@@ -129,6 +234,15 @@
 .draw-pile small{color:#8b806c;font:10px Georgia,serif}
 .draw-pile:hover:not(:disabled){background:#d3ad5d24;border-color:#d3ad5d;transform:translateY(-1px)}
 .draw-pile:disabled{opacity:.4;cursor:not-allowed}
+
+/* The draw bar is one compact row, and the screen reserves the height it adds —
+   otherwise opening it pushes the dock up over the ruler bar. */
+.draw-prompt{display:flex;align-items:center;gap:18px;max-width:660px;margin:0 0 9px;padding:8px 14px}
+.draw-prompt[hidden]{display:none}
+.draw-prompt-head{flex-direction:column;align-items:flex-start;gap:1px;margin:0;flex:0 0 auto}
+.draw-piles{flex:1;min-width:0}
+.draw-pile{flex-direction:row;align-items:baseline;justify-content:center;gap:8px;padding:8px 12px}
+.draw-pile small{font-size:11px}
 
 .slot-card.board-painted.damaged{filter:saturate(.48) brightness(.78);box-shadow:inset 0 0 0 1px #d8c7aa40,inset 0 -24px 35px #0b140ddb}
 .slot-card.board-painted.damaged .slot-power{background:#d4c9b7;color:#6f3730}

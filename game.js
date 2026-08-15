@@ -160,6 +160,8 @@ loadMeta();
 function showScreen(name){
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id===`${name}Screen`));
   $$('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
+  // A battle takes the whole viewport: the site nav is redundant next to the screen's own back arrow.
+  document.body.classList.toggle('in-battle',name==='game');
   if(name==='deck')renderDeckBuilder(); if(name==='collection')renderCollection();
   window.scrollTo(0,0);
 }
@@ -325,7 +327,7 @@ function startGame(){
   const aiProfile=$('#aiDeckSelect').value||'general',aiDifficulty=$('#aiDifficultySelect').value||'normal';
   game={round:1,player:createSide(chosen.cards),ai:createSide(AI_DECKS[aiProfile]||AI_DECKS.general),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
   $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
-  drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(true);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
+  drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(false);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
 }
 function startOnlineGame(state,seat,names={}){
   game=JSON.parse(JSON.stringify(state));
@@ -333,7 +335,7 @@ function startOnlineGame(state,seat,names={}){
   if(seat==='guest')[game.player,game.ai]=[game.ai,game.player];
   game.onlineSeat=seat;game.locked=false;selectedUid=null;
   $('#aiProfileLabel').textContent=`${String((seat==='host'?names.guest:names.host)||'Opponent').toUpperCase()} · ONLINE`;
-  showScreen('game');setLog(true);renderGame();
+  showScreen('game');setLog(false);renderGame();
 }
 function onlineCanonicalState(){
   const state=JSON.parse(JSON.stringify(game));
@@ -704,7 +706,11 @@ function damageForecastHtml(side,lane,reveal){
 }
 function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" title="${name}: ${c.text}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power">⚔ ${power}</span>`:''}</div>`}
 function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round)}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),workerForecastHtml(lane.unit)+damageForecastHtml(side,i,reveal))}</div></div>`:'').join('')}
-function renderResources(el,resources){el.innerHTML=`<div class="resource-map" aria-label="Food ${resources.food}, Wood ${resources.material}, Metal ${resources.metal}, Gold ${resources.gold}. Gold can replace any other resource."><svg class="resource-links" viewBox="0 0 96 66" aria-hidden="true"><path class="triangle" d="M48 12 24 54h48L48 12Z"/><path class="trade-lines" d="M48 40V12M48 40 24 54M48 40l24 14"/></svg>${['food','material','metal','gold'].map(r=>`<span class="resource-node ${r}" title="${RESOURCE_NAMES[r]}: ${resources[r]}${r==='gold'?' · can replace any resource':''}">${resourceIcon(r)}<b>${resources[r]}</b></span>`).join('')}</div>`}
+// A flat row of chips reads at a glance; the old triangle diagram was decorative at the cost of legibility.
+function renderResources(el,resources){
+  el.setAttribute('aria-label',`Food ${resources.food}, Wood ${resources.material}, Metal ${resources.metal}, Gold ${resources.gold}. Gold can replace any other resource.`);
+  el.innerHTML=['food','material','metal','gold'].map(r=>`<span class="res ${r} ${resources[r]?'':'empty'}" title="${RESOURCE_NAMES[r]}: ${resources[r]}${r==='gold'?' — spends as any missing resource':''}">${resourceIcon(r)}<b>${resources[r]}</b></span>`).join('');
+}
 function renderGame(reveal=false){
   if(!game)return;$('#roundNumber').textContent=game.round;$('#playerHealth').textContent=`♥ ${Math.max(0,game.player.health)}`;$('#aiHealth').textContent=`♥ ${Math.max(0,game.ai.health)}`;renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
@@ -722,7 +728,7 @@ function renderGame(reveal=false){
     button.disabled=!remaining;button.querySelector('small').textContent=`${remaining} left`;
     button.onclick=()=>chooseDraw(pile);
   });
-  $('#handHint').textContent=pending?'Draw before you plan — pick a pile above':'Select a card, then choose a valid slot';
+  $('#handHint').textContent=pending?'Draw before you plan — pick a pile above':'Select a card, then choose a slot';
   $('#commitButton').disabled=game.locked||pending>0;$('#commitButton').innerHTML=game.locked?'Resolving…':'Commit plans <span>⚔</span>';
 }
 function renderLog(){
@@ -733,7 +739,8 @@ function renderLog(){
 }
 function log(text){game.logs.unshift({text,round:game.round});game.logs=game.logs.slice(0,24);renderLog()}
 // The chronicle slides out of the battlefield and can be dismissed from either control.
-function setLog(open){$('#gameLog').classList.toggle('show',open);$('#gameLog').setAttribute('aria-hidden',String(!open));$('#logToggle').setAttribute('aria-pressed',String(open))}
+// The chronicle opens as a rail beside the battlefield rather than on top of it: the screen makes room.
+function setLog(open){$('#gameLog').classList.toggle('show',open);$('#gameLog').setAttribute('aria-hidden',String(!open));$('#logToggle').setAttribute('aria-pressed',String(open));$('#gameScreen').classList.toggle('log-open',open)}
 
 function showModal(html){$('#modalContent').innerHTML=html;$('#modal').classList.add('open');$('#modal').setAttribute('aria-hidden','false')}
 function closeModal(){$('#modal').classList.remove('open');$('#modal').setAttribute('aria-hidden','true')}
@@ -753,6 +760,6 @@ $('#deckNameInput').oninput=e=>{activeDeck().name=deckName(e.target.value);saveM
 $('#newDeck').onclick=()=>{if(meta.decks.length>=12)return;const d=makeDeck(`Banner ${meta.decks.length+1}`,[]);meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`New banner started — add ${DECK_SIZE} cards.`};
 $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeDeck(),d=makeDeck(`${a.name} copy`,a.cards.slice());meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Banner duplicated.'};
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
-$('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$('#handSizeToggle').onclick=()=>{const compact=$('#handArea').classList.toggle('compact');$('#handSizeToggle').textContent=compact?'EXPAND CARDS ↑':'COMPACT HAND ↓';$('#handSizeToggle').setAttribute('aria-pressed',String(compact))};
+$('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$('#handSizeToggle').onclick=()=>{const compact=$('#handArea').classList.toggle('compact');$('#handSizeToggle').textContent=compact?'⤢':'⤡';$('#handSizeToggle').title=compact?'Show larger cards':'Show smaller cards';$('#handSizeToggle').setAttribute('aria-pressed',String(compact))};
 $$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
 setupRuleSelector();applyDevMode();renderDeckBuilder();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');
