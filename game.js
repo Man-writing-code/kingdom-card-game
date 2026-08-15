@@ -177,6 +177,7 @@ if(meta)devDeck=readDevDeck();
 function showScreen(name){
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id===`${name}Screen`));
   $$('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
+  document.body.dataset.screen=name;
   // A battle takes the whole viewport: the site nav is redundant next to the screen's own back arrow.
   document.body.classList.toggle('in-battle',name==='game');
   document.body.classList.toggle('in-hall',name==='home');
