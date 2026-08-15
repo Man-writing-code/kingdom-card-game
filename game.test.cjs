@@ -89,9 +89,21 @@ for(const rule of META_RULES)assert(rule.name&&rule.text&&rule.icon&&rule.flavou
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
 
-loadMeta();assert.equal(meta.unlocked.length,COLLECTION_SIZE,'a first run opens with a full collection');
+loadMeta();devMode=false;assert.equal(meta.unlocked.length,COLLECTION_SIZE,'a first run opens with a full collection');
 assert.equal(meta.decks.length,1);assert.equal(activeDeck().cards.length,DECK_SIZE,'a first run is dealt a playable opening banner');
 assert(deckIsPlayable(activeDeck()),'the opening banner only uses owned designs');
+
+devMode=true;resetDevDeck();
+assert.equal(availableDesigns().length,COLLECTIBLE_IDS.length,'dev mode unlocks every collectible design');
+assert.equal(deckCards(activeDeck()).length,DECK_SIZE,'the dev deck starts with a full 20 cards');
+assert.deepEqual(deckCards(activeDeck()),activeDeck().cards,'the dev deck starts from the active normal banner');
+assert.equal(sanitizeDevDeck([...COLLECTIBLE_IDS,'logging']).length,DECK_SIZE,'the dev deck keeps the normal 20-card cap');
+assert(deckIsPlayable(activeDeck()),'a full dev deck remains playable');
+devMode=false;
+assert.equal(availableDesigns().length,COLLECTION_SIZE,'normal mode restores the saved 20-design collection');
+assert.equal(deckCards(activeDeck()).length,DECK_SIZE,'normal mode restores the saved 20-card banner');
+assert(deckIsPlayable(activeDeck()),'the restored normal banner uses the normal validation rules');
+devMode=true;resetDevDeck();
 
 localStorage.getItem=()=>JSON.stringify({version:SAVE_VERSION,unlocked:INITIAL_UNLOCKED,decks:[{id:'empty',name:'Empty Banner',cards:[]}],activeDeckId:'empty'});
 loadMeta();assert.equal(activeDeck().cards.length,0,'a deliberately emptied saved banner stays empty after reload');

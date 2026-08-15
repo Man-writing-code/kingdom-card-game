@@ -84,8 +84,8 @@
 
     <section id="deckScreen" class="screen panel-screen">
       <div class="section-heading">
-        <div><p class="eyebrow">YOUR WAR COUNCIL</p><h1>Shape your deck</h1><p>Choose exactly 20 cards. No more than four copies of any card.</p></div>
-        <div class="deck-total"><span id="deckCount">20</span><small>/ 20 CARDS</small></div>
+        <div><p class="eyebrow">YOUR WAR COUNCIL</p><h1>Shape your deck</h1><p id="deckRuleText">Choose exactly 20 cards. No more than four copies of any card.</p></div>
+        <div class="deck-total"><span id="deckCount">20</span><small id="deckLimitLabel">/ 20 CARDS</small></div>
       </div>
       <div class="deck-layout">
         <div><div class="filter-row"><button class="chip active" data-filter="all">All</button><button class="chip" data-filter="building">Buildings</button><button class="chip" data-filter="unit">Units</button></div><div id="deckCards" class="card-grid"></div></div>
@@ -201,7 +201,7 @@
   <div id="cardTip" class="card-tip" hidden></div>
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=27"></script>
-  <script src="multiplayer.js?v=4"></script>
+  <script src="game.js?v=29"></script>
+  <script src="multiplayer.js?v=6"></script>
 </body>
 </html>

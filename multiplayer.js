@@ -11,7 +11,7 @@
   const cleanCode=()=>codeEl.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
   const rowOf=data=>Array.isArray(data)?data[0]:data;
   const names=()=>({host:ctx.match?.host_name||'Host',guest:ctx.match?.guest_name||'Guest'});
-  const playableDeck=()=>{const deck=activeDeck();if(!deckIsPlayable(deck)){showScreen('deck');$('#deckMessage').textContent=`“${deck.name}” needs exactly ${DECK_SIZE} cards before entering an online duel.`;return null}return deck.cards.slice()};
+  const playableDeck=()=>{const deck=activeDeck();if(!deckIsPlayable(deck)){showScreen('deck');$('#deckMessage').textContent=`“${deck.name}” needs exactly ${DECK_SIZE} cards before entering an online duel.`;return null}return deckCards(deck).slice()};
 
   async function connect(){
     if(!window.supabase?.createClient)throw new Error('The multiplayer library did not load. Check your connection and refresh.');

@@ -121,7 +121,21 @@ function activeDeck(){
   if(found)return found;
   meta.activeDeckId=meta.decks[0].id;return meta.decks[0];
 }
-const deckIsPlayable=d=>d.cards.length===DECK_SIZE&&d.cards.every(id=>meta.unlocked.includes(id));
+function sanitizeDevDeck(deck){
+  const counts={},out=[];
+  for(const id of deck||[]){if(!COLLECTIBLE_IDS.includes(id)||out.length>=DECK_SIZE)continue;counts[id]=(counts[id]||0)+1;if(counts[id]<=MAX_COPIES)out.push(id)}
+  return out;
+}
+let devDeck=[];
+function readDevDeck(){
+  try{const saved=sanitizeDevDeck(JSON.parse(localStorage.getItem('kingdom-dev-deck')||'null'));if(saved.length===DECK_SIZE)return saved}catch(e){}
+  const active=sanitizeDevDeck(activeDeck().cards);return active.length===DECK_SIZE?active:buildDefaultDeck(meta.unlocked);
+}
+const saveDevDeck=()=>{try{localStorage.setItem('kingdom-dev-deck',JSON.stringify(devDeck))}catch(e){}};
+const resetDevDeck=()=>{const active=sanitizeDevDeck(activeDeck().cards);devDeck=active.length===DECK_SIZE?active:buildDefaultDeck(meta.unlocked);saveDevDeck()};
+const availableDesigns=()=>devMode?COLLECTIBLE_IDS:meta.unlocked;
+const deckCards=d=>devMode?devDeck:d.cards;
+const deckIsPlayable=d=>{const cards=deckCards(d);return cards.length===DECK_SIZE&&cards.every(id=>devMode?COLLECTIBLE_IDS.includes(id):meta.unlocked.includes(id))};
 // v1 saves predate the worker split, the Fire Sapper and the tier-two buildings. Run once, then stamp
 // the version, so a design sacrificed to a pack is not quietly restored on the next load.
 function migrateSave(stored){
@@ -158,6 +172,7 @@ function loadMeta(){
   saveMeta();
 }
 loadMeta();
+if(meta)devDeck=readDevDeck();
 
 function showScreen(name){
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id===`${name}Screen`));
@@ -241,67 +256,52 @@ function renderCountdown(){
 // Both deck pickers (deck screen and hall) share one option list so they never disagree.
 function renderDeckOptions(){
   const active=activeDeck();
-  const opts=meta.decks.map(d=>`<option value="${d.id}"${d.id===active.id?' selected':''}>${esc(d.name)} · ${d.cards.length}/${DECK_SIZE}${deckIsPlayable(d)?'':' · incomplete'}</option>`).join('');
+  const opts=meta.decks.map(d=>{const cards=deckCards(d);return `<option value="${d.id}"${d.id===active.id?' selected':''}>${esc(d.name)} · ${devMode?`${cards.length} cards · DEV`:`${cards.length}/${DECK_SIZE}${deckIsPlayable(d)?'':' · incomplete'}`}</option>`}).join('');
   ['#deckSelect','#homeDeckSelect','#onlineDeckSelect'].forEach(sel=>{const el=$(sel);if(el)el.innerHTML=opts});
   const del=$('#deleteDeck');if(del)del.disabled=meta.decks.length<2;
   const add=$('#newDeck');if(add)add.disabled=meta.decks.length>=12;
 }
 function renderDeckBuilder(){
-  const active=activeDeck(),cards=active.cards;
-  const ids=meta.unlocked.filter(id=>deckFilter==='all'||CARDS[id].type===deckFilter);
+  const active=activeDeck(),cards=deckCards(active);
+  const ids=availableDesigns().filter(id=>deckFilter==='all'||CARDS[id].type===deckFilter);
   $('#deckCards').innerHTML=ids.map(id=>cardHtml(id,{className:cards.includes(id)?'in-deck':'',extra:`<div class="deck-controls"><button data-minus="${id}">−</button><b>${cards.filter(x=>x===id).length}</b><button data-plus="${id}">+</button></div>`})).join('');
   $('#deckCount').textContent=cards.length;
+  $('#deckLimitLabel').textContent=`/ ${DECK_SIZE} CARDS`;
+  $('#deckRuleText').textContent=devMode?`Every card is unlocked for testing. Choose exactly ${DECK_SIZE}, with no more than four copies of any design.`:`Choose exactly ${DECK_SIZE} cards. No more than four copies of any card.`;
   const counts={};cards.forEach(id=>counts[id]=(counts[id]||0)+1);
-  $('#deckList').innerHTML=Object.entries(counts).map(([id,n])=>`<div class="deck-row"><span>${CARDS[id].name}</span><b>×${n}</b></div>`).join('')||`<p class="deck-empty">Empty banner — add ${DECK_SIZE} cards from your collection.</p>`;
-  $('#deckUnique').textContent=`${new Set(cards).size} unique · ${cards.length}/${DECK_SIZE} cards`;
+  $('#deckList').innerHTML=Object.entries(counts).map(([id,n])=>`<div class="deck-row"><span>${CARDS[id].name}</span><b>×${n}</b></div>`).join('')||`<p class="deck-empty">Empty banner — add ${DECK_SIZE} cards from ${devMode?'the full card pool':'your collection'}.</p>`;
+  $('#deckUnique').textContent=`${new Set(cards).size} unique · ${cards.length}/${DECK_SIZE} cards${devMode?' · DEV':''}`;
   const nameInput=$('#deckNameInput');if(nameInput&&document.activeElement!==nameInput)nameInput.value=active.name;
   $('#saveDeck').disabled=cards.length!==DECK_SIZE;
   renderDeckOptions();
 }
 function adjustDeck(id,amount){
-  const cards=activeDeck().cards,count=cards.filter(x=>x===id).length;
+  const cards=deckCards(activeDeck()),count=cards.filter(x=>x===id).length;
   if(amount>0&&count<MAX_COPIES&&cards.length<DECK_SIZE)cards.push(id);
   if(amount<0&&count>0)cards.splice(cards.indexOf(id),1);
-  saveMeta();renderDeckBuilder();
+  if(devMode)saveDevDeck();else saveMeta();renderDeckBuilder();
 }
-function selectDeck(id){if(meta.decks.some(d=>d.id===id)){meta.activeDeckId=id;saveMeta();renderDeckBuilder()}}
+function selectDeck(id){if(meta.decks.some(d=>d.id===id)){meta.activeDeckId=id;if(devMode)resetDevDeck();saveMeta();renderDeckBuilder()}}
 let collectionView='owned';
 function renderCollection(){
-  $('#packStatus').textContent=meta.packWeek===weekKey()?'This week’s pack has been claimed. Return when the decree changes.':meta.winWeek===weekKey()?'Victory earned: your weekly pack is ready. Choose a discovery and sacrifice an old design.':'Win one match this week to earn a new pack.';
-  $('#openPackButton').disabled=meta.packWeek===weekKey()||meta.winWeek!==weekKey();
-  const owned=meta.unlocked.filter(id=>CARDS[id]),undiscovered=COLLECTIBLE_IDS.length-owned.length;
-  $('#collectionCount').textContent=`${owned.length} / ${COLLECTION_SIZE}`;
+  $('#packStatus').textContent=devMode?'Every card is unlocked while dev mode is on. Weekly packs resume in normal mode.':meta.packWeek===weekKey()?'This week’s pack has been claimed. Return when the decree changes.':meta.winWeek===weekKey()?'Victory earned: your weekly pack is ready. Choose a discovery and sacrifice an old design.':'Win one match this week to earn a new pack.';
+  $('#openPackButton').disabled=devMode||meta.packWeek===weekKey()||meta.winWeek!==weekKey();
+  const owned=availableDesigns().filter(id=>CARDS[id]),undiscovered=COLLECTIBLE_IDS.length-owned.length;
+  $('#collectionCount').textContent=`${owned.length} / ${devMode?COLLECTIBLE_IDS.length:COLLECTION_SIZE}`;
   $('#archiveNote').textContent=collectionView==='owned'
-    ?`These ${owned.length} designs are the only ones your decks can draw on. A pack swaps one in for one out.`
+    ?devMode?'All card designs are available. Your normal collection is unchanged.':`These ${owned.length} designs are the only ones your decks can draw on. A pack swaps one in for one out.`
     :`Every design in Kingdom: ${owned.length} in your collection, ${undiscovered} still undiscovered.`;
   const ids=collectionView==='owned'?owned:COLLECTIBLE_IDS;
-  $('#collectionCards').innerHTML=ids.map(id=>{const has=meta.unlocked.includes(id);
-    const swap=devMode?`<button class="collection-swap ${has?'drop':'take'}" data-swap="${id}">${has?'− REMOVE':'+ ADD'}</button>`:'';
-    return cardHtml(id,{className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>${swap}`})}).join('');
+  $('#collectionCards').innerHTML=ids.map(id=>{const has=devMode||meta.unlocked.includes(id);
+    return cardHtml(id,{className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>`})}).join('');
   $$('[data-collection]').forEach(b=>b.classList.toggle('active',b.dataset.collection===collectionView));
   $$('.collection-grid .locked').forEach(el=>{el.style.filter='grayscale(1)';el.style.opacity='.48'});
-  renderDevCollectionNote(owned);
+  renderDevCollectionNote();
 }
-// Dev swaps can leave a saved deck holding designs that are no longer in the collection. Rather than
-// silently stripping those decks, name them so the mismatch is visible and fixable.
-function renderDevCollectionNote(owned){
+function renderDevCollectionNote(){
   const note=$('#devCollectionNote');if(!note)return;
   note.hidden=!devMode;if(!devMode)return;
-  const broken=meta.decks.filter(d=>!deckIsPlayable(d));
-  note.innerHTML=`<span>DEV · COLLECTION EDITOR</span> Swap any design in or out, up to ${COLLECTION_SIZE}. `
-    +(broken.length?`<b>${broken.length} deck${broken.length>1?'s':''} no longer legal:</b> ${broken.map(d=>esc(d.name)).join(', ')}. Reset them on the Deck screen.`:'All decks still legal.')
-    +` <button id="devRestoreCollection" class="small-link">RESTORE STARTING 20</button>`;
-  $('#devRestoreCollection').onclick=()=>{meta.unlocked=normaliseCollection(INITIAL_UNLOCKED);saveMeta();renderCollection();renderDeckBuilder()};
-}
-function swapCollection(id){
-  if(!devMode||!CARDS[id]||CARDS[id].token)return;
-  const has=meta.unlocked.includes(id);
-  if(has)meta.unlocked=meta.unlocked.filter(x=>x!==id);
-  else if(meta.unlocked.length>=COLLECTION_SIZE){
-    const note=$('#devCollectionNote');if(note)note.innerHTML=`<span>DEV · COLLECTION EDITOR</span> Collection is full at ${COLLECTION_SIZE}. Remove a design before adding ${CARDS[id].name}.`;
-    return;
-  }else meta.unlocked.push(id);
-  saveMeta();renderCollection();renderDeckBuilder();
+  note.innerHTML=`<span>DEV · ALL CARDS UNLOCKED</span> Build a standard ${DECK_SIZE}-card deck from any design in the game. Your normal collection and saved decks stay untouched.`;
 }
 
 function openPack(){
@@ -328,9 +328,9 @@ function createSide(deck){
 }
 function startGame(){
   const chosen=activeDeck();
-  if(!deckIsPlayable(chosen)){showScreen('deck');$('#deckMessage').textContent=`“${chosen.name}” holds ${chosen.cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`;return}
+  if(!deckIsPlayable(chosen)){showScreen('deck');const cards=deckCards(chosen);$('#deckMessage').textContent=devMode?`The dev deck holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`:`“${chosen.name}” holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`;return}
   const aiProfile=$('#aiDeckSelect').value||'general',aiDifficulty=$('#aiDifficultySelect').value||'normal';
-  game={round:1,player:createSide(chosen.cards),ai:createSide(AI_DECKS[aiProfile]||AI_DECKS.general),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
+  game={round:1,player:createSide(deckCards(chosen)),ai:createSide(AI_DECKS[aiProfile]||AI_DECKS.general),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
   $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
   drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(false);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
 }
@@ -821,10 +821,9 @@ $$('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.datas
 $$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{deckFilter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderDeckBuilder()}));
 $('#deckCards').addEventListener('click',e=>{const plus=e.target.dataset.plus,minus=e.target.dataset.minus;if(plus)adjustDeck(plus,1);if(minus)adjustDeck(minus,-1)});
 $$('[data-collection]').forEach(b=>b.addEventListener('click',()=>{collectionView=b.dataset.collection;renderCollection()}));
-$('#collectionCards').addEventListener('click',e=>{const id=e.target.dataset?.swap;if(id){e.stopPropagation();swapCollection(id)}});
-$('#devModeToggle').onclick=()=>{devMode=!devMode;localStorage.setItem('kingdom-dev-mode',devMode?'1':'0');applyDevMode()};
-$('#resetDeck').onclick=()=>{activeDeck().cards=[];saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Deck emptied — choose 20 cards for this banner.'};
-$('#saveDeck').onclick=()=>{saveMeta();$('#deckMessage').textContent=`“${activeDeck().name}” saved to the royal archive.`};
+$('#devModeToggle').onclick=()=>{devMode=!devMode;if(devMode)resetDevDeck();localStorage.setItem('kingdom-dev-mode',devMode?'1':'0');applyDevMode()};
+$('#resetDeck').onclick=()=>{if(devMode)resetDevDeck();else{activeDeck().cards=[];saveMeta()}renderDeckBuilder();$('#deckMessage').textContent=devMode?'Dev deck restored from the active banner.':'Deck emptied — choose 20 cards for this banner.'};
+$('#saveDeck').onclick=()=>{if(devMode)saveDevDeck();else saveMeta();$('#deckMessage').textContent=devMode?'Dev deck saved. Your normal banner is unchanged.':`“${activeDeck().name}” saved to the royal archive.`};
 $('#deckSelect').onchange=e=>selectDeck(e.target.value);
 $('#homeDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
 $('#onlineDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
