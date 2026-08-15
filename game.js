@@ -54,7 +54,7 @@ const AI_DECKS={
   wood:['logging','logging','logging','farm','farm','goldmine','townhall','university','lumbermill','lumbermill','palisade','palisade','wallwarden','wallwarden','archer','archer','firesapper','huntsman','huntsman','huntinglodge'],
   food:['farm','farm','farm','farm','villagecommons','villagecommons','villagecommons','villagecommons','peasantmob','peasantmob','peasantmob','farmer','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','boarriders','boarriders','boarriders'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
-  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','lumbermill','farm','farm','university','university','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
+  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
 };
 const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
@@ -423,6 +423,8 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='university')score+=game.round<6?5:2;
     // Archers are the whole clock: worth most pointed at an open lane.
     if(hc.cardId==='archer')score+=aiVisiblePlayerSlot(lane,'unit')?1:3;
+    // A Lumberjack only pays out if it lives, so it wants a quiet lane and an early round.
+    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-3:(game.round<5?4:1);
     if(c.special==='sapper'){
       const enemy=aiVisiblePlayerSlot(lane,'unit');
       // A Sapper waits in hand for something worth trading up into. The exception is a thin castle,
