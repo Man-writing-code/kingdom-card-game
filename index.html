@@ -1,15 +1,15 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17271d">
-  <title>Kingdom — Weekly Deckbuilder</title>
+  <title>Kingdom â€” Weekly Deckbuilder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b3225'/%3E%3Cpath d='M32 15 11 51h42Z' fill='none' stroke='%23d3ad5d' stroke-width='3'/%3E%3Cpath d='M32 39 32 15M32 39 11 51M32 39 53 51' stroke='%23e6ca85' stroke-width='2' opacity='.6'/%3E%3Ccircle cx='32' cy='15' r='7' fill='%238fb04e'/%3E%3Ccircle cx='11' cy='51' r='7' fill='%23c2884b'/%3E%3Ccircle cx='53' cy='51' r='7' fill='%2392a6ba'/%3E%3Ccircle cx='32' cy='39' r='9' fill='%23e9b54c'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body>
   <div class="grain"></div>
@@ -25,7 +25,7 @@
       <button class="nav-link" data-screen="rules">How to play</button>
     </nav>
     <button id="devModeToggle" class="dev-toggle" aria-pressed="true" title="Toggle developer tools" hidden>DEV</button>
-    <div class="season-pill"><span></span> Season I · Week <b id="weekNumber">1</b></div>
+    <div class="season-pill"><span></span> Season I Â· Week <b id="weekNumber">1</b></div>
   </header>
 
   <main>
@@ -37,24 +37,24 @@
         <div class="duel-launcher">
           <div class="mode-heading"><span>CHOOSE YOUR BATTLE</span></div>
           <div class="mode-tabs" role="tablist" aria-label="Game mode">
-            <button class="mode-tab active" role="tab" aria-selected="true" data-play-mode="solo"><b>⚔</b><span>Single player<small>Battle an AI kingdom</small></span></button>
-            <button class="mode-tab" role="tab" aria-selected="false" data-play-mode="online"><b>♚</b><span>Multiplayer<small>Private online room</small></span></button>
+            <button class="mode-tab active" role="tab" aria-selected="true" data-play-mode="solo"><b>âš”</b><span>Single player<small>Battle an AI kingdom</small></span></button>
+            <button class="mode-tab" role="tab" aria-selected="false" data-play-mode="online"><b>â™š</b><span>Multiplayer<small>Private online room</small></span></button>
           </div>
           <section class="mode-panel active" data-mode-panel="solo" role="tabpanel">
             <div class="launch-row deck-launch" aria-label="Single-player deck selection">
               <label>Your banner<select id="homeDeckSelect"></select></label>
-              <button class="small-link" data-screen="deck">EDIT DECKS →</button>
+              <button class="small-link" data-screen="deck">EDIT DECKS â†’</button>
             </div>
             <div class="launch-row opponent-launch" aria-label="Computer opponent settings">
               <label>Opponent<select id="aiDeckSelect"><option value="general">General</option><option value="wood">Wood architect</option><option value="food">Food commons</option><option value="metal">Metal iron crown</option><option value="timber">Timber scholars</option></select></label>
               <label>Difficulty<select id="aiDifficultySelect"><option value="normal">Normal</option><option value="hard">Hard</option><option value="hardcore">Hardcore</option></select></label>
             </div>
-            <button id="playButton" class="button primary launch-button">Play single player <span>→</span></button>
+            <button id="playButton" class="button primary launch-button">Play single player <span>â†’</span></button>
           </section>
           <section class="mode-panel" data-mode-panel="online" role="tabpanel" hidden>
             <div class="launch-row deck-launch" aria-label="Multiplayer deck selection">
               <label>Your banner<select id="onlineDeckSelect"></select></label>
-              <button class="small-link" data-screen="deck">EDIT DECKS →</button>
+              <button class="small-link" data-screen="deck">EDIT DECKS â†’</button>
             </div>
             <div class="multiplayer-setup" aria-label="Online multiplayer">
               <label>Ruler name<input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Your name"></label>
@@ -73,12 +73,12 @@
       </div>
       <aside class="weekly-card">
         <div class="weekly-top"><span>THIS WEEK'S DECREE</span><span id="weekCountdown">6d 23h</span></div>
-        <div class="decree-icon" id="homeRuleIcon">○</div>
-        <h2 id="homeRuleName">Reading the week…</h2>
+        <div class="decree-icon" id="homeRuleIcon">â—‹</div>
+        <h2 id="homeRuleName">Reading the weekâ€¦</h2>
         <p id="homeRuleText"></p>
         <div class="rule-divider"></div>
         <p class="flavour" id="homeRuleFlavour"></p>
-        <button class="text-button" data-screen="rules">See all battlefield laws →</button>
+        <button class="text-button" data-screen="rules">See all battlefield laws â†’</button>
       </aside>
     </section>
 
@@ -126,46 +126,46 @@
       <div class="section-heading"><div><p class="eyebrow">THE LAWS OF KINGDOM</p><h1>How to play</h1></div></div>
       <h2 class="rules-subhead">The shape of a round</h2>
       <ol class="round-flow">
-        <li><b>❖</b><span>DRAW</span><small>Take each card from the pile you choose</small></li>
-        <li><b>✎</b><span>PLAN</span><small>Place in secret, and take it back if you think better of it</small></li>
-        <li><b>⚔</b><span>COMMIT</span><small>Both plans are revealed at the same moment</small></li>
-        <li><b>✹</b><span>CLASH</span><small>Ballistas fire, then every lane west to east</small></li>
-        <li><b>≋</b><span>HARVEST</span><small>Buildings and surviving workers pay out</small></li>
+        <li><b>â–</b><span>DRAW</span><small>Take each card from the pile you choose</small></li>
+        <li><b>âœŽ</b><span>PLAN</span><small>Place in secret, and take it back if you think better of it</small></li>
+        <li><b>âš”</b><span>COMMIT</span><small>Both plans are revealed at the same moment</small></li>
+        <li><b>âœ¹</b><span>CLASH</span><small>Ballistas fire, then every lane west to east</small></li>
+        <li><b>â‰‹</b><span>HARVEST</span><small>Buildings and surviving workers pay out</small></li>
       </ol>
 
       <h2 class="rules-subhead">The laws</h2>
       <div class="rules-grid">
-        <article><span>01</span><h3>Draw from two piles</h3><p>Your banner splits into structures and units when battle begins. You are dealt three structures and two units to open; after that <b>you choose which pile each draw comes from</b>. A round opens on the draw step and planning stays locked until you have spent it. Two draws a round, plus one for each University standing. A hand holds ten — draws into a full hand are forfeited, and the card stays on its pile.</p></article>
+        <article><span>01</span><h3>Draw from two piles</h3><p>Your banner splits into structures and units when battle begins. You are dealt three structures and two units to open; after that <b>you choose which pile each draw comes from</b>. A round opens on the draw step and planning stays locked until you have spent it. Two draws a round, plus one for each University standing. A hand holds ten â€” draws into a full hand are forfeited, and the card stays on its pile.</p></article>
         <article><span>02</span><h3>Plan in secret</h3><p>Buildings go in your back row, units in the lane in front of them. You may build over an occupied slot; the old card is sacrificed to the discard when you commit. <b>Click a card you placed this round to take it back</b> and be refunded in full. Nothing either ruler places is visible to the other until both commit.</p></article>
-        <article><span>03</span><h3>The clash, in order</h3><p>Ballistas fire first, before any unit moves. Then each lane resolves west to east. A Fire Sapper burns out and takes the opposing unit with it. Otherwise the higher power wins and the loser falls; equal power destroys both. A unit facing no one strikes the enemy ruler for its power — unless it is a Battering Ram, which breaks the building behind instead. <b>Power is counted before the first blow</b>, so adjacency bonuses are locked in as the lanes meet.</p></article>
+        <article><span>03</span><h3>The clash, in order</h3><p>Ballistas fire first, before any unit moves. Then each lane resolves west to east. A Fire Sapper burns out and takes the opposing unit with it. Otherwise the higher power wins and the loser falls; equal power destroys both. A unit facing no one strikes the enemy ruler for its power â€” unless it is a Battering Ram, which breaks the building behind instead. <b>Power is counted before the first blow</b>, so adjacency bonuses are locked in as the lanes meet.</p></article>
         <article><span>04</span><h3>Feed the realm</h3><p>Camps cost nothing and harvest one. The Mill, Sawmill and Forge harvest two and are each bought with <b>two of the very resource they make</b>, so a realm ramps on its own harvest. Workers harvest only after surviving a full round, then every second round. Gold stands in for any missing food, wood or metal.</p></article>
-        <article><span>05</span><h3>Shape your banner</h3><p>A banner is exactly twenty cards with at most four copies of any design, built from a collection of twenty designs. Win a battle and the week’s pack offers a new design — taking it means sacrificing one you already hold, so the collection stays at twenty and every banner swaps its copies over automatically.</p></article>
+        <article><span>05</span><h3>Shape your banner</h3><p>A banner is exactly twenty cards with at most four copies of any design, built from a collection of twenty designs. Win a battle and the weekâ€™s pack offers a new design â€” taking it means sacrificing one you already hold, so the collection stays at twenty and every banner swaps its copies over automatically.</p></article>
         <article><span>06</span><h3>The weekly decree</h3><p>One decree rules the whole week, and it binds both rulers equally. A decree can change what you draw, what your buildings yield, or how much of the field you may use at all. They turn on the calendar, so read the Hall before you rebuild.</p></article>
       </div>
-      <div class="decree-banner"><div id="rulesRuleIcon">○</div><div><p class="eyebrow">CURRENT WEEKLY DECREE</p><h2 id="rulesRuleName">Reading the week…</h2><p id="rulesRuleText"></p></div></div>
+      <div class="decree-banner"><div id="rulesRuleIcon">â—‹</div><div><p class="eyebrow">CURRENT WEEKLY DECREE</p><h2 id="rulesRuleName">Reading the weekâ€¦</h2><p id="rulesRuleText"></p></div></div>
       <div class="decree-archive-heading"><p class="eyebrow">DECREE ARCHIVE</p><h2>The realm never stays comfortable</h2><p>Each decree rules for one week in the live rotation. Build several banners and reshape them as the realm changes.</p></div>
       <div id="decreeArchive" class="decree-archive"></div>
     </section>
 
     <section id="gameScreen" class="screen game-screen">
       <div class="game-header">
-        <button id="leaveGame" class="icon-button" aria-label="Leave game">←</button>
-        <button id="logToggle" class="icon-button log-toggle" aria-label="Toggle battle log" aria-pressed="true">▤</button>
+        <button id="leaveGame" class="icon-button" aria-label="Leave game">â†</button>
+        <button id="logToggle" class="icon-button log-toggle" aria-label="Toggle battle log" aria-pressed="true">â–¤</button>
         <div class="round-badge">ROUND <strong id="roundNumber">1</strong></div>
-        <button id="gameRuleBadge" class="mini-decree"><span id="gameRuleIcon">⚙</span><span><small>WEEKLY DECREE</small><b id="gameRuleName">Guild Charters</b></span></button>
-        <button id="restartGame" class="icon-button" aria-label="Restart game">↻</button>
+        <button id="gameRuleBadge" class="mini-decree"><span id="gameRuleIcon">âš™</span><span><small>WEEKLY DECREE</small><b id="gameRuleName">Guild Charters</b></span></button>
+        <button id="restartGame" class="icon-button" aria-label="Restart game">â†»</button>
       </div>
 
       <div class="opponent-bar player-bar">
-        <div class="avatar enemy">R</div><div class="ruler-id"><b id="aiProfileLabel">GENERAL · NORMAL</b><div id="aiHealth" class="health">♥ 10</div></div>
+        <div class="avatar enemy">R</div><div class="ruler-id"><b id="aiProfileLabel">GENERAL Â· NORMAL</b><div id="aiHealth" class="health">â™¥ 10</div></div>
         <div id="aiResources" class="resources"></div><div id="aiHandCount" class="hand-count">5</div>
       </div>
 
       <div id="battlefieldWrap" class="battlefield-wrap">
         <div class="battle-label">RIVAL'S REALM</div>
-        <div id="riverNotice" class="river-lane" hidden><span>≈</span><b>FLOWING RIVER</b><small>EASTERN LANE CLOSED</small><span>≈</span></div>
+        <div id="riverNotice" class="river-lane" hidden><span>â‰ˆ</span><b>FLOWING RIVER</b><small>EASTERN LANE CLOSED</small><span>â‰ˆ</span></div>
         <div id="aiBoard" class="board enemy-board"></div>
-        <div class="clash-line"><span></span><b>⚔</b><span></span></div>
+        <div class="clash-line"><span></span><b>âš”</b><span></span></div>
         <div id="playerBoard" class="board player-board"></div>
         <div class="battle-label yours">YOUR REALM</div>
       </div>
@@ -175,23 +175,23 @@
         <div id="drawPrompt" class="draw-prompt" hidden>
           <div class="draw-prompt-head"><span>CHOOSE YOUR DRAW</span><small id="drawRemaining"></small></div>
           <div class="draw-piles">
-            <button class="draw-pile" data-pile="structures"><b>♧ Structures</b><small></small></button>
-            <button class="draw-pile" data-pile="units"><b>⚔ Units</b><small></small></button>
+            <button class="draw-pile" data-pile="structures"><b>â™§ Structures</b><small></small></button>
+            <button class="draw-pile" data-pile="units"><b>âš” Units</b><small></small></button>
           </div>
         </div>
         <div class="hand-dock-row">
           <div class="dock-keep" aria-label="Your kingdom">
-            <div id="playerHealth" class="health">♥ 10</div>
+            <div id="playerHealth" class="health">â™¥ 10</div>
             <div id="playerResources" class="resources"></div>
           </div>
           <div id="playerHand" class="hand"></div>
-          <button id="commitButton" class="button primary commit">Commit plans <span>⚔</span></button>
+          <button id="commitButton" class="button primary commit">Commit plans <span>âš”</span></button>
         </div>
       </div>
       <aside id="gameLog" class="game-log" aria-label="Battle chronicle" aria-hidden="true">
         <div class="log-header">
           <div><span>CHRONICLE</span><small id="logRoundLabel">ROUND 1</small></div>
-          <button id="logClose" aria-label="Close battle chronicle">×</button>
+          <button id="logClose" aria-label="Close battle chronicle">Ã—</button>
         </div>
         <div id="gameLogEntries" class="log-entries"><p class="log-empty">The scribes await the first move.</p></div>
       </aside>
@@ -199,7 +199,7 @@
   </main>
 
   <div id="cardTip" class="card-tip" hidden></div>
-  <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
+  <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">Ã—</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="game.js?v=29"></script>
   <script src="multiplayer.js?v=6"></script>

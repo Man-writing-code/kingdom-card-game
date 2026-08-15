@@ -1,5 +1,14 @@
-:root{--ink:#17271d;--forest:#203f2d;--forest2:#2d5138;--cream:#f3ecda;--paper:#fbf7eb;--gold:#d39b3c;--rust:#a84d32;--muted:#776f60;--line:#d8cfb9;--shadow:0 18px 50px #17271d21}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",sans-serif;min-height:100vh}.grain{position:fixed;inset:0;pointer-events:none;opacity:.18;z-index:20;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E")}.topbar{height:76px;padding:0 5vw;display:flex;align-items:center;border-bottom:1px solid #cfc5ad;gap:5vw;position:relative;z-index:10}.brand{border:0;background:none;display:flex;align-items:center;gap:12px;font:bold 19px "MedievalSharp";letter-spacing:2px;color:var(--ink);cursor:pointer}.brand-mark{display:grid;place-items:center;width:35px;height:40px;background:var(--forest);color:var(--cream);clip-path:polygon(10% 0,90% 0,100% 72%,50% 100%,0 72%);font-size:20px}.topbar nav{display:flex;gap:30px;height:100%}.nav-link{background:transparent;border:0;color:#5f665e;font:600 13px "DM Sans";letter-spacing:.4px;cursor:pointer;position:relative}.nav-link.active,.nav-link:hover{color:var(--ink)}.nav-link.active:after{content:"";position:absolute;left:15%;right:15%;bottom:0;height:3px;background:var(--gold)}.season-pill{margin-left:auto;border:1px solid #c9bea5;border-radius:30px;padding:8px 14px;font-size:11px;letter-spacing:1px}.season-pill span{display:inline-block;width:7px;height:7px;background:#5e885f;border-radius:50%;margin-right:6px}.screen{display:none}.screen.active{display:block}.home-screen{min-height:calc(100vh - 76px);padding:8vh 8vw;position:relative;overflow:hidden;display:none;grid-template-columns:minmax(500px,1.5fr) minmax(330px,.7fr);gap:8vw;align-items:center}.home-screen.active{display:grid}.home-screen:before{content:"";position:absolute;width:680px;height:680px;border:1px solid #d8ceb6;border-radius:50%;left:-300px;bottom:-440px;box-shadow:0 0 0 80px #ded5c147,0 0 0 160px #ded5c126}.hero-copy{position:relative;z-index:1}.eyebrow{color:#9a6d27;font-weight:700;font-size:11px;letter-spacing:2.1px;margin:0 0 18px}.hero-copy h1,.section-heading h1{font:400 clamp(48px,6vw,84px)/.96 "MedievalSharp";margin:0 0 25px;letter-spacing:-2px}.hero-copy h1 em{color:var(--rust);font-style:normal}.hero-intro{font:400 17px/1.7 "DM Sans";max-width:600px;color:#566057}.hero-actions{display:flex;gap:12px;margin:32px 0 48px}.button{border:0;border-radius:4px;padding:14px 20px;text-transform:uppercase;letter-spacing:1px;font:bold 11px "DM Sans";cursor:pointer;transition:.2s}.button:hover{transform:translateY(-2px)}.button.primary{background:var(--forest);color:white;box-shadow:0 7px 18px #203f2d28}.button.primary:hover{background:var(--forest2)}.button.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}.button.ghost{border:1px solid #bcb19b;background:transparent;color:var(--ink)}.button span{margin-left:18px}.stats-row{display:flex;gap:45px}.stats-row div{display:grid;grid-template-columns:auto auto;gap:0 10px;align-items:center}.stats-row strong{font:32px "MedievalSharp";grid-row:span 2}.stats-row span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;max-width:70px}.weekly-card{background:var(--forest);color:var(--cream);padding:34px 36px;box-shadow:18px 18px 0 #d9cdae;position:relative}.weekly-card:after{content:"";position:absolute;inset:10px;border:1px solid #ffffff17;pointer-events:none}.weekly-top{display:flex;justify-content:space-between;color:#d7c8a6;font-size:9px;letter-spacing:1.5px}.decree-icon{font-size:48px;color:var(--gold);margin:32px 0 15px}.weekly-card h2{font:31px "MedievalSharp";margin:0 0 12px}.weekly-card>p{color:#d8ddcf;font-size:13px;line-height:1.6}.weekly-card .rule-divider{height:1px;background:#ffffff1c;margin:25px 0}.weekly-card .flavour{font-family:Georgia,serif;font-style:italic;color:#aaae9f}.text-button,.small-link{background:none;border:0;color:#e2b661;text-transform:uppercase;letter-spacing:1px;font:bold 9px "DM Sans";padding:18px 0 0;cursor:pointer}.panel-screen{padding:55px 6vw 80px}.panel-screen.narrow{max-width:1200px;margin:auto}.section-heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:38px}.section-heading h1{font-size:50px;margin-bottom:8px}.section-heading>div>p:last-child{color:var(--muted);margin:0}.deck-total{text-align:right}.deck-total span{font:50px "MedievalSharp"}.deck-total small{display:block;color:var(--muted);font-size:9px;letter-spacing:1px}.deck-layout{display:grid;grid-template-columns:1fr 285px;gap:35px}.filter-row{display:flex;gap:8px;margin-bottom:20px}.chip{padding:8px 15px;border:1px solid #c9bea6;background:transparent;border-radius:20px;font:600 10px "DM Sans";text-transform:uppercase;letter-spacing:1px;cursor:pointer}.chip.active{background:var(--forest);color:white;border-color:var(--forest)}.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}.game-card{background:var(--paper);border:1px solid #cec3aa;min-height:235px;padding:14px;position:relative;box-shadow:0 3px 0 #d0c6b0;transition:.18s;overflow:hidden}.game-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}.card-art{height:85px;background:linear-gradient(150deg,var(--accent,#426449),#1e3426);display:grid;place-items:center;color:#f6e5ba;font-size:45px;margin:-14px -14px 12px;position:relative}.card-type{position:absolute;top:6px;left:7px;font-size:8px;letter-spacing:1px;background:#192c20cf;padding:4px 6px;color:white;text-transform:uppercase}.game-card h3{font:18px "MedievalSharp";margin:0 0 5px}.game-card p{font-size:10px;line-height:1.45;color:#665f51;margin:0}.costs{display:flex;gap:4px;position:absolute;right:8px;top:78px}.cost{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;color:white;font-size:9px;font-weight:bold;border:2px solid var(--paper)}.cost.food{background:#779149}.cost.metal{background:#6a7480}.cost.material{background:#9b663c}.cost.gold{background:#c49232}.power{position:absolute;bottom:8px;right:8px;font:bold 11px "DM Sans";color:var(--rust)}.deck-controls{position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:8px}.deck-controls button{width:22px;height:22px;border:1px solid #bcae91;background:#eee4ce;cursor:pointer}.deck-controls b{font-size:12px}.deck-list-panel{background:var(--forest);padding:22px;color:white;height:max-content;position:sticky;top:20px}.panel-title{display:flex;justify-content:space-between;font-size:9px;letter-spacing:1.4px;padding-bottom:14px;border-bottom:1px solid #ffffff1b}.panel-title .small-link{padding:0}.deck-row{display:flex;justify-content:space-between;font-size:11px;padding:9px 0;border-bottom:1px solid #ffffff0f;color:#dce1d9}.deck-row b{color:#e4bb69}.button.full{width:100%;background:var(--gold);color:var(--ink);margin-top:18px}.deck-message{text-align:center;font-size:10px;color:#e0b965;min-height:15px}.notice{padding:14px 18px;border:1px solid #d4c6a8;background:#eee5d1;margin-bottom:24px;color:#645d50;font-size:12px}.collection-grid .game-card{min-height:220px}.owned{position:absolute;bottom:9px;left:9px;font:bold 9px "DM Sans";color:#8e6629}.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.rules-grid article{background:var(--paper);border:1px solid var(--line);padding:28px}.rules-grid article>span{color:var(--gold);font:20px "MedievalSharp"}.rules-grid h3{font:22px "MedievalSharp";margin:12px 0}.rules-grid p{font-size:13px;line-height:1.65;color:var(--muted)}.decree-banner{margin-top:20px;background:var(--forest);color:white;padding:25px 30px;display:flex;align-items:center;gap:25px}.decree-banner>div:first-child{font-size:38px;color:var(--gold)}.decree-banner h2{font:25px "MedievalSharp";margin:0 0 5px}.decree-banner p{margin:0;font-size:12px;color:#cbd3c9}
-.game-screen{background:#1b3225;color:var(--cream);min-height:100vh;padding-bottom:220px}.game-screen.active{display:block}.game-header{height:62px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #ffffff12;position:relative}.icon-button{position:absolute;left:24px;background:transparent;border:1px solid #ffffff27;color:white;width:34px;height:34px;cursor:pointer}.game-header .icon-button:last-child{left:auto;right:24px}.log-toggle{left:66px;font-size:13px;line-height:1}.log-toggle[aria-pressed="true"]{border-color:#d3ad5d80;color:#e2bb69}.round-badge{font-size:9px;letter-spacing:1.5px}.round-badge strong{font-size:16px;color:var(--gold);margin-left:8px}.mini-decree{position:absolute;right:75px;background:#ffffff0c;color:white;border:1px solid #ffffff1a;padding:6px 10px;display:flex;gap:8px;align-items:center;text-align:left;cursor:pointer}.mini-decree>span:first-child{color:var(--gold)}.mini-decree small{font-size:7px;display:block;color:#a7b2a7;letter-spacing:1px}.mini-decree b{font:11px "MedievalSharp"}.player-bar{height:60px;padding:0 max(5vw,25px);display:flex;align-items:center;gap:10px;background:#172b20}.player-bar>div:nth-child(2)>span{font-size:8px;letter-spacing:1px;color:#9fa99f}.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#d1b267;color:#17271d;font:bold 16px "MedievalSharp";border:2px solid #f0dca7}.avatar.enemy{background:#9a4c37;color:white;border-color:#c87962}.health{color:#e68067;font:bold 13px "DM Sans"}.resources{display:flex;gap:8px;margin-left:auto}.hand-count{font-size:9px;color:#aab4ab;margin-left:15px}.battlefield-wrap{max-width:720px;margin:8px auto 0;padding:0 20px}.battle-label{font-size:7px;letter-spacing:1.3px;color:#9eaa9f;margin:5px 0;display:flex;justify-content:space-between}.battle-label.yours{margin-top:7px}.board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.lane{display:flex;gap:5px;flex-direction:column}.enemy-board .lane{flex-direction:column-reverse}.slot{height:72px;border:1px solid #ffffff1c;background:#ffffff08;display:grid;place-items:center;position:relative;cursor:pointer;transition:.15s}.slot:before{font-size:8px;color:#ffffff1d;letter-spacing:1px}.slot.building:before{content:"BUILDING"}.slot.unit:before{content:"UNIT"}.slot.valid{border-color:#ddb45b;background:#ddb45b16;box-shadow:inset 0 0 15px #d9ad4730}.slot.occupied:before{display:none}.slot-card{position:absolute;inset:3px;padding:5px;background:#ede5d2;color:var(--ink);border-left:3px solid var(--accent,#5b795c);overflow:hidden}.slot-card b{display:block;font:11px "MedievalSharp";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot-card small{font-size:7px;color:#716b5f}.slot-card .slot-icon{font-size:20px;float:right;color:var(--accent)}.slot-card .slot-power{position:absolute;right:4px;bottom:3px;color:var(--rust);font-size:9px;font-weight:bold}.enemy-board .slot-card.hidden{background:#263f2f;border:1px solid #46624c;color:#729077;display:grid;place-items:center;font:22px "MedievalSharp"}.clash-line{height:22px;display:flex;align-items:center;gap:10px;color:#9f7b3c}.clash-line span{height:1px;background:#ffffff13;flex:1}.bottom-bar{margin-top:7px;border-top:1px solid #ffffff10}.hand-area{position:fixed;z-index:8;bottom:0;left:0;right:0;background:#f0e8d6;color:var(--ink);padding:10px 18px 14px;box-shadow:0 -12px 35px #08120c61}.hand-heading{max-width:920px;margin:0 auto 6px;font-size:8px;letter-spacing:1.4px;display:flex;justify-content:space-between}.hand-heading small{font-size:8px;color:#777064;letter-spacing:0}.hand{display:flex;gap:7px;justify-content:center;margin-right:145px}.hand .game-card{width:125px;min-height:145px;padding:8px;cursor:pointer;box-shadow:0 2px 0 #bcb29c}.hand .card-art{height:46px;font-size:26px;margin:-8px -8px 7px}.hand .card-type{font-size:5px;padding:2px}.hand .game-card h3{font-size:12px}.hand .game-card p{font-size:7px;line-height:1.3}.hand .costs{top:38px}.hand .cost{width:18px;height:18px;font-size:7px}.hand .power{font-size:8px}.hand .game-card.selected{transform:translateY(-9px);outline:2px solid var(--gold)}.hand .game-card.unaffordable{filter:saturate(.3);opacity:.7}.commit{position:fixed;bottom:56px;right:25px;width:135px}.game-log{position:fixed;top:135px;right:18px;width:210px;background:#10251aeb;border:1px solid #ffffff16;padding:12px;max-height:330px;overflow:auto;z-index:5;font-size:9px;line-height:1.45;color:#b7c1b8;transform:translateX(calc(100% + 20px));transition:.2s}.game-log.show{transform:none}.log-entry{padding:5px 0;border-bottom:1px solid #ffffff10}.log-entry b{color:#d3ad5d}.modal{position:fixed;inset:0;background:#071009bb;z-index:40;display:none;place-items:center;padding:20px}.modal.open{display:grid}.modal-card{width:min(520px,100%);max-height:90vh;overflow:auto;background:var(--paper);padding:38px;position:relative;box-shadow:var(--shadow)}.modal-close{position:absolute;right:12px;top:9px;background:none;border:0;font-size:26px;cursor:pointer}.modal-card h2{font:34px "MedievalSharp";margin:0 0 10px}.modal-card p{color:var(--muted);font-size:13px;line-height:1.6}.modal-actions{display:flex;gap:10px;margin-top:22px}.pack-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.pack-options .game-card{min-height:190px}.sacrifice-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:220px;overflow:auto}.sacrifice-button{border:1px solid var(--line);background:#eee6d3;padding:9px;text-align:left;cursor:pointer;font:11px "DM Sans"}.sacrifice-button:hover{border-color:var(--rust)}
+﻿:root{--ink:#17271d;--forest:#203f2d;--forest2:#2d5138;--cream:#f3ecda;--paper:#fbf7eb;--gold:#d39b3c;--rust:#a84d32;--muted:#776f60;--line:#d8cfb9;--shadow:0 18px 50px #17271d21;
+/* One fluid type scale for the whole game. Every size grows with the viewport between
+   a floor that stays readable on a phone and a ceiling that stops headings running away
+   on a wide monitor. The floors are deliberate: nothing here goes below 10px, where the
+   old sheet had labels at 5, 6 and 7. */
+--t-micro:clamp(10px,.28vw + 8.2px,13px);
+--t-tiny:clamp(11px,.3vw + 9px,14px);
+--t-small:clamp(12.5px,.34vw + 10.4px,16px);
+--t-body:clamp(14px,.36vw + 11.8px,18px);
+--t-lead:clamp(16px,.5vw + 13px,21px)}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:var(--t-body);line-height:1.6;min-height:100vh}.grain{position:fixed;inset:0;pointer-events:none;opacity:.18;z-index:20;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E")}.topbar{height:76px;padding:0 5vw;display:flex;align-items:center;border-bottom:1px solid #cfc5ad;gap:5vw;position:relative;z-index:10}.brand{border:0;background:none;display:flex;align-items:center;gap:12px;font:bold 19px "MedievalSharp";letter-spacing:2px;color:var(--ink);cursor:pointer}.brand-mark{display:grid;place-items:center;width:35px;height:40px;background:var(--forest);color:var(--cream);clip-path:polygon(10% 0,90% 0,100% 72%,50% 100%,0 72%);font-size:20px}.topbar nav{display:flex;gap:30px;height:100%}.nav-link{background:transparent;border:0;color:#5f665e;font:600 13px "DM Sans";letter-spacing:.4px;cursor:pointer;position:relative}.nav-link.active,.nav-link:hover{color:var(--ink)}.nav-link.active:after{content:"";position:absolute;left:15%;right:15%;bottom:0;height:3px;background:var(--gold)}.season-pill{margin-left:auto;border:1px solid #c9bea5;border-radius:30px;padding:8px 14px;font-size:11px;letter-spacing:1px}.season-pill span{display:inline-block;width:7px;height:7px;background:#5e885f;border-radius:50%;margin-right:6px}.screen{display:none}.screen.active{display:block}.home-screen{min-height:calc(100vh - 76px);padding:8vh 8vw;position:relative;overflow:hidden;display:none;grid-template-columns:minmax(500px,1.5fr) minmax(330px,.7fr);gap:8vw;align-items:center}.home-screen.active{display:grid}.home-screen:before{content:"";position:absolute;width:680px;height:680px;border:1px solid #d8ceb6;border-radius:50%;left:-300px;bottom:-440px;box-shadow:0 0 0 80px #ded5c147,0 0 0 160px #ded5c126}.hero-copy{position:relative;z-index:1}.eyebrow{color:#9a6d27;font-weight:700;font-size:var(--t-micro);letter-spacing:2.1px;margin:0 0 18px}.hero-copy h1,.section-heading h1{font:400 clamp(48px,6vw,84px)/.96 "MedievalSharp";margin:0 0 25px;letter-spacing:-2px}.hero-copy h1 em{color:var(--rust);font-style:normal}.hero-intro{font:400 var(--t-lead)/1.7 "DM Sans";max-width:600px;color:#566057}.hero-actions{display:flex;gap:12px;margin:32px 0 48px}.button{border:0;border-radius:4px;padding:14px 20px;text-transform:uppercase;letter-spacing:1px;font:bold 11px "DM Sans";cursor:pointer;transition:.2s}.button:hover{transform:translateY(-2px)}.button.primary{background:var(--forest);color:white;box-shadow:0 7px 18px #203f2d28}.button.primary:hover{background:var(--forest2)}.button.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}.button.ghost{border:1px solid #bcb19b;background:transparent;color:var(--ink)}.button span{margin-left:18px}.stats-row{display:flex;gap:45px}.stats-row div{display:grid;grid-template-columns:auto auto;gap:0 10px;align-items:center}.stats-row strong{font:32px "MedievalSharp";grid-row:span 2}.stats-row span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;max-width:70px}.weekly-card{background:var(--forest);color:var(--cream);padding:34px 36px;box-shadow:18px 18px 0 #d9cdae;position:relative}.weekly-card:after{content:"";position:absolute;inset:10px;border:1px solid #ffffff17;pointer-events:none}.weekly-top{display:flex;justify-content:space-between;color:#d7c8a6;font-size:var(--t-micro);letter-spacing:1.5px}.decree-icon{font-size:48px;color:var(--gold);margin:32px 0 15px}.weekly-card h2{font:31px "MedievalSharp";margin:0 0 12px}.weekly-card>p{color:#d8ddcf;font-size:var(--t-small);line-height:1.6}.weekly-card .rule-divider{height:1px;background:#ffffff1c;margin:25px 0}.weekly-card .flavour{font-family:Georgia,serif;font-style:italic;color:#aaae9f}.text-button,.small-link{background:none;border:0;color:#e2b661;text-transform:uppercase;letter-spacing:1px;font:bold var(--t-micro) "DM Sans";padding:18px 0 0;cursor:pointer}.panel-screen{padding:55px 6vw 80px}.panel-screen.narrow{max-width:1200px;margin:auto}.section-heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:38px}.section-heading h1{font-size:50px;margin-bottom:8px}.section-heading>div>p:last-child{color:var(--muted);margin:0}.deck-total{text-align:right}.deck-total span{font:50px "MedievalSharp"}.deck-total small{display:block;color:var(--muted);font-size:var(--t-micro);letter-spacing:1px}.deck-layout{display:grid;grid-template-columns:1fr 285px;gap:35px}.filter-row{display:flex;gap:8px;margin-bottom:20px}.chip{padding:8px 15px;border:1px solid #c9bea6;background:transparent;border-radius:20px;font:600 10px "DM Sans";text-transform:uppercase;letter-spacing:1px;cursor:pointer}.chip.active{background:var(--forest);color:white;border-color:var(--forest)}.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}.game-card{background:var(--paper);border:1px solid #cec3aa;min-height:235px;padding:14px;position:relative;box-shadow:0 3px 0 #d0c6b0;transition:.18s;overflow:hidden}.game-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}.card-art{height:85px;background:linear-gradient(150deg,var(--accent,#426449),#1e3426);display:grid;place-items:center;color:#f6e5ba;font-size:45px;margin:-14px -14px 12px;position:relative}.card-type{position:absolute;top:6px;left:7px;font-size:var(--t-micro);letter-spacing:1px;background:#192c20cf;padding:4px 6px;color:white;text-transform:uppercase}.game-card h3{font:18px "MedievalSharp";margin:0 0 5px}.game-card p{font-size:10px;line-height:1.45;color:#665f51;margin:0}.costs{display:flex;gap:4px;position:absolute;right:8px;top:78px}.cost{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;color:white;font-size:9px;font-weight:bold;border:2px solid var(--paper)}.cost.food{background:#779149}.cost.metal{background:#6a7480}.cost.material{background:#9b663c}.cost.gold{background:#c49232}.power{position:absolute;bottom:8px;right:8px;font:bold 11px "DM Sans";color:var(--rust)}.deck-controls{position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:8px}.deck-controls button{width:22px;height:22px;border:1px solid #bcae91;background:#eee4ce;cursor:pointer}.deck-controls b{font-size:12px}.deck-list-panel{background:var(--forest);padding:22px;color:white;height:max-content;position:sticky;top:20px}.panel-title{display:flex;justify-content:space-between;font-size:var(--t-micro);letter-spacing:1.4px;padding-bottom:14px;border-bottom:1px solid #ffffff1b}.panel-title .small-link{padding:0}.deck-row{display:flex;justify-content:space-between;font-size:11px;padding:9px 0;border-bottom:1px solid #ffffff0f;color:#dce1d9}.deck-row b{color:#e4bb69}.button.full{width:100%;background:var(--gold);color:var(--ink);margin-top:18px}.deck-message{text-align:center;font-size:var(--t-micro);color:#e0b965;min-height:15px}.notice{padding:14px 18px;border:1px solid #d4c6a8;background:#eee5d1;margin-bottom:24px;color:#645d50;font-size:var(--t-small)}.collection-grid .game-card{min-height:220px}.owned{position:absolute;bottom:9px;left:9px;font:bold var(--t-micro) "DM Sans";color:#8e6629}.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.rules-grid article{background:var(--paper);border:1px solid var(--line);padding:28px}.rules-grid article>span{color:var(--gold);font:20px "MedievalSharp"}.rules-grid h3{font:22px "MedievalSharp";margin:12px 0}.rules-grid p{font-size:var(--t-small);line-height:1.65;color:var(--muted)}.decree-banner{margin-top:20px;background:var(--forest);color:white;padding:25px 30px;display:flex;align-items:center;gap:25px}.decree-banner>div:first-child{font-size:38px;color:var(--gold)}.decree-banner h2{font:25px "MedievalSharp";margin:0 0 5px}.decree-banner p{margin:0;font-size:12px;color:#cbd3c9}
+.game-screen{background:#1b3225;color:var(--cream);min-height:100vh;padding-bottom:220px}.game-screen.active{display:block}.game-header{height:62px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #ffffff12;position:relative}.icon-button{position:absolute;left:24px;background:transparent;border:1px solid #ffffff27;color:white;width:34px;height:34px;cursor:pointer}.game-header .icon-button:last-child{left:auto;right:24px}.log-toggle{left:66px;font-size:13px;line-height:1}.log-toggle[aria-pressed="true"]{border-color:#d3ad5d80;color:#e2bb69}.round-badge{font-size:var(--t-micro);letter-spacing:1.5px}.round-badge strong{font-size:16px;color:var(--gold);margin-left:8px}.mini-decree{position:absolute;right:75px;background:#ffffff0c;color:white;border:1px solid #ffffff1a;padding:6px 10px;display:flex;gap:8px;align-items:center;text-align:left;cursor:pointer}.mini-decree>span:first-child{color:var(--gold)}.mini-decree small{font-size:var(--t-micro);display:block;color:#a7b2a7;letter-spacing:1px}.mini-decree b{font:11px "MedievalSharp"}.player-bar{height:60px;padding:0 max(5vw,25px);display:flex;align-items:center;gap:10px;background:#172b20}.player-bar>div:nth-child(2)>span{font-size:var(--t-micro);letter-spacing:1px;color:#9fa99f}.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#d1b267;color:#17271d;font:bold 16px "MedievalSharp";border:2px solid #f0dca7}.avatar.enemy{background:#9a4c37;color:white;border-color:#c87962}.health{color:#e68067;font:bold 13px "DM Sans"}.resources{display:flex;gap:8px;margin-left:auto}.hand-count{font-size:var(--t-micro);color:#aab4ab;margin-left:15px}.battlefield-wrap{max-width:720px;margin:8px auto 0;padding:0 20px}.battle-label{font-size:var(--t-micro);letter-spacing:1.3px;color:#9eaa9f;margin:5px 0;display:flex;justify-content:space-between}.battle-label.yours{margin-top:7px}.board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.lane{display:flex;gap:5px;flex-direction:column}.enemy-board .lane{flex-direction:column-reverse}.slot{height:72px;border:1px solid #ffffff1c;background:#ffffff08;display:grid;place-items:center;position:relative;cursor:pointer;transition:.15s}.slot:before{font-size:var(--t-micro);color:#ffffff1d;letter-spacing:1px}.slot.building:before{content:"BUILDING"}.slot.unit:before{content:"UNIT"}.slot.valid{border-color:#ddb45b;background:#ddb45b16;box-shadow:inset 0 0 15px #d9ad4730}.slot.occupied:before{display:none}.slot-card{position:absolute;inset:3px;padding:5px;background:#ede5d2;color:var(--ink);border-left:3px solid var(--accent,#5b795c);overflow:hidden}.slot-card b{display:block;font:11px "MedievalSharp";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot-card small{font-size:var(--t-micro);color:#716b5f}.slot-card .slot-icon{font-size:20px;float:right;color:var(--accent)}.slot-card .slot-power{position:absolute;right:4px;bottom:3px;color:var(--rust);font-size:var(--t-tiny);font-weight:bold}.enemy-board .slot-card.hidden{background:#263f2f;border:1px solid #46624c;color:#729077;display:grid;place-items:center;font:22px "MedievalSharp"}.clash-line{height:22px;display:flex;align-items:center;gap:10px;color:#9f7b3c}.clash-line span{height:1px;background:#ffffff13;flex:1}.bottom-bar{margin-top:7px;border-top:1px solid #ffffff10}.hand-area{position:fixed;z-index:8;bottom:0;left:0;right:0;background:#f0e8d6;color:var(--ink);padding:10px 18px 14px;box-shadow:0 -12px 35px #08120c61}.hand-heading{max-width:920px;margin:0 auto 6px;font-size:var(--t-micro);letter-spacing:1.4px;display:flex;justify-content:space-between}.hand-heading small{font-size:var(--t-micro);color:#777064;letter-spacing:0}.hand{display:flex;gap:7px;justify-content:center;margin-right:145px}.hand .game-card{width:125px;min-height:145px;padding:8px;cursor:pointer;box-shadow:0 2px 0 #bcb29c}.hand .card-art{height:46px;font-size:26px;margin:-8px -8px 7px}.hand .game-card h3{font-size:12px}.hand .costs{top:38px}.hand .cost{width:18px;height:18px;font-size:7px}.hand .power{font-size:8px}.hand .game-card.selected{transform:translateY(-9px);outline:2px solid var(--gold)}.hand .game-card.unaffordable{filter:saturate(.3);opacity:.7}.commit{position:fixed;bottom:56px;right:25px;width:135px}.game-log{position:fixed;top:135px;right:18px;width:210px;background:#10251aeb;border:1px solid #ffffff16;padding:12px;max-height:330px;overflow:auto;z-index:5;font-size:var(--t-small);line-height:1.45;color:#b7c1b8;transform:translateX(calc(100% + 20px));transition:.2s}.game-log.show{transform:none}.log-entry{padding:5px 0;border-bottom:1px solid #ffffff10}.log-entry b{color:#d3ad5d}.modal{position:fixed;inset:0;background:#071009bb;z-index:40;display:none;place-items:center;padding:20px}.modal.open{display:grid}.modal-card{width:min(520px,100%);max-height:90vh;overflow:auto;background:var(--paper);padding:38px;position:relative;box-shadow:var(--shadow)}.modal-close{position:absolute;right:12px;top:9px;background:none;border:0;font-size:26px;cursor:pointer}.modal-card h2{font:34px "MedievalSharp";margin:0 0 10px}.modal-card p{color:var(--muted);font-size:13px;line-height:1.6}.modal-actions{display:flex;gap:10px;margin-top:22px}.pack-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.pack-options .game-card{min-height:190px}.sacrifice-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:220px;overflow:auto}.sacrifice-button{border:1px solid var(--line);background:#eee6d3;padding:9px;text-align:left;cursor:pointer;font:11px "DM Sans"}.sacrifice-button:hover{border-color:var(--rust)}
 @media(max-width:900px){.topbar{padding:0 20px}.topbar nav{display:none}.home-screen.active{grid-template-columns:1fr;padding:55px 8vw}.weekly-card{max-width:470px}.deck-layout{grid-template-columns:1fr}.deck-list-panel{position:static}.game-log,.log-toggle{display:none}.battlefield-wrap{max-width:620px}.hand{justify-content:flex-start;overflow-x:auto;margin-right:115px}.hand .game-card{min-width:112px}.commit{right:12px;width:105px}.mini-decree{display:none}}@media(max-width:600px){.season-pill{display:none}.hero-copy h1{font-size:48px}.stats-row{gap:15px}.stats-row div{display:block}.section-heading{align-items:flex-start}.section-heading h1{font-size:40px}.deck-total{display:none}.rules-grid{grid-template-columns:1fr}.panel-screen{padding:35px 18px}.slot{height:61px}.battlefield-wrap{padding:0 8px}.resources{gap:3px}.hand-area{padding-left:8px}.hero-actions{flex-direction:column;align-items:flex-start}}
 /* Lane rows face the clash line: units in front, buildings behind. */
 .board.enemy-board .lane{flex-direction:column}
@@ -7,16 +16,6 @@
 
 /* Resource crest: the three staples form a triangle around flexible gold. */
 .resources{display:block;width:126px;height:56px;margin-left:auto;flex:0 0 126px}
-.resource-map{width:126px;height:56px;position:relative}
-.resource-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.resource-links path{fill:none;stroke:#d7c18b;stroke-width:1;stroke-dasharray:2 3;opacity:.32}
-.resource-node{position:absolute;width:25px;height:25px;border-radius:50%;display:grid;place-items:center;color:#f7f0dd;border:1px solid #ffffff42;box-shadow:0 2px 6px #07110b55,inset 0 0 0 2px #ffffff0b}
-.resource-node.food{left:51px;top:0;background:#728c45}
-.resource-node.material{left:3px;top:30px;background:#925f36}
-.resource-node.metal{left:99px;top:30px;background:#66727b}
-.resource-node.gold{left:49px;top:25px;width:29px;height:29px;background:#c39231;color:#fff3c8;border-color:#efd388;z-index:2}
-.resource-node .resource-icon{width:13px;height:13px}
-.resource-node b{position:absolute;right:-5px;bottom:-4px;min-width:14px;height:14px;padding:0 3px;border-radius:8px;display:grid;place-items:center;background:#f2e8cf;color:#203126;border:1px solid #c9b98f;font:bold 8px "DM Sans"}
 .resource-icon{display:block;fill:none;stroke:currentColor;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
 .cost{position:relative;color:white}
 .cost .resource-icon{width:12px;height:12px}
@@ -28,19 +27,6 @@
 /* Refined compact resource crest: true equilateral geometry and integrated counts. */
 .player-bar{height:70px}
 .resources{width:96px;height:66px;flex-basis:96px}
-.resource-map{width:96px;height:66px}
-.resource-links path{stroke-linecap:round;stroke-linejoin:round}
-.resource-links .triangle{stroke:#d9bd78;stroke-width:1.5;stroke-dasharray:none;opacity:.42}
-.resource-links .trade-lines{stroke:#e6ca85;stroke-width:1;stroke-dasharray:none;opacity:.22}
-.resource-node{width:24px;height:24px;display:flex;flex-direction:column;justify-content:center;gap:0;border:2px solid #f5e6bd99;box-shadow:0 3px 0 #08160e88,inset 0 2px 0 #ffffff35,inset 0 -3px 0 #08120b3d}
-.resource-node.food{left:36px;top:0;background:linear-gradient(#96b658,#617d38)}
-.resource-node.material{left:12px;top:42px;background:linear-gradient(#bd7744,#784728)}
-.resource-node.metal{left:60px;top:42px;background:linear-gradient(#91a1aa,#53616c)}
-.resource-node.gold{left:37px;top:29px;width:22px;height:22px;background:linear-gradient(#f0c95c,#b77c20);border-color:#ffe5a0;color:#fff7d5;z-index:2}
-.resource-node .resource-icon{width:10px;height:10px;stroke-width:1.7;flex:none}
-.resource-node b{position:static;min-width:0;height:auto;padding:0;border:0;border-radius:0;display:block;background:none;color:#fff8df;text-shadow:0 1px #182017;font:bold 8px/8px "DM Sans"}
-.resource-node.gold .resource-icon{width:9px;height:9px}
-.resource-node.gold b{font-size:7px;line-height:7px}
 @media(max-width:600px){.resources{width:82px;flex-basis:82px;transform:scale(.86);transform-origin:right center;margin-right:0}}
 
 /* Painted card-art rollout. Cards without art retain the heraldic glyph treatment. */
@@ -82,7 +68,7 @@
 .game-log.show{transform:none}
 .log-header{height:62px;padding:13px 14px 12px 18px;background:linear-gradient(135deg,#203e2c,#14291d);color:#f7ecd2;display:flex;align-items:center;justify-content:space-between;border-bottom:3px double #c99b48}
 .log-header span{display:block;font:15px "MedievalSharp";letter-spacing:1.1px}
-.log-header small{display:block;margin-top:4px;color:#cfb875;font:bold 7px "DM Sans";letter-spacing:1.5px}
+.log-header small{display:block;margin-top:4px;color:#cfb875;font:bold var(--t-micro) "DM Sans";letter-spacing:1.5px}
 .log-header button{width:29px;height:29px;border:1px solid #ffffff2b;background:#ffffff08;color:#e5d8b7;font:20px/1 Georgia;cursor:pointer}
 .log-header button:hover{background:#ffffff14;color:#fff}
 .log-entries{height:auto;max-height:calc(100vh - 372px);overflow:auto;padding:7px 15px 15px 17px;scrollbar-color:#b28a4c #e8deca;scrollbar-width:thin}
@@ -90,39 +76,20 @@
 .log-entry:before{content:"";position:absolute;left:14px;top:0;bottom:0;width:1px;background:#cbbd9e}
 .log-entry:after{content:"";position:absolute;left:10px;top:19px;width:7px;height:7px;border-radius:50%;background:#9d8e70;border:2px solid #f6efdf;box-shadow:0 0 0 1px #b6a582}
 .log-entry p{margin:0;font-size:10px;line-height:1.55}
-.log-entry .log-round{position:absolute;left:23px;top:16px;font:bold 7px "DM Sans";letter-spacing:.5px;color:#947344}
-.log-entry b{display:inline-block;margin-top:6px;color:#a34d36;font:bold 7px "DM Sans";letter-spacing:1.2px}
+.log-entry .log-round{position:absolute;left:23px;top:16px;font:bold var(--t-micro) "DM Sans";letter-spacing:.5px;color:#947344}
+.log-entry b{display:inline-block;margin-top:6px;color:#a34d36;font:bold var(--t-micro) "DM Sans";letter-spacing:1.2px}
 .log-entry.latest{margin:6px -5px 0;padding:14px 11px 14px 47px;background:#efe2c5;color:#273a2d;border:1px solid #d7bd82;box-shadow:0 3px 10px #49381712}
 .log-entry.latest:before{left:19px;background:#b37d32}.log-entry.latest:after{left:15px;background:#cf9637;border-color:#efe2c5}.log-entry.latest .log-round{left:28px;color:#875c24}
 .log-empty{margin:30px 15px;text-align:center;color:#8b806c;font:italic 11px/1.6 Georgia,serif}
 .log-toggle{border-color:#ffffff30;background:#ffffff08}.log-toggle[aria-pressed="true"]{background:#d3ad5d1f;box-shadow:inset 0 -2px #d3ad5d}
 @media(max-width:1100px){.game-log{width:280px;right:10px}}
-
-/* Two-height hand dock: compact keeps every card available without hiding the battlefield. */
-.hand-heading-actions{display:flex;align-items:center;gap:12px}
-.hand-heading-actions button{border:0;background:transparent;color:#8b6428;font:bold 7px "DM Sans";letter-spacing:1px;cursor:pointer;padding:3px 0}
-.hand-heading-actions button:hover{color:#a84d32}
 .hand-area{transition:padding .2s ease,box-shadow .2s ease}
-.hand-area.compact{padding-top:6px;padding-bottom:7px;box-shadow:0 -8px 24px #08120c4d}
-.hand-area.compact .hand-heading{margin-bottom:4px}
-.hand-area.compact .hand{gap:6px}
-.hand-area.compact .game-card{width:104px;min-width:104px;min-height:94px;height:94px;padding:6px}
-.hand-area.compact .game-card.illustrated{min-height:94px}
-.hand-area.compact .card-art,.hand-area.compact .card-art.painted{height:47px;margin:-6px -6px 5px}
-.hand-area.compact .game-card h3{font-size:10px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hand-area.compact .game-card p{display:none}
-.hand-area.compact .costs,.hand-area.compact .illustrated .costs{top:38px;right:4px}
-.hand-area.compact .cost{width:16px;height:16px;border-width:1px}
-.hand-area.compact .power{right:5px;bottom:4px;font-size:7px}
-.hand-area.compact .game-card.selected{transform:translateY(-4px)}
-.hand-area.compact .commit{bottom:24px}
-@media(max-width:900px){.hand-heading-actions small{display:none}.hand-area.compact .game-card{min-width:96px;width:96px}}
 
 /* ================================================================
    BATTLEFIELD UI PACK
    Last block in the file on purpose: it settles the layout after
    several rounds of iteration rather than adding another patch.
-   Three rules drive it — nothing overlaps anything, every label is
+   Three rules drive it â€” nothing overlaps anything, every label is
    at a readable size, and the hand relates to the board it feeds.
    ================================================================ */
 
@@ -130,7 +97,7 @@
    one reads mid-plan and buys the board back its vertical space. */
 body.in-battle .topbar{display:none}
 
-/* The battle screen is one flex column — header, rulers, board, dock. Nothing is
+/* The battle screen is one flex column â€” header, rulers, board, dock. Nothing is
    pinned into another element's space, so no arrangement of them can overlap.
    The board takes the slack, which is why the slot height is fluid below. */
 body.in-battle{overflow:hidden}
@@ -150,24 +117,24 @@ body.in-battle{overflow:hidden}
 .game-log{top:56px;right:0;bottom:0;width:352px;max-height:none;border-right:0;border-top:0;box-shadow:-14px 0 40px #07130c5c}
 .log-header{height:54px}
 .log-header span{font:bold 10px "DM Sans";letter-spacing:2px}
-.log-header small{font-size:9px;letter-spacing:1.4px;opacity:.72}
+.log-header small{font-size:var(--t-micro);letter-spacing:1.4px;opacity:.72}
 
-/* Header — the round number is the one number that matters up here. */
+/* Header â€” the round number is the one number that matters up here. */
 .game-header{height:56px}
-.round-badge{font:bold 9px/1 "DM Sans";letter-spacing:2.2px;color:#93a094}
+.round-badge{font:bold var(--t-micro)/1 "DM Sans";letter-spacing:2.2px;color:#93a094}
 .round-badge strong{font:bold 18px/1 "MedievalSharp";color:var(--gold);margin-left:7px;vertical-align:-2px}
 
-/* Ruler bars — identity, health and resources on one readable line. */
+/* Ruler bars â€” identity, health and resources on one readable line. */
 .player-bar{height:auto;min-height:64px;gap:14px;padding:7px var(--gutter)}
 .avatar{width:38px;height:38px;font-size:17px;flex:0 0 38px}
 .ruler-id{display:flex;flex-direction:column;gap:3px;min-width:0}
-.ruler-id b{font:bold 10px/1 "DM Sans";letter-spacing:1.5px;color:#c3cdbe;white-space:nowrap}
-.opponent-bar #aiProfileLabel{font-size:10px;letter-spacing:1.5px;color:#d6b86c}
+.ruler-id b{font:bold var(--t-micro)/1 "DM Sans";letter-spacing:1.5px;color:#c3cdbe;white-space:nowrap}
+.opponent-bar #aiProfileLabel{font-size:var(--t-micro);letter-spacing:1.5px;color:#d6b86c}
 .health{font:bold 19px/1 Georgia,serif;color:#e8836a;letter-spacing:.5px}
-.hand-count{margin-left:12px;padding:5px 11px;border:1px solid #ffffff1c;border-radius:999px;background:#ffffff0a;font:bold 12px/1 "DM Sans";color:#c3cdbe;flex:0 0 auto}
-.hand-count:after{content:" ♠";opacity:.5}
+.hand-count{margin-left:12px;padding:5px 11px;border:1px solid #ffffff1c;border-radius:999px;background:#ffffff0a;font:bold var(--t-tiny)/1 "DM Sans";color:#c3cdbe;flex:0 0 auto}
+.hand-count:after{content:" â™ ";opacity:.5}
 
-/* Resources — the realm sigil. Three resources at the points of a triangle, gold at
+/* Resources â€” the realm sigil. Three resources at the points of a triangle, gold at
    the heart, the spokes drawing the substitution rule. Sized to be read mid-plan;
    SVG text scales with the mark, so it stays legible at any width. */
 .resources{display:block;width:clamp(96px,min(10.5vw,16vh),150px);height:auto;flex:0 0 auto;margin:0 0 0 auto;transform:none}
@@ -187,29 +154,29 @@ body.in-battle{overflow:hidden}
 .cost.metal{background:#7d92a6}
 .cost.gold{background:#d3a03a}
 
-/* Battlefield — the stage tracks the viewport instead of sitting at a fixed 980px
+/* Battlefield â€” the stage tracks the viewport instead of sitting at a fixed 980px
    island on a wide monitor. Every row below aligns to the same width, so health,
    resources, board edge and hand all share one column rather than drifting to
    opposite corners of the screen. */
 .game-screen{--inset:clamp(26px,5vw,96px);--stage:min(1560px,calc(100vw - var(--rail) - var(--inset)));--gutter:max(calc((100vw - var(--rail) - var(--stage))/2),13px)}
 .battlefield-wrap{width:var(--stage);max-width:none;padding:0;margin:4px auto 0}
-.battle-label{font:bold 9px/1 "DM Sans";letter-spacing:2.2px;color:#7d8a80;margin:9px 2px 7px}
+.battle-label{font:bold var(--t-micro)/1 "DM Sans";letter-spacing:2.2px;color:#7d8a80;margin:9px 2px 7px}
 .board{gap:10px}
 .lane{gap:8px}
 .slot{height:clamp(72px,13.5vh,164px);height:clamp(56px,calc((100cqh - 112px)/4),164px);border-radius:4px;border-color:#ffffff17}
 .slot.valid{border-color:#d3ad5d99;background:#d3ad5d14}
 .clash-line{height:26px;margin:2px 0}
 
-/* Hand dock — the cards and the commit button share a row instead of
+/* Hand dock â€” the cards and the commit button share a row instead of
    the button floating over the hand behind a 145px margin. */
 .hand-area{position:static;right:auto;left:auto;padding:9px var(--gutter) 13px;box-shadow:0 -10px 26px #08120c47}
 .hand-heading{max-width:none;margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:14px}
-.hand-heading small{font:italic 12px/1.35 Georgia,serif;letter-spacing:0;color:#7b7160;text-transform:none}
+.hand-heading small{font:italic var(--t-small)/1.35 Georgia,serif;letter-spacing:0;color:#7b7160;text-transform:none}
 .hand-heading button{border:0;background:transparent;color:#8b6428;font:15px/1 "DM Sans";cursor:pointer;padding:3px 5px;border-radius:4px}
 .hand-heading button:hover{color:var(--rust);background:#17271d0d}
 /* min-width:0 on the hand, or its content width forces the dock wider than the
-   viewport instead of scrolling inside it. The keep — your health and sigil on a
-   dark plaque — anchors the dock's left flank; there is no bottom ruler bar any
+   viewport instead of scrolling inside it. The keep â€” your health and sigil on a
+   dark plaque â€” anchors the dock's left flank; there is no bottom ruler bar any
    more, so the board above keeps that height for itself. */
 .hand-dock-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;min-width:0}
 .hand{margin:0;gap:8px;justify-content:flex-start;overflow-x:auto;padding:2px 0 4px;min-width:0}
@@ -234,7 +201,7 @@ body.in-battle{overflow:hidden}
 .hand-area .cost b{width:11px;height:11px;font-size:8px;right:-3px;bottom:-3px}
 .hand-area .power{right:auto;left:9px;bottom:9px;font-size:11px}
 .hand-area .game-card.selected{transform:translateY(-6px)}
-.hand-area .card-type{font-size:8px;letter-spacing:1.2px}
+.hand-area .card-type{font-size:var(--t-micro);letter-spacing:1.2px}
 
 /* The rail scales with the viewport and the board shrinks into what is left, so the
    chronicle keeps its own ground. Only on a phone is there nothing to give, and
@@ -245,10 +212,15 @@ body.in-battle{overflow:hidden}
   .game-log{width:min(340px,88vw)}
 }
 @media(max-width:640px){
-  /* Side by side, the button would leave the hand about a card and a half wide. */
-  .hand-dock-row{grid-template-columns:1fr;gap:9px}
-  .dock-keep{flex-direction:row;gap:14px;padding:7px 12px}
-  .commit{width:100%}
+  /* Three abreast would leave the hand about a card and a half wide, but stacking all
+     three costs the board a third of the screen. The keep and the button share a row
+     instead, and the hand takes the full width beneath them. */
+  .hand-dock-row{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"keep commit" "hand hand";gap:9px 12px}
+  .dock-keep{grid-area:keep;flex-direction:row;gap:12px;padding:7px 11px}
+  /* The sigil is square, so its width sets the whole dock's height on a phone. */
+  .dock-keep .resources{width:80px}
+  #playerHand{grid-area:hand}
+  .commit{grid-area:commit;width:100%;min-width:0}
 }
 @media(max-width:900px){
   .resources{width:clamp(96px,24vw,116px)}
@@ -259,7 +231,7 @@ body.in-battle{overflow:hidden}
    BATTLE THEATRE
    The clash is staged, not stated: armies lunge, the fallen linger
    as fading ghosts, damage floats up in numbers, palisades flash
-   when they hold. Nothing here changes an outcome — resolveRound
+   when they hold. Nothing here changes an outcome â€” resolveRound
    reports what happened and this block performs it.
    ================================================================ */
 
@@ -277,7 +249,7 @@ body.in-battle{overflow:hidden}
 .fx-slain{position:absolute;inset:3px;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#131f16ea;border:1px solid #a84d3266;border-radius:3px;animation:fxSlain 1.55s ease forwards;pointer-events:none}
 .fx-slain i{font-size:22px;font-style:normal;color:#c96b52;text-shadow:0 0 10px #a84d3255}
 .fx-slain b{font:bold 11px "DM Sans";letter-spacing:.4px;color:#e8dcc4;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fx-slain small{font:italic 9.5px Georgia,serif;color:#cf6a48;letter-spacing:1.1px;text-transform:uppercase}
+.fx-slain small{font:italic var(--t-micro) Georgia,serif;color:#cf6a48;letter-spacing:1.1px;text-transform:uppercase}
 @keyframes fxSlain{0%{opacity:0;transform:scale(.88)}10%{opacity:1;transform:scale(1.05)}20%{transform:scale(1) rotate(-1.2deg)}72%{opacity:1;transform:rotate(-1.2deg)}100%{opacity:0;transform:translateY(12px) rotate(2.5deg)}}
 .fx-burnout{background:radial-gradient(circle at 50% 62%,#5c1f0aee 0%,#131f16f2 68%);border-color:#e0703d99}
 .fx-burnout i{color:#ff9a4d;text-shadow:0 0 14px #ff7a2a}
@@ -306,18 +278,18 @@ body.in-battle{overflow:hidden}
 .slot-card.board-painted .slot-power{right:auto;left:6px;bottom:6px;width:31px;height:35px;font:bold 12px "DM Sans"}
 
 /* Hand cards spend their whitespace on telling you what the card does. */
-.hand-area .game-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-height:3em;font:italic 10.5px/1.45 Georgia,serif;color:#6f6553;margin:4px 0 0;padding:0 10px}
+.hand-area .game-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-height:3.1em;font:italic var(--t-micro)/1.45 Georgia,serif;color:#6f6553;margin:4px 0 0;padding:0 10px}
 .hand-area .game-card{padding-bottom:46px}
 
 /* The chronicle of a card, on hover: name, cost, power, and what it does. */
 .card-tip{position:fixed;z-index:60;width:288px;padding:13px 15px 14px;background:#f6efdf;color:#2a2417;border:1px solid #c9a961;box-shadow:0 16px 44px #07130c88,5px 5px 0 #c99b4830;pointer-events:none}
 .card-tip .tip-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
-.card-tip .tip-head b{font:bold 14px "DM Sans"}
-.card-tip .tip-head span{font:bold 8px "DM Sans";letter-spacing:1.6px;color:#8b6428;text-transform:uppercase}
-.card-tip .tip-power{font:bold 12px "DM Sans";color:#8c3b2b;margin:0 0 5px}
+.card-tip .tip-head b{font:bold var(--t-small) "DM Sans"}
+.card-tip .tip-head span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.6px;color:#8b6428;text-transform:uppercase}
+.card-tip .tip-power{font:bold var(--t-tiny) "DM Sans";color:#8c3b2b;margin:0 0 5px}
 .card-tip .tip-cost{display:flex;gap:5px;margin:0 0 8px}
-.card-tip .tip-cost.free{font:italic 11px Georgia,serif;color:#776f60}
-.card-tip p{font:italic 12.5px/1.55 Georgia,serif;color:#4a4234;margin:0}
+.card-tip .tip-cost.free{font:italic var(--t-tiny) Georgia,serif;color:#776f60}
+.card-tip p{font:italic var(--t-small)/1.55 Georgia,serif;color:#4a4234;margin:0}
 
 /* A short viewport slims the chrome before it squeezes the board: smaller sigils,
    no rules text in hand, shallower card art. The battlefield keeps its height. */
@@ -330,8 +302,8 @@ body.in-battle{overflow:hidden}
 }
 
 /* Empty slots hold their ground: a ghost of what belongs there, not a void. */
-.board .slot:not(.occupied):before{content:"⚔";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,3.4cqh,30px);color:#ffffff10;transition:color .16s ease}
-.board .slot.building:not(.occupied):before{content:"♜"}
+.board .slot:not(.occupied):before{content:"âš”";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,3.4cqh,30px);color:#ffffff10;transition:color .16s ease}
+.board .slot.building:not(.occupied):before{content:"â™œ"}
 .board .slot:not(.occupied):hover:before{color:#ffffff2a}
 .board .slot.valid:before{color:#d3ad5d3d}
 
@@ -345,10 +317,10 @@ body.in-battle{overflow:hidden}
 .rules-subhead:first-of-type{margin-top:6px}
 .round-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin:0;padding:0;list-style:none}
 .round-flow li{position:relative;background:var(--paper);border:1px solid var(--line);padding:17px 13px 16px;text-align:center}
-.round-flow li:not(:last-child):after{content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:15px;line-height:1}
+.round-flow li:not(:last-child):after{content:"â†’";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:15px;line-height:1}
 .round-flow b{display:block;font-size:23px;color:var(--gold);line-height:1}
-.round-flow span{display:block;font:bold 10px "DM Sans";letter-spacing:1.7px;color:var(--ink);margin:9px 0 6px}
-.round-flow small{display:block;font:italic 11.5px/1.5 Georgia,serif;color:var(--muted)}
+.round-flow span{display:block;font:bold var(--t-micro) "DM Sans";letter-spacing:1.7px;color:var(--ink);margin:9px 0 6px}
+.round-flow small{display:block;font:italic var(--t-small)/1.5 Georgia,serif;color:var(--muted)}
 .rules-grid article b{color:var(--ink);font-weight:600}
 @media(max-width:820px){
   .round-flow{grid-template-columns:repeat(2,1fr)}
@@ -358,33 +330,33 @@ body.in-battle{overflow:hidden}
 /* Draw step: a round opens here and planning stays locked until every draw is spent. */
 .draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
 .draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.draw-prompt-head span{color:#d3ad5d;font:bold 8px "DM Sans";letter-spacing:1.6px}
-.draw-prompt-head small{color:#8b806c;font:italic 10px Georgia,serif}
+.draw-prompt-head span{color:#d3ad5d;font:bold var(--t-micro) "DM Sans";letter-spacing:1.6px}
+.draw-prompt-head small{color:#8b806c;font:italic var(--t-tiny) Georgia,serif}
 .draw-piles{display:flex;gap:8px}
 .draw-pile{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 6px;border:1px solid #d3ad5d40;border-radius:5px;background:#ffffff08;color:#efe2c5;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease}
-.draw-pile b{font:bold 11px "DM Sans";letter-spacing:.5px}
+.draw-pile b{font:bold var(--t-small) "DM Sans";letter-spacing:.5px}
 .draw-pile small{color:#8b806c;font:10px Georgia,serif}
 .draw-pile:hover:not(:disabled){background:#d3ad5d24;border-color:#d3ad5d;transform:translateY(-1px)}
 .draw-pile:disabled{opacity:.4;cursor:not-allowed}
 
-/* The draw bar is one compact row, and the screen reserves the height it adds —
+/* The draw bar is one compact row, and the screen reserves the height it adds â€”
    otherwise opening it pushes the dock up over the ruler bar. */
 .draw-prompt{display:flex;align-items:center;gap:18px;max-width:660px;margin:0 0 9px;padding:8px 14px}
 .draw-prompt[hidden]{display:none}
 .draw-prompt-head{flex-direction:column;align-items:flex-start;gap:1px;margin:0;flex:0 0 auto}
 .draw-piles{flex:1;min-width:0}
 .draw-pile{flex-direction:row;align-items:baseline;justify-content:center;gap:8px;padding:8px 12px}
-.draw-pile small{font-size:11px}
+.draw-pile small{font-size:var(--t-tiny)}
 
 .slot-card.board-painted.damaged{filter:saturate(.48) brightness(.78);box-shadow:inset 0 0 0 1px #d8c7aa40,inset 0 -24px 35px #0b140ddb}
 .slot-card.board-painted.damaged .slot-power{background:#d4c9b7;color:#6f3730}
 
 /* Temporary opponent controls for rapid AI testing. */
 .opponent-setup{display:flex;align-items:center;gap:10px;margin:-28px 0 34px;width:max-content;padding:9px 11px;border:1px solid #cfc3aa;background:#eee5d2;color:#645d50;position:relative;z-index:1}
-.opponent-setup>span{font:bold 8px "DM Sans";letter-spacing:1.4px;color:#8e6629;padding-right:3px}
-.opponent-setup label{display:flex;align-items:center;gap:6px;font:bold 7px "DM Sans";letter-spacing:.8px;text-transform:uppercase}
+.opponent-setup>span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.4px;color:#8e6629;padding-right:3px}
+.opponent-setup label{display:flex;align-items:center;gap:6px;font:bold var(--t-micro) "DM Sans";letter-spacing:.8px;text-transform:uppercase}
 .opponent-setup select{height:29px;border:1px solid #bdae91;background:#faf5e8;color:var(--ink);padding:0 25px 0 8px;font:600 10px "DM Sans";cursor:pointer}
-.opponent-bar #aiProfileLabel{color:#d6b86c;font-size:7px;letter-spacing:.8px}
+.opponent-bar #aiProfileLabel{color:#d6b86c;font-size:var(--t-micro);letter-spacing:.8px}
 @media(max-width:600px){.opponent-setup{width:100%;flex-wrap:wrap;margin-top:-22px}.opponent-setup>span{width:100%}}
 
 /* Deck library: several saved banners drawn from one fixed 20-design collection. */
@@ -399,10 +371,10 @@ body.in-battle{overflow:hidden}
 .deck-picker input::placeholder{color:#8ea18f}
 .deck-picker select:focus,.deck-picker input:focus{outline:2px solid var(--gold);outline-offset:-1px}
 .deck-picker-actions{display:flex;gap:10px;flex-wrap:wrap}
-.deck-picker-actions .small-link{padding:0;font-size:8px}
+.deck-picker-actions .small-link{padding:0;font-size:var(--t-micro)}
 .deck-picker-actions .small-link:disabled{opacity:.35;cursor:not-allowed}
 .deck-picker-actions .danger{color:#e0866b}
-.deck-stats{margin:12px 0 4px;font:bold 9px "DM Sans";letter-spacing:1.1px;color:#a9b6a6}
+.deck-stats{margin:12px 0 4px;font:bold var(--t-micro) "DM Sans";letter-spacing:1.1px;color:#a9b6a6}
 .deck-empty{margin:0;padding:12px 0;font-size:10px;line-height:1.5;color:#a9b6a6}
 .game-card.in-deck{border-color:#b9963f;box-shadow:0 3px 0 #b9963f66}
 
@@ -410,13 +382,13 @@ body.in-battle{overflow:hidden}
 .decree-archive-heading{margin:48px 0 20px}
 .decree-archive-heading .eyebrow{margin-bottom:9px}
 .decree-archive-heading h2{font:30px "MedievalSharp";margin:0 0 8px}
-.decree-archive-heading>p:last-child{max-width:680px;margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.decree-archive-heading>p:last-child{max-width:680px;margin:0;color:var(--muted);font-size:var(--t-small);line-height:1.6}
 .decree-archive{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .decree-archive article{display:flex;gap:15px;padding:18px;background:var(--paper);border:1px solid var(--line);box-shadow:0 2px 0 #d8cfb966}
 .decree-archive article.active{border-color:#b78a39;box-shadow:inset 3px 0 #b78a39,0 2px 0 #d8cfb966}
 .decree-archive article>span{display:grid;place-items:center;flex:0 0 39px;height:39px;background:var(--forest);color:var(--gold);font-size:21px}
 .decree-archive h3{font:19px "MedievalSharp";margin:0 0 5px}
-.decree-archive p{margin:0;color:var(--muted);font-size:11px;line-height:1.5}
+.decree-archive p{margin:0;color:var(--muted);font-size:var(--t-small);line-height:1.5}
 @media(max-width:700px){.decree-archive{grid-template-columns:1fr}.decree-setup select{min-width:0;max-width:100%}}
 
 /* The River Runs High compresses both realms to the same three playable lanes. */
@@ -426,17 +398,17 @@ body.in-battle{overflow:hidden}
 .river-lane{position:absolute;z-index:2;right:20px;top:19px;bottom:19px;width:calc(25% - 7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1px solid #92d4d080;color:#e2fbf6;background:repeating-linear-gradient(165deg,#214f57 0,#214f57 18px,#2d6e76 18px,#2d6e76 36px);background-size:100% 150%;box-shadow:inset 8px 0 18px #09272c66,inset -8px 0 18px #09272c66;text-shadow:0 1px 3px #061f23;animation:river-flow 4s linear infinite;pointer-events:none;overflow:hidden}
 .river-lane[hidden]{display:none}
 .river-lane b,.river-lane small{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1.6px}
-.river-lane b{font:700 9px "DM Sans"}
-.river-lane small{font:700 6px "DM Sans";color:#b9dedb}
+.river-lane b{font:700 var(--t-micro) "DM Sans"}
+.river-lane small{font:700 var(--t-micro) "DM Sans";color:#b9dedb}
 .river-lane span{color:#9de0dc;font-size:25px;line-height:1}
 @keyframes river-flow{to{background-position:0 180px}}
 @media(prefers-reduced-motion:reduce){.river-lane{animation:none}}
 
 /* Compact next-clash forecasts for workers, open-lane damage, and siege effects. */
 .forecast-stack{position:absolute;z-index:3;top:5px;left:5px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none;text-shadow:none}
-.forecast-chip{height:19px;display:inline-flex;align-items:center;gap:3px;padding:2px 5px;border:1px solid #ffffff33;border-radius:10px;color:#fff;box-shadow:0 1px 4px #07100b99;backdrop-filter:blur(3px);font:700 8px "DM Sans";white-space:nowrap}
+.forecast-chip{height:22px;display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border:1px solid #ffffff33;border-radius:11px;color:#fff;box-shadow:0 1px 4px #07100b99;backdrop-filter:blur(3px);font:700 var(--t-micro) "DM Sans";white-space:nowrap}
 .forecast-chip .resource-icon{width:10px;height:10px;stroke-width:1.8}
-.forecast-chip>i{font-style:normal;font-size:5px;letter-spacing:.65px;opacity:.82}
+.forecast-chip>i{font-style:normal;font-size:var(--t-micro);letter-spacing:.5px;opacity:.72}
 .forecast-chip.harvest-ready{background:#32633ee8;color:#eaffd8;border-color:#a9d88788}
 .forecast-chip.harvest-ready:before{content:"";width:4px;height:4px;border-radius:50%;background:#b9ec7d;box-shadow:0 0 5px #b9ec7d}
 .forecast-chip.harvest-waiting{background:#29342de0;color:#d7ddd4;border-color:#b8c1b455}
@@ -455,44 +427,44 @@ body.in-battle{overflow:hidden}
 /* Private-room online multiplayer. */
 .multiplayer-setup{display:grid;grid-template-columns:minmax(130px,1fr) auto auto minmax(100px,.7fr) auto;align-items:end;gap:9px;margin:-22px 0 34px;padding:13px;border:1px solid #bda66f;background:linear-gradient(135deg,#183423,#23482f);color:#f2e7cb;box-shadow:4px 4px 0 #b58c3b2e}
 .multiplayer-title{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding-bottom:6px;border-bottom:1px solid #ffffff1f}
-.multiplayer-title span{font:bold 9px "DM Sans";letter-spacing:1.5px;color:#d9b962}.multiplayer-title small{font:8px "DM Sans";color:#a9b9aa}
-.multiplayer-setup label{display:grid;gap:4px;font:bold 7px "DM Sans";letter-spacing:.8px;text-transform:uppercase;color:#b8c4b8}
+.multiplayer-title span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.5px;color:#d9b962}.multiplayer-title small{font:var(--t-tiny) "DM Sans";color:#a9b9aa}
+.multiplayer-setup label{display:grid;gap:4px;font:bold var(--t-micro) "DM Sans";letter-spacing:.8px;text-transform:uppercase;color:#b8c4b8}
 .multiplayer-setup input{height:34px;min-width:0;border:1px solid #ffffff35;background:#10271a;color:#fff4d9;padding:0 10px;font:600 11px "DM Sans";text-transform:none}
 .multiplayer-setup #roomCode{text-transform:uppercase;letter-spacing:2px;font-weight:700}
-.online-button{height:34px;padding:0 13px;background:#cfad5d;color:#172a1d;font-size:9px;white-space:nowrap}.online-button:hover{background:#e0c477}
-.room-divider{align-self:center;color:#809386;font:italic 9px Georgia;text-align:center}
-#onlineStatus{grid-column:1/-1;min-height:14px;margin:0;color:#d9d5c4;font:9px/1.4 "DM Sans"}#onlineStatus.error{color:#ffad91}
+.online-button{height:36px;padding:0 14px;background:#cfad5d;color:#172a1d;font-size:var(--t-micro);white-space:nowrap}.online-button:hover{background:#e0c477}
+.room-divider{align-self:center;color:#809386;font:italic var(--t-tiny) Georgia;text-align:center}
+#onlineStatus{grid-column:1/-1;min-height:16px;margin:0;color:#d9d5c4;font:var(--t-tiny)/1.4 "DM Sans"}#onlineStatus.error{color:#ffad91}
 @media(max-width:760px){.multiplayer-setup{grid-template-columns:1fr auto}.multiplayer-title,#onlineStatus{grid-column:1/-1}.room-divider{grid-column:1/-1}.multiplayer-setup label{min-width:0}}
 
 /* Hall mode chooser: keep solo and online setup distinct and make the launch path obvious. */
 .home-screen.active{align-items:start;padding-top:5vh}
 .duel-launcher{width:min(650px,100%);margin:30px 0 30px;border:1px solid #c8bda5;background:#f8f2e4;box-shadow:5px 5px 0 #c7b78e42;position:relative;z-index:2}
 .mode-heading{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid #d7cbb2;color:#876126}
-.mode-heading>span{font:bold 9px "DM Sans";letter-spacing:1.45px}.mode-heading small{font:8px "DM Sans";color:#8a8172}
+.mode-heading>span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.45px}.mode-heading small{font:var(--t-tiny) "DM Sans";color:#8a8172}
 .mode-tabs{display:grid;grid-template-columns:1fr 1fr;background:#e8deca;border-bottom:1px solid #cfc1a3}
 .mode-tab{display:flex;align-items:center;gap:11px;padding:14px 16px;border:0;border-right:1px solid #cfc1a3;background:transparent;color:#6b675e;text-align:left;cursor:pointer;position:relative}
 .mode-tab:last-child{border-right:0}.mode-tab>b{display:grid;place-items:center;width:31px;height:31px;background:#d5c9b0;color:#625c4f;font-size:15px;border-radius:50%}
-.mode-tab>span{font:700 11px "DM Sans"}.mode-tab small{display:block;margin-top:3px;color:#898174;font:8px "DM Sans"}
+.mode-tab>span{font:700 11px "DM Sans"}.mode-tab small{display:block;margin-top:3px;color:#898174;font:var(--t-tiny) "DM Sans"}
 .mode-tab.active{background:#fffaf0;color:#203f2d}.mode-tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--gold)}.mode-tab.active>b{background:var(--forest);color:#e6bd67}
 .mode-panel{padding:15px}.mode-panel[hidden]{display:none}.mode-panel.active{display:block}
-.launch-row{display:flex;align-items:end;gap:12px;margin-bottom:12px}.launch-row label{display:grid;gap:5px;color:#7a7163;font:bold 7px "DM Sans";letter-spacing:.9px;text-transform:uppercase}.launch-row select{height:35px;border:1px solid #bcae91;background:#fffaf0;color:var(--ink);padding:0 30px 0 9px;font:600 11px "DM Sans";cursor:pointer}
+.launch-row{display:flex;align-items:end;gap:12px;margin-bottom:12px}.launch-row label{display:grid;gap:5px;color:#7a7163;font:bold var(--t-micro) "DM Sans";letter-spacing:.9px;text-transform:uppercase}.launch-row select{height:35px;border:1px solid #bcae91;background:#fffaf0;color:var(--ink);padding:0 30px 0 9px;font:600 11px "DM Sans";cursor:pointer}
 .deck-launch label{flex:1}.deck-launch select{width:100%}.deck-launch .small-link{padding:0 0 10px;color:#8e6629}.opponent-launch label:first-child{flex:1}.opponent-launch select{width:100%}.launch-button{width:100%;margin-top:3px}
 .duel-launcher .multiplayer-setup{display:grid;grid-template-columns:minmax(140px,1fr) auto auto minmax(105px,.75fr) auto;align-items:end;gap:9px;margin:0;padding:0;border:0;background:none;color:var(--ink);box-shadow:none}
 .duel-launcher .multiplayer-setup label{color:#7a7163}.duel-launcher .multiplayer-setup input{background:#fffaf0;color:var(--ink);border-color:#bcae91}.duel-launcher #onlineStatus{color:#5f6f61}.duel-launcher #onlineStatus.error{color:#a84d32}
-.duel-launcher .decree-setup{display:flex;align-items:center;gap:10px;margin:0;padding:10px 15px;border-top:1px solid #d7cbb2;background:#eee5d2;color:#645d50}.duel-launcher .decree-setup>span{font:bold 8px "DM Sans";letter-spacing:1.2px;color:#8e6629}.duel-launcher .decree-setup label{display:flex;align-items:center;gap:7px;font:bold 7px "DM Sans";letter-spacing:.8px;text-transform:uppercase}.duel-launcher .decree-setup select{height:29px;min-width:245px;border:1px solid #bdae91;background:#faf5e8;color:var(--ink);padding:0 25px 0 8px;font:600 10px "DM Sans"}
+.duel-launcher .decree-setup{display:flex;align-items:center;gap:10px;margin:0;padding:10px 15px;border-top:1px solid #d7cbb2;background:#eee5d2;color:#645d50}.duel-launcher .decree-setup>span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.2px;color:#8e6629}.duel-launcher .decree-setup label{display:flex;align-items:center;gap:7px;font:bold var(--t-micro) "DM Sans";letter-spacing:.8px;text-transform:uppercase}.duel-launcher .decree-setup select{height:29px;min-width:245px;border:1px solid #bdae91;background:#faf5e8;color:var(--ink);padding:0 25px 0 8px;font:600 10px "DM Sans"}
 .duel-launcher .decree-setup[hidden]{display:none}
 @media(max-width:760px){.mode-heading{align-items:flex-start;gap:8px}.mode-heading small{text-align:right}.duel-launcher .multiplayer-setup{grid-template-columns:1fr auto}.duel-launcher .room-divider,.duel-launcher #onlineStatus{grid-column:1/-1}.duel-launcher .decree-setup{align-items:flex-start;flex-direction:column}.duel-launcher .decree-setup select{min-width:0;max-width:100%}}
 
 /* Developer tools: a topbar switch that reveals the decree override and the collection editor. */
-.dev-toggle{margin-left:auto;border:1px solid #c9bea5;background:transparent;color:#8a8172;border-radius:30px;padding:7px 14px;font:bold 9px "DM Sans";letter-spacing:1.4px;cursor:pointer}
+.dev-toggle{margin-left:auto;border:1px solid #c9bea5;background:transparent;color:#8a8172;border-radius:30px;padding:7px 14px;font:bold var(--t-micro) "DM Sans";letter-spacing:1.4px;cursor:pointer}
 .dev-toggle:hover{color:var(--ink);border-color:#a89c80}
 .dev-toggle.on{background:var(--rust);border-color:var(--rust);color:#fff4e4}
 .dev-toggle:not([hidden])+.season-pill{margin-left:12px}
 .dev-note{border-color:#c8a98f;background:#f2e4d6;color:#6b503f}
-.dev-note>span{display:inline-block;font:bold 8px "DM Sans";letter-spacing:1.4px;color:var(--rust);margin-right:8px}
+.dev-note>span{display:inline-block;font:bold var(--t-micro) "DM Sans";letter-spacing:1.4px;color:var(--rust);margin-right:8px}
 .dev-note b{color:#8c3f28}
 .dev-note .small-link{padding:0;margin-left:8px;color:var(--rust)}
-.collection-swap{position:absolute;bottom:8px;right:8px;border:1px solid #bcae91;background:#eee4ce;color:var(--ink);padding:4px 8px;font:bold 8px "DM Sans";letter-spacing:.8px;cursor:pointer;z-index:2}
+.collection-swap{position:absolute;bottom:8px;right:8px;border:1px solid #bcae91;background:#eee4ce;color:var(--ink);padding:5px 9px;font:bold var(--t-micro) "DM Sans";letter-spacing:.8px;cursor:pointer;z-index:2}
 .collection-swap:hover{border-color:var(--rust);color:var(--rust)}
 .collection-swap.drop{background:#f0ded5;border-color:#cfa992}
 .collection-grid .locked .collection-swap{filter:none}
@@ -518,7 +490,7 @@ body.in-hall .home-screen:before{content:none}
 body.in-hall .hero-copy{width:100%;color:#f4ecda}
 body.in-hall .hero-copy>.eyebrow{margin-bottom:10px;color:#d5b66f}
 body.in-hall .hero-copy h1{margin:0 0 12px;color:#fff8e8;font-size:clamp(46px,5vw,72px);letter-spacing:-1px;text-shadow:0 3px 24px #000}
-body.in-hall .hero-intro{margin:0;color:#cbc5b6;font-size:15px;line-height:1.5;text-shadow:0 2px 10px #000;max-width:500px}
+body.in-hall .hero-intro{margin:0;color:#cbc5b6;font-size:var(--t-body);line-height:1.5;text-shadow:0 2px 10px #000;max-width:500px}
 
 body.in-hall .duel-launcher{width:min(610px,100%);margin:28px 0 0;border:1px solid #c7a96455;background:#111510ee;box-shadow:0 18px 48px #0009,0 1px 0 #ffffff0a;backdrop-filter:blur(12px)}
 body.in-hall .mode-heading{padding:11px 15px;border-bottom-color:#c7a9642e;color:#d7b96f}
