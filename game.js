@@ -172,7 +172,11 @@ function setHallMode(mode){
 }
 
 const RESOURCE_NAMES={food:'Food',material:'Wood',metal:'Metal',gold:'Gold'};
-function resourceIcon(type){const art={food:'<path d="M8 14V2M8 5C5 5 4 3 3 2c3 0 5 1 5 3Zm0 4c3 0 4-2 5-3-3 0-5 1-5 3Zm0 3c-3 0-4-2-5-3 3 0 5 1 5 3Z"/>',material:'<path d="M3 5h10v7H3zM3 8h10M5 5V3h6v2"/><circle cx="5" cy="8" r="1.5"/>',metal:'<path d="m4 4 8-1 3 9H1l3-8Z"/><path d="M4 4h8l-2 4H6L4 4Z"/>',gold:'<circle cx="8" cy="8" r="6"/><path d="m8 4 1.2 2.8L12 8 9.2 9.2 8 12 6.8 9.2 4 8l2.8-1.2L8 4Z"/>'};return `<svg class="resource-icon" viewBox="0 0 16 16" aria-hidden="true">${art[type]}</svg>`}
+const RESOURCE_GLYPHS={food:'<path d="M8 14V2M8 5C5 5 4 3 3 2c3 0 5 1 5 3Zm0 4c3 0 4-2 5-3-3 0-5 1-5 3Zm0 3c-3 0-4-2-5-3 3 0 5 1 5 3Z"/>',material:'<path d="M3 5h10v7H3zM3 8h10M5 5V3h6v2"/><circle cx="5" cy="8" r="1.5"/>',metal:'<path d="m4 4 8-1 3 9H1l3-8Z"/><path d="M4 4h8l-2 4H6L4 4Z"/>',gold:'<circle cx="8" cy="8" r="6"/><path d="m8 4 1.2 2.8L12 8 9.2 9.2 8 12 6.8 9.2 4 8l2.8-1.2L8 4Z"/>'};
+// The realm's palette: food is harvest green, wood is warm timber, metal is cold steel,
+// gold is the radiant centre. Wood used to share food's green, which made the two blur.
+const RES_COLORS={food:'#8fb04e',material:'#c2884b',metal:'#92a6ba',gold:'#e9b54c'};
+function resourceIcon(type){return `<svg class="resource-icon" viewBox="0 0 16 16" aria-hidden="true">${RESOURCE_GLYPHS[type]}</svg>`}
 function costsHtml(cost={}){return Object.entries(cost).map(([k,v])=>`<span class="cost ${k}" title="${v} ${RESOURCE_NAMES[k]}">${resourceIcon(k)}<b>${v}</b></span>`).join('')}
 const CARD_ART={
   logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',goldmine:'assets/cards/gold-mine.webp',
@@ -706,10 +710,38 @@ function damageForecastHtml(side,lane,reveal){
 }
 function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" title="${name}: ${c.text}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power">⚔ ${power}</span>`:''}</div>`}
 function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round)}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),workerForecastHtml(lane.unit)+damageForecastHtml(side,i,reveal))}</div></div>`:'').join('')}
-// A flat row of chips reads at a glance; the old triangle diagram was decorative at the cost of legibility.
+// The realm sigil: three resources at the points of a triangle, gold at its heart.
+// The spokes are the rule made visible — gold flows out to stand in for any of the three.
+// The same mark, without counts, is the game's logo in the top bar and the favicon.
+function resourceEmblemHtml(resources,opts={}){
+  const counts=!opts.logo;
+  const V={food:[60,30],material:[22,96],metal:[98,96]},CHIP={food:[60,10],material:[11,108],metal:[109,108]},CX=60,CY=74;
+  const chrome=`
+    <circle cx="${CX}" cy="${CY}" r="27" fill="${RES_COLORS.gold}" opacity=".07"/>
+    <circle cx="${CX}" cy="${CY}" r="22" fill="${RES_COLORS.gold}" opacity=".07"/>
+    <path d="M60 30 22 96h76Z" fill="none" stroke="#d3ad5d" stroke-width="1.4" opacity=".45"/>
+    <path d="M60 30 22 96h76Z" fill="none" stroke="#d3ad5d" stroke-width="4" opacity=".08"/>
+    <path d="M${CX} ${CY}L60 30M${CX} ${CY}L22 96M${CX} ${CY}L98 96" stroke="#e6ca85" stroke-width="1.6" opacity=".4"/>
+    <path d="M41 63l3.2 3.2-3.2 3.2-3.2-3.2Z M79 63l3.2 3.2-3.2 3.2-3.2-3.2Z M60 92.8l3.2 3.2-3.2 3.2-3.2-3.2Z" fill="#d3ad5d" opacity=".5"/>`;
+  const vertex=r=>{
+    const [x,y]=V[r],[gx,gy]=CHIP[r],col=RES_COLORS[r];
+    return `<g class="em-node ${counts&&!resources[r]?'empty':''}"><title>${RESOURCE_NAMES[r]}: ${resources[r]}</title>
+      <circle cx="${x}" cy="${y}" r="15" fill="#16241a" stroke="${col}" stroke-width="2"/>
+      ${counts?`<text x="${x}" y="${y+5.5}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="15" font-weight="700" fill="#f2ecda">${resources[r]}</text>`
+        :`<g fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(${x-8},${y-8})">${RESOURCE_GLYPHS[r]}</g>`}
+      <circle cx="${gx}" cy="${gy}" r="8.5" fill="#16241a" stroke="${col}" stroke-width="1.5"/>
+      <g fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(${gx-5.6},${gy-5.6}) scale(.7)">${RESOURCE_GLYPHS[r]}</g></g>`;
+  };
+  const gold=`<g class="em-node gold ${counts&&!resources.gold?'empty':''}"><title>Gold: ${resources.gold} — spends as any missing resource</title>
+      <circle cx="${CX}" cy="${CY}" r="18" fill="#1d2b1f" stroke="${RES_COLORS.gold}" stroke-width="2.2"/>
+      <circle cx="${CX}" cy="${CY}" r="14.5" fill="none" stroke="${RES_COLORS.gold}" stroke-width=".9" opacity=".55"/>
+      ${counts?`<text x="${CX}" y="${CY+6.5}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="18" font-weight="700" fill="#f3d489">${resources.gold}</text>`
+        :`<g fill="none" stroke="${RES_COLORS.gold}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(${CX-8},${CY-8})">${RESOURCE_GLYPHS.gold}</g>`}</g>`;
+  return `<svg class="resource-emblem" viewBox="0 0 120 120" role="img" aria-hidden="${opts.logo?'true':'false'}">${chrome}${vertex('food')}${vertex('material')}${vertex('metal')}${gold}</svg>`;
+}
 function renderResources(el,resources){
   el.setAttribute('aria-label',`Food ${resources.food}, Wood ${resources.material}, Metal ${resources.metal}, Gold ${resources.gold}. Gold can replace any other resource.`);
-  el.innerHTML=['food','material','metal','gold'].map(r=>`<span class="res ${r} ${resources[r]?'':'empty'}" title="${RESOURCE_NAMES[r]}: ${resources[r]}${r==='gold'?' — spends as any missing resource':''}">${resourceIcon(r)}<b>${resources[r]}</b></span>`).join('');
+  el.innerHTML=resourceEmblemHtml(resources);
 }
 function renderGame(reveal=false){
   if(!game)return;$('#roundNumber').textContent=game.round;$('#playerHealth').textContent=`♥ ${Math.max(0,game.player.health)}`;$('#aiHealth').textContent=`♥ ${Math.max(0,game.ai.health)}`;renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
@@ -761,4 +793,6 @@ $('#newDeck').onclick=()=>{if(meta.decks.length>=12)return;const d=makeDeck(`Ban
 $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeDeck(),d=makeDeck(`${a.name} copy`,a.cards.slice());meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Banner duplicated.'};
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
 $('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
+// The realm sigil doubles as the game's mark in the top bar.
+$$('.brand-mark').forEach(el=>{el.textContent='';el.innerHTML=resourceEmblemHtml({food:'',material:'',metal:'',gold:''},{logo:true})});
 setupRuleSelector();applyDevMode();renderDeckBuilder();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');

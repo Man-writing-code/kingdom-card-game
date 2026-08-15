@@ -155,7 +155,7 @@ body.in-battle{overflow:hidden}
 .round-badge strong{font:bold 18px/1 "MedievalSharp";color:var(--gold);margin-left:7px;vertical-align:-2px}
 
 /* Ruler bars — identity, health and resources on one readable line. */
-.player-bar{height:64px;gap:14px;padding:0 var(--gutter)}
+.player-bar{height:auto;min-height:64px;gap:14px;padding:7px var(--gutter)}
 .avatar{width:38px;height:38px;font-size:17px;flex:0 0 38px}
 .ruler-id{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ruler-id b{font:bold 10px/1 "DM Sans";letter-spacing:1.5px;color:#c3cdbe;white-space:nowrap}
@@ -164,14 +164,25 @@ body.in-battle{overflow:hidden}
 .hand-count{margin-left:12px;padding:5px 11px;border:1px solid #ffffff1c;border-radius:999px;background:#ffffff0a;font:bold 12px/1 "DM Sans";color:#c3cdbe;flex:0 0 auto}
 .hand-count:after{content:" ♠";opacity:.5}
 
-/* Resources — a flat chip row, sized to actually be read mid-plan. */
-.resources{display:flex;align-items:center;gap:6px;width:auto;height:auto;flex:0 0 auto;margin:0 0 0 auto;transform:none}
-.res{display:inline-flex;align-items:center;gap:6px;padding:5px 11px 5px 9px;border:1px solid #ffffff20;border-radius:999px;background:#ffffff0d;transition:opacity .2s ease}
-.res .resource-icon{width:16px;height:16px;stroke-width:1.4}
-.res b{font:bold 14px/1 "DM Sans";color:#f2ecda;min-width:8px;text-align:right}
-.res.empty{opacity:.38}
-.res.gold{border-color:#d39b3c5c;background:#d39b3c1c}
-.res.gold b{color:#eec173}
+/* Resources — the realm sigil. Three resources at the points of a triangle, gold at
+   the heart, the spokes drawing the substitution rule. Sized to be read mid-plan;
+   SVG text scales with the mark, so it stays legible at any width. */
+.resources{display:block;width:clamp(116px,10.5vw,150px);height:auto;flex:0 0 auto;margin:0 0 0 auto;transform:none}
+.resource-emblem{display:block;width:100%;height:auto}
+.em-node text{user-select:none}
+.em-node.empty{opacity:.45}
+.em-node{transition:opacity .25s ease}
+
+/* The same sigil is the game's mark in the top bar. */
+.brand-mark{background:transparent;clip-path:none;width:38px;height:38px;padding:1px}
+.brand-mark .resource-emblem{width:100%;height:100%}
+
+/* Resource colours, one palette everywhere: harvest green, warm timber, cold steel,
+   radiant gold. Wood no longer borrows food's green. */
+.cost.food{background:#7d9c40}
+.cost.material{background:#b0763c}
+.cost.metal{background:#7d92a6}
+.cost.gold{background:#d3a03a}
 
 /* Battlefield — the stage tracks the viewport instead of sitting at a fixed 980px
    island on a wide monitor. Every row below aligns to the same width, so health,
@@ -231,9 +242,7 @@ body.in-battle{overflow:hidden}
   .commit{width:100%}
 }
 @media(max-width:900px){
-  .resources{gap:4px}
-  .res{padding:4px 8px 4px 7px;gap:4px}
-  .res b{font-size:12px}
+  .resources{width:clamp(96px,24vw,116px)}
   .hand-count{display:none}
 }
 
