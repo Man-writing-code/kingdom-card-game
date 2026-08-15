@@ -1,4 +1,4 @@
-﻿:root{--ink:#17271d;--forest:#203f2d;--forest2:#2d5138;--cream:#f3ecda;--paper:#fbf7eb;--gold:#d39b3c;--rust:#a84d32;--muted:#776f60;--line:#d8cfb9;--shadow:0 18px 50px #17271d21;
+:root{--ink:#17271d;--forest:#203f2d;--forest2:#2d5138;--cream:#f3ecda;--paper:#fbf7eb;--gold:#d39b3c;--rust:#a84d32;--muted:#776f60;--line:#d8cfb9;--shadow:0 18px 50px #17271d21;
 /* One fluid type scale for the whole game. Every size grows with the viewport between
    a floor that stays readable on a phone and a ceiling that stops headings running away
    on a wide monitor. The floors are deliberate: general interface text stays at 12px or
@@ -89,7 +89,7 @@
    BATTLEFIELD UI PACK
    Last block in the file on purpose: it settles the layout after
    several rounds of iteration rather than adding another patch.
-   Three rules drive it â€” nothing overlaps anything, every label is
+   Three rules drive it — nothing overlaps anything, every label is
    at a readable size, and the hand relates to the board it feeds.
    ================================================================ */
 
@@ -97,7 +97,7 @@
    one reads mid-plan and buys the board back its vertical space. */
 body.in-battle .topbar{display:none}
 
-/* The battle screen is one flex column â€” header, rulers, board, dock. Nothing is
+/* The battle screen is one flex column — header, rulers, board, dock. Nothing is
    pinned into another element's space, so no arrangement of them can overlap.
    The board takes the slack, which is why the slot height is fluid below. */
 body.in-battle{overflow:hidden}
@@ -119,12 +119,12 @@ body.in-battle{overflow:hidden}
 .log-header span{font:bold 10px "DM Sans";letter-spacing:2px}
 .log-header small{font-size:var(--t-micro);letter-spacing:1.4px;opacity:.72}
 
-/* Header â€” the round number is the one number that matters up here. */
+/* Header — the round number is the one number that matters up here. */
 .game-header{height:56px}
 .round-badge{font:bold var(--t-micro)/1 "DM Sans";letter-spacing:2.2px;color:#93a094}
 .round-badge strong{font:bold 18px/1 "MedievalSharp";color:var(--gold);margin-left:7px;vertical-align:-2px}
 
-/* Ruler bars â€” identity, health and resources on one readable line. */
+/* Ruler bars — identity, health and resources on one readable line. */
 .player-bar{height:auto;min-height:64px;gap:14px;padding:7px var(--gutter)}
 .avatar{width:38px;height:38px;font-size:17px;flex:0 0 38px}
 .ruler-id{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -132,9 +132,9 @@ body.in-battle{overflow:hidden}
 .opponent-bar #aiProfileLabel{font-size:var(--t-micro);letter-spacing:1.5px;color:#d6b86c}
 .health{font:bold 19px/1 Georgia,serif;color:#e8836a;letter-spacing:.5px}
 .hand-count{margin-left:12px;padding:5px 11px;border:1px solid #ffffff1c;border-radius:999px;background:#ffffff0a;font:bold var(--t-tiny)/1 "DM Sans";color:#c3cdbe;flex:0 0 auto}
-.hand-count:after{content:" â™ ";opacity:.5}
+.hand-count:after{content:" ♠";opacity:.5}
 
-/* Resources â€” the realm sigil. Three resources at the points of a triangle, gold at
+/* Resources — the realm sigil. Three resources at the points of a triangle, gold at
    the heart, the spokes drawing the substitution rule. Sized to be read mid-plan;
    SVG text scales with the mark, so it stays legible at any width. */
 .resources{display:block;width:clamp(96px,min(10.5vw,16vh),150px);height:auto;flex:0 0 auto;margin:0 0 0 auto;transform:none}
@@ -154,7 +154,7 @@ body.in-battle{overflow:hidden}
 .cost.metal{background:#7d92a6}
 .cost.gold{background:#d3a03a}
 
-/* Battlefield â€” the stage tracks the viewport instead of sitting at a fixed 980px
+/* Battlefield — the stage tracks the viewport instead of sitting at a fixed 980px
    island on a wide monitor. Every row below aligns to the same width, so health,
    resources, board edge and hand all share one column rather than drifting to
    opposite corners of the screen. */
@@ -167,7 +167,7 @@ body.in-battle{overflow:hidden}
 .slot.valid{border-color:#d3ad5d99;background:#d3ad5d14}
 .clash-line{height:26px;margin:2px 0}
 
-/* Hand dock â€” the cards and the commit button share a row instead of
+/* Hand dock — the cards and the commit button share a row instead of
    the button floating over the hand behind a 145px margin. */
 .hand-area{position:static;right:auto;left:auto;padding:9px var(--gutter) 13px;box-shadow:0 -10px 26px #08120c47}
 .hand-heading{max-width:none;margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:14px}
@@ -175,8 +175,8 @@ body.in-battle{overflow:hidden}
 .hand-heading button{border:0;background:transparent;color:#8b6428;font:15px/1 "DM Sans";cursor:pointer;padding:3px 5px;border-radius:4px}
 .hand-heading button:hover{color:var(--rust);background:#17271d0d}
 /* min-width:0 on the hand, or its content width forces the dock wider than the
-   viewport instead of scrolling inside it. The keep â€” your health and sigil on a
-   dark plaque â€” anchors the dock's left flank; there is no bottom ruler bar any
+   viewport instead of scrolling inside it. The keep — your health and sigil on a
+   dark plaque — anchors the dock's left flank; there is no bottom ruler bar any
    more, so the board above keeps that height for itself. */
 .hand-dock-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;min-width:0}
 .hand{margin:0;gap:8px;justify-content:flex-start;overflow-x:auto;padding:2px 0 4px;min-width:0}
@@ -231,7 +231,7 @@ body.in-battle{overflow:hidden}
    BATTLE THEATRE
    The clash is staged, not stated: armies lunge, the fallen linger
    as fading ghosts, damage floats up in numbers, palisades flash
-   when they hold. Nothing here changes an outcome â€” resolveRound
+   when they hold. Nothing here changes an outcome — resolveRound
    reports what happened and this block performs it.
    ================================================================ */
 
@@ -302,8 +302,8 @@ body.in-battle{overflow:hidden}
 }
 
 /* Empty slots hold their ground: a ghost of what belongs there, not a void. */
-.board .slot:not(.occupied):before{content:"âš”";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,3.4cqh,30px);color:#ffffff10;transition:color .16s ease}
-.board .slot.building:not(.occupied):before{content:"â™œ"}
+.board .slot:not(.occupied):before{content:"⚔";position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,3.4cqh,30px);color:#ffffff10;transition:color .16s ease}
+.board .slot.building:not(.occupied):before{content:"♜"}
 .board .slot:not(.occupied):hover:before{color:#ffffff2a}
 .board .slot.valid:before{color:#d3ad5d3d}
 
@@ -317,7 +317,7 @@ body.in-battle{overflow:hidden}
 .rules-subhead:first-of-type{margin-top:6px}
 .round-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin:0;padding:0;list-style:none}
 .round-flow li{position:relative;background:var(--paper);border:1px solid var(--line);padding:17px 13px 16px;text-align:center}
-.round-flow li:not(:last-child):after{content:"â†’";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:15px;line-height:1}
+.round-flow li:not(:last-child):after{content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:15px;line-height:1}
 .round-flow b{display:block;font-size:23px;color:var(--gold);line-height:1}
 .round-flow span{display:block;font:bold var(--t-micro) "DM Sans";letter-spacing:1.7px;color:var(--ink);margin:9px 0 6px}
 .round-flow small{display:block;font:italic var(--t-small)/1.5 Georgia,serif;color:var(--muted)}
@@ -339,7 +339,7 @@ body.in-battle{overflow:hidden}
 .draw-pile:hover:not(:disabled){background:#d3ad5d24;border-color:#d3ad5d;transform:translateY(-1px)}
 .draw-pile:disabled{opacity:.4;cursor:not-allowed}
 
-/* The draw bar is one compact row, and the screen reserves the height it adds â€”
+/* The draw bar is one compact row, and the screen reserves the height it adds —
    otherwise opening it pushes the dock up over the ruler bar. */
 .draw-prompt{display:flex;align-items:center;gap:18px;max-width:660px;margin:0 0 9px;padding:8px 14px}
 .draw-prompt[hidden]{display:none}
@@ -610,6 +610,16 @@ body[data-screen="game"] .hand-area{background:#ece1cbdc;backdrop-filter:blur(12
 .deck-picker select,.deck-picker input,
 .launch-row select,.multiplayer-setup input,
 .duel-launcher .decree-setup select{min-height:36px;font-size:var(--t-small)}
+
+/* A card face is paper whichever room hangs behind it. The deck, collection and
+   scriptorium screens set a light body colour for their dark backdrops, and the card
+   name had no colour of its own, so it inherited that and vanished into the stock. */
+.game-card h3{color:var(--ink)}
+.game-card p{color:#665f51}
+
+/* The stepper and the power badge are pinned to the foot of a card, so the rules text
+   needs that strip reserved or a long one runs underneath them and is clipped away. */
+.card-grid .game-card,.collection-grid .game-card{padding-bottom:42px}
 
 @media(max-width:600px){
   body.in-hall .hero-intro{font-size:var(--t-body)}
