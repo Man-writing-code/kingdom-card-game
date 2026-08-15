@@ -355,13 +355,6 @@ body.in-battle{overflow:hidden}
   .round-flow li:after{display:none}
 }
 
-/* The hall frieze: two hosts marching on a keep, drawn flat and linear in the earth
-   palette the tapestries used. It is the page's spine — the rule between the claim
-   and the launcher — so it carries the border bands above and below like a register. */
-.hall-frieze{margin:22px 0 26px;padding:13px 0;border-top:1px solid #d8cfb9;border-bottom:1px solid #d8cfb9}
-.hall-frieze svg{display:block;width:100%;height:clamp(84px,11vw,140px)}
-@media(max-width:720px){.hall-frieze{margin:16px 0 20px;padding:9px 0}}
-
 /* Draw step: a round opens here and planning stays locked until every draw is spent. */
 .draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
 .draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
@@ -504,3 +497,70 @@ body.in-battle{overflow:hidden}
 .collection-swap.drop{background:#f0ded5;border-color:#cfa992}
 .collection-grid .locked .collection-swap{filter:none}
 @media(max-width:600px){.dev-toggle{padding:6px 10px;margin-left:8px}}
+
+/* Great hall landing screen. The room is the hero; the interface sits on it like
+   a compact game table instead of competing with it as another illustration. */
+body.in-hall{background:#0c0d0b;color:#f2ead8}
+body.in-hall .grain{opacity:.1;mix-blend-mode:soft-light}
+body.in-hall .topbar{background:#0d100ddb;border-bottom-color:#b5965738;color:#f1e7d0;backdrop-filter:blur(12px)}
+body.in-hall .brand{color:#f1e7d0}
+body.in-hall .brand-mark{background:#d0aa5e;color:#17271d}
+body.in-hall .nav-link{color:#aaa797}
+body.in-hall .nav-link.active,body.in-hall .nav-link:hover{color:#fff8e7}
+body.in-hall .season-pill,body.in-hall .dev-toggle{border-color:#d2b5754f;color:#c9c3b2}
+
+.home-screen{isolation:isolate}
+body.in-hall .home-screen.active{min-height:calc(100vh - 76px);display:grid;grid-template-columns:minmax(460px,650px) minmax(280px,360px);justify-content:space-between;align-items:center;gap:clamp(32px,6vw,100px);padding:clamp(42px,6vh,76px) clamp(28px,6vw,100px);background:
+  linear-gradient(90deg,#090b09e8 0%,#0b0d0bc7 28%,#0b0d0b35 58%,#090b09a8 100%),
+  linear-gradient(0deg,#070807b8 0%,transparent 48%),
+  url("assets/ui/great-hall.webp") center 46%/cover no-repeat}
+body.in-hall .home-screen:before{content:none}
+body.in-hall .hero-copy{width:100%;color:#f4ecda}
+body.in-hall .hero-copy>.eyebrow{margin-bottom:10px;color:#d5b66f}
+body.in-hall .hero-copy h1{margin:0 0 12px;color:#fff8e8;font-size:clamp(46px,5vw,72px);letter-spacing:-1px;text-shadow:0 3px 24px #000}
+body.in-hall .hero-intro{margin:0;color:#cbc5b6;font-size:15px;line-height:1.5;text-shadow:0 2px 10px #000;max-width:500px}
+
+body.in-hall .duel-launcher{width:min(610px,100%);margin:28px 0 0;border:1px solid #c7a96455;background:#111510ee;box-shadow:0 18px 48px #0009,0 1px 0 #ffffff0a;backdrop-filter:blur(12px)}
+body.in-hall .mode-heading{padding:11px 15px;border-bottom-color:#c7a9642e;color:#d7b96f}
+body.in-hall .mode-tabs{background:#0b0e0bd9;border-bottom-color:#c7a96436}
+body.in-hall .mode-tab{border-right-color:#c7a96436;color:#a9aa9f}
+body.in-hall .mode-tab>b{background:#252820;color:#bdb6a6}
+body.in-hall .mode-tab small{color:#777c73}
+body.in-hall .mode-tab.active{background:#1a2119;color:#f2ead8}
+body.in-hall .mode-tab.active>b{background:#c9a75c;color:#17271d}
+body.in-hall .mode-panel{padding:16px}
+body.in-hall .launch-row label,body.in-hall .duel-launcher .multiplayer-setup label{color:#a4a294}
+body.in-hall .launch-row select,body.in-hall .duel-launcher .multiplayer-setup input{border-color:#b9a06b63;background:#090c09;color:#f3ead8}
+body.in-hall .deck-launch .small-link{color:#d3b56b}
+body.in-hall .button.primary{background:#cba85c;color:#152419;box-shadow:none}
+body.in-hall .button.primary:hover{background:#e0c172}
+body.in-hall .duel-launcher .decree-setup{border-top-color:#c7a96436;background:#0b0e0b;color:#b7b2a5}
+body.in-hall .duel-launcher .decree-setup select{border-color:#b9a06b63;background:#090c09;color:#f3ead8}
+body.in-hall .duel-launcher #onlineStatus{color:#aeb4aa}
+
+body.in-hall .weekly-card{align-self:center;padding:28px 30px;border:1px solid #c7a96455;background:#111510e8;color:#f1e7d0;box-shadow:0 18px 48px #0009;backdrop-filter:blur(12px)}
+body.in-hall .weekly-card:after{border-color:#d6bd7b1f}
+body.in-hall .weekly-card h2{font-size:28px}
+body.in-hall .weekly-card>p{color:#c4c5b9}
+body.in-hall .weekly-card .flavour{color:#92978e}
+body.in-hall .weekly-card .rule-divider{background:#d5bc7a24}
+
+@media(max-width:900px){
+  body.in-hall .home-screen.active{grid-template-columns:1fr;align-content:start;gap:24px;padding:44px max(24px,7vw) 60px;background:
+    linear-gradient(90deg,#080a08e8 0%,#080a08b8 68%,#080a0878 100%),
+    linear-gradient(0deg,#070807d6 0%,transparent 65%),
+    url("assets/ui/great-hall.webp") center 42%/cover no-repeat}
+  body.in-hall .hero-copy{max-width:650px}
+  body.in-hall .weekly-card{width:min(610px,100%);max-width:none}
+}
+@media(max-width:600px){
+  body.in-hall .home-screen.active{min-height:calc(100vh - 76px);padding:34px 18px 46px;background:
+    linear-gradient(#080a08bd,#080a08e8),
+    url("assets/ui/great-hall.webp") center top/auto 100% no-repeat}
+  body.in-hall .hero-copy h1{font-size:43px}
+  body.in-hall .hero-intro{font-size:14px}
+  body.in-hall .duel-launcher{margin-top:24px}
+  body.in-hall .mode-tab{padding:12px 10px;gap:8px}
+  body.in-hall .mode-tab>b{width:28px;height:28px}
+  body.in-hall .weekly-card{padding:25px 24px}
+}

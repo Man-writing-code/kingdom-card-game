@@ -164,6 +164,7 @@ function showScreen(name){
   $$('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   // A battle takes the whole viewport: the site nav is redundant next to the screen's own back arrow.
   document.body.classList.toggle('in-battle',name==='game');
+  document.body.classList.toggle('in-hall',name==='home');
   if(name==='deck')renderDeckBuilder(); if(name==='collection')renderCollection();
   window.scrollTo(0,0);
 }
