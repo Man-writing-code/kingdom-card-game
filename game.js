@@ -380,6 +380,8 @@ function aiCardValue(id){
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista','bannercaptain'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
+// Hard and Hardcore both take the best-scoring line rather than a random pick off the top of the list.
+const aiPlaysBest=d=>d==='hard'||d==='hardcore';
 function aiActionScore(hc,lane,difficulty){
   const side=game.ai,c=CARDS[hc.cardId],cost=effectiveCost(hc.cardId),old=side.board[lane][c.type];let score=aiCardValue(hc.cardId)*2-Object.values(cost).reduce((a,b)=>a+b,0)*.3;
   if(old)score-=aiCardValue(old.cardId)*1.7;
@@ -398,7 +400,7 @@ function aiActionScore(hc,lane,difficulty){
     if(MOB_SPECIALS.includes(c.special))score+=adjacentAllies(side,lane)*2.5;
     if(side.board[lane].building)score+=1;
   }else{
-    if(c.produce)score+=Object.values(c.produce).reduce((a,b)=>a+b,0)*(difficulty==='hard'?2.2:1.5);
+    if(c.produce)score+=Object.values(c.produce).reduce((a,b)=>a+b,0)*(aiPlaysBest(difficulty)?2.2:1.5);
     if(['university','townhall'].includes(c.special))score+=game.round<5?3:1;
     if(['watchtower','gatehouse'].includes(c.special)&&side.board[lane].unit)score+=3;
     if(c.special==='palisade'&&!aiVisiblePlayerSlot(lane,'unit'))score+=3;
@@ -437,17 +439,20 @@ function aiActionScore(hc,lane,difficulty){
   if(currentRule.id==='tradefair'&&['goldmine','market','merchant'].includes(hc.cardId))score+=3;
   if(currentRule.id==='guilds'&&TIER_TWO.includes(hc.cardId))score+=2;
   if(currentRule.id==='leancourt'&&c.special==='university')score+=2;
-  return score+Math.random()*(difficulty==='hard'?.35:4.5);
+  // Hardcore takes no jitter at all, so its ranking is purely the evaluation.
+  return score+Math.random()*(difficulty==='hardcore'?0:aiPlaysBest(difficulty)?0.35:4.5);
 }
 function aiPlan(){
-  const side=game.ai,difficulty=game.aiDifficulty||'normal',limit=difficulty==='hard'?4:2;let actions=0;
+  // Four lanes times a building and a unit slot is every placement the rules allow in one round, and
+  // a slot filled this round is skipped below, so Hardcore's ceiling is simply the whole board.
+  const side=game.ai,difficulty=game.aiDifficulty||'normal',limit=difficulty==='hardcore'?8:difficulty==='hard'?4:2;let actions=0;
   while(actions<limit){
     const options=[];
     for(const hc of side.hand){
       const c=CARDS[hc.cardId];if(!canAfford(side,effectiveCost(hc.cardId)))continue;
-      for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&difficulty!=='hard')continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty)})}
+      for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&!aiPlaysBest(difficulty))continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty)})}
     }
-    if(!options.length)break;options.sort((a,b)=>b.score-a.score);const choice=difficulty==='hard'?options[0]:options[Math.floor(Math.random()*Math.min(3,options.length))];if(choice.score<0)break;
+    if(!options.length)break;options.sort((a,b)=>b.score-a.score);const choice=aiPlaysBest(difficulty)?options[0]:options[Math.floor(Math.random()*Math.min(3,options.length))];if(choice.score<0)break;
     const c=CARDS[choice.hc.cardId],idx=side.hand.findIndex(x=>x.uid===choice.hc.uid),old=side.board[choice.lane][c.type],spent=payCost(side,effectiveCost(choice.hc.cardId));side.hand.splice(idx,1);side.board[choice.lane][c.type]={cardId:choice.hc.cardId,round:game.round,spent,handCard:choice.hc,replaced:old||null};actions++;
   }
 }

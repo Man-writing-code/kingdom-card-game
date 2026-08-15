@@ -104,6 +104,26 @@ const openLane=aiActionScore(timberArcher,0,'hard');game.player.board[0].unit=te
 assert(openLane>aiActionScore(timberArcher,0,'hard'),'Archers prefer an undefended lane');
 game.aiProfile=null;
 
+function stockedAI(profile,difficulty){
+  resetGame();game.aiProfile=profile;game.aiDifficulty=difficulty;
+  game.ai.resources={food:9,metal:9,material:9,gold:9};
+  game.ai.hand=AI_DECKS[profile].map((cardId,i)=>({uid:'h'+i,cardId,bonus:false}));
+  aiPlan();return game.ai;
+}
+const boardPrint=side=>side.board.map(l=>(l.building?.cardId||'-')+'/'+(l.unit?.cardId||'-')).join(',');
+const placements=side=>side.board.reduce((n,l)=>n+(l.building?1:0)+(l.unit?1:0),0);
+
+for(const profile of Object.keys(AI_DECKS)){
+  const hardcore=stockedAI(profile,'hardcore');
+  assert(placements(hardcore)>4,profile+' on Hardcore commits past the four-action Hard cap');
+  assert(placements(hardcore)<=8,profile+' on Hardcore still fits inside the eight board slots');
+  for(const r of ['food','metal','material','gold'])assert(hardcore.resources[r]>=0,profile+' never overspends '+r+' on Hardcore');
+  assert(hardcore.board.every(l=>['building','unit'].every(t=>!l[t]||l[t].round===game.round||!l[t].replaced)),profile+' fills each slot once per round');
+  assert.equal(boardPrint(hardcore),boardPrint(stockedAI(profile,'hardcore')),profile+' plays deterministically on Hardcore');
+  assert.equal(placements(stockedAI(profile,'hard')),4,profile+' on Hard still stops at four');
+}
+assert.equal(aiPlaysBest('hardcore'),true);assert.equal(aiPlaysBest('hard'),true);assert.equal(aiPlaysBest('normal'),false);
+
 assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
 assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');
 `;
