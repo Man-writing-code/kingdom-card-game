@@ -62,15 +62,21 @@ resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(comba
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();assert(game.player.board[0].unit?.damaged);assert.equal(game.ai.board[0].unit,null,'Pavise Guard survives a normal tie');
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('firesapper');resolveRound();assert.equal(game.player.board[0].unit,null,'Fire Sapper bypasses Pavise resilience');
 
-// Tier-two engines are bought with the resource they make, so an archetype can ramp itself.
-assert.deepEqual(CARDS.granary.cost,{food:2,material:1},'the Mill is paid for in food');
-assert.deepEqual(CARDS.lumbermill.cost,{material:2,food:1},'and the Sawmill mirrors it in wood');
+// Every tier-two engine is bought with 2 of what it harvests, so an archetype can ramp itself.
 currentRule={id:'none'};
-const foodOnly={food:2,metal:0,material:1,gold:0};
-assert(canAfford({resources:foodOnly},effectiveCost('granary')),'a farm-fed realm can raise a Mill');
-assert(!canAfford({resources:{food:2,metal:0,material:0,gold:0}},effectiveCost('granary')),'but it still owes the timber');
+for(const [id,resource] of [['granary','food'],['lumbermill','material'],['foundry','metal']]){
+  assert.equal(CARDS[id].cost[resource],2,id+' is paid for in what it makes');
+  assert.equal(Object.values(CARDS[id].produce)[0],2,id+' harvests two of it');
+  const own={food:0,metal:0,material:0,gold:0};own[resource]=2;
+  assert(!canAfford({resources:own},effectiveCost(id)),id+' still owes its secondary cost');
+  const secondary=Object.keys(CARDS[id].cost).find(r=>r!==resource);own[secondary]=(own[secondary]||0)+1;
+  assert(canAfford({resources:own},effectiveCost(id)),'a realm on its own harvest can raise '+id);
+}
+// The charter follows the card: each tier-two sheds one of its own harvest, none is skipped.
 currentRule={id:'guilds'};
-assert.deepEqual(effectiveCost('granary'),{food:2},'Guild Charters waive the Mill timber entirely');
+assert.deepEqual(effectiveCost('granary'),{food:1,material:1},'Mill sheds a food');
+assert.deepEqual(effectiveCost('lumbermill'),{material:1,food:1},'Sawmill sheds a wood');
+assert.deepEqual(effectiveCost('foundry'),{metal:1,food:1},'Forge sheds a metal rather than being passed over');
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
 

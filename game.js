@@ -12,7 +12,7 @@ const CARDS = {
   firesapper:{name:'Fire Sapper',type:'unit',icon:'♨',accent:'#a84d32',cost:{material:1},power:0,text:'At the clash, burns itself out and destroys the opposing unit in its lane.',special:'sapper'},
   knight:{name:'Knight',type:'unit',icon:'♞',accent:'#475b73',cost:{food:1,metal:2},power:3,text:'Armoured cavalry with 3 power.'},
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
-  foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{material:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
+  foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
@@ -59,7 +59,7 @@ const AI_DECKS={
 const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
-  {id:'guilds',icon:'⚙',name:'Guild Charters',text:'Mills, Forges, and Sawmills cost one less wood.',flavour:'“The crown signs once; a hundred workshops answer.”'},
+  {id:'guilds',icon:'⚙',name:'Guild Charters',text:'Mills, Forges, and Sawmills cost one less of the resource they harvest.',flavour:'“The crown signs once; a hundred workshops answer.”'},
   {id:'winter',icon:'❄',name:'The Long Winter',text:'Food, Metal, and Wood buildings produce 1 less; surviving workers produce 1 extra.',flavour:'“Storehouses empty. Calloused hands endure.”'},
   {id:'tradefair',icon:'¤',name:'The Grand Fair',text:'Markets produce +1 Gold, Gold Mines pay every round, and Merchants gain +1 power.',flavour:'“Every road leads to the royal market.”'},
   {id:'leancourt',icon:'Ⅰ',name:'The Lean Court',text:'Each ruler draws only 1 base card at the start of a new round.',flavour:'“Every summons must earn its place at court.”'},
@@ -198,7 +198,13 @@ function cardHtml(id,opts={}){
 }
 function effectiveCost(id){
   const card=CARDS[id],c={...card.cost};
-  if(currentRule.id==='guilds'&&TIER_TWO.includes(id)&&c.material){c.material--;if(!c.material)delete c.material}
+  // Guild Charters shave a tier-two's primary material — the resource it was raised to make.
+  // Written against wood back when every tier-two was built of it; now each is bought with its
+  // own harvest, so the charter follows the card rather than one resource.
+  if(currentRule.id==='guilds'&&TIER_TWO.includes(id)){
+    const primary=Object.keys(card.produce||{})[0];
+    if(primary&&c[primary]){c[primary]--;if(!c[primary])delete c[primary]}
+  }
   return c;
 }
 
