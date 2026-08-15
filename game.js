@@ -382,9 +382,40 @@ function aiCardValue(id){
 }
 // Hard and Hardcore both take the best-scoring line rather than a random pick off the top of the list.
 const aiPlaysBest=d=>d==='hard'||d==='hardcore';
+// Every card the banner has not committed yet. Cards already on the board are gone from here, so this
+// is what the AI can still count on drawing to rebuild or to spend on.
+function aiPending(side){return side.deck.concat(side.hand.map(hc=>hc.cardId))}
+const aiProducerCount=(ids,resource)=>ids.filter(id=>CARDS[id].produce?.[resource]).length;
+const aiBoardProducers=(side,resource,except)=>side.board.filter(l=>l.building&&l.building!==except&&CARDS[l.building.cardId].produce?.[resource]).length;
+// Spending a resource the banner cannot replace should hurt more than spending a renewable one.
+function aiScarcity(side,resource){
+  if(aiBoardProducers(side,resource,null))return 1;
+  return aiProducerCount(aiPending(side),resource)?1.6:2.6;
+}
+// Sacrificing a standing card costs more than its face value. A producer keeps paying for every round
+// it stays up, card-advantage buildings compound, and the banner may hold no second copy to rebuild with.
+function aiReplacementCost(side,old,incoming){
+  const oldCard=CARDS[old.cardId];let penalty=aiCardValue(old.cardId)*1.7;
+  // Swapping a card for its own twin gains nothing and throws the standing copy away.
+  if(old.cardId===incoming)penalty+=8;
+  else if(aiCardValue(incoming)<aiCardValue(old.cardId))penalty+=6;
+  // Buildings do not fight, so an equal-value swap only makes sense for a lane-specific effect.
+  else if(CARDS[incoming].type==='building'&&aiCardValue(incoming)===aiCardValue(old.cardId)&&!CARDS[incoming].special)penalty+=4;
+  if(['university','townhall'].includes(oldCard.special))penalty+=4;
+  if(oldCard.produce){
+    const pending=aiPending(side);
+    for(const [r,n] of Object.entries(oldCard.produce)){
+      penalty+=n*2;
+      // Tearing down the last source of a resource is bad; doing it with no replacement left to draw is worse.
+      if(!aiBoardProducers(side,r,old))penalty+=aiProducerCount(pending,r)?4:8;
+    }
+  }
+  return penalty;
+}
 function aiActionScore(hc,lane,difficulty){
-  const side=game.ai,c=CARDS[hc.cardId],cost=effectiveCost(hc.cardId),old=side.board[lane][c.type];let score=aiCardValue(hc.cardId)*2-Object.values(cost).reduce((a,b)=>a+b,0)*.3;
-  if(old)score-=aiCardValue(old.cardId)*1.7;
+  const side=game.ai,c=CARDS[hc.cardId],cost=effectiveCost(hc.cardId),old=side.board[lane][c.type];
+  let score=aiCardValue(hc.cardId)*2-Object.entries(cost).reduce((a,[r,n])=>a+n*aiScarcity(side,r),0)*.3;
+  if(old)score-=aiReplacementCost(side,old,hc.cardId);
   if(c.type==='unit'){
     const enemy=aiVisiblePlayerSlot(lane,'unit'),enemyBuilding=aiVisiblePlayerSlot(lane,'building'),power=c.power||0;
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
@@ -416,11 +447,9 @@ function aiActionScore(hc,lane,difficulty){
   if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard','lancer','bannercaptain'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='timber'){
-    const farms=side.board.filter(x=>x.building&&CARDS[x.building.cardId].produce?.food).length;
     // Sawmills carry the only food cost in the banner, so a Farm has to land before they can.
-    if(hc.cardId==='farm')score+=farms?1:6;
-    // Paving over the last Farm strands every Sawmill still in hand.
-    if(old&&CARDS[old.cardId].produce?.food&&farms<=1)score-=6;
+    // Protecting that Farm afterwards is left to the generic last-producer rule above.
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?1:6;
     if(['logging','lumbermill'].includes(hc.cardId))score+=game.round<6?4:2;
     if(c.special==='university')score+=game.round<6?5:2;
     // Archers are the whole clock: worth most pointed at an open lane.

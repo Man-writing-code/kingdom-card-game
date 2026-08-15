@@ -104,6 +104,32 @@ const openLane=aiActionScore(timberArcher,0,'hard');game.player.board[0].unit=te
 assert(openLane>aiActionScore(timberArcher,0,'hard'),'Archers prefer an undefended lane');
 game.aiProfile=null;
 
+// Replacement discipline: a standing producer is worth more than its face value.
+resetGame();game.aiProfile='timber';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const logCamp={uid:'lc',cardId:'logging',bonus:false};
+game.ai.board[0].building=testSlot('university');game.ai.board[1].building=testSlot('lumbermill');
+assert(aiActionScore(logCamp,0,'hardcore')<0,'a Logging Camp will not pave a University');
+assert(aiActionScore(logCamp,1,'hardcore')<0,'a Logging Camp will not pave a Sawmill');
+assert(aiActionScore(logCamp,2,'hardcore')>0,'but it still wants the empty lane');
+assert(aiActionScore(logCamp,2,'hardcore')>aiActionScore(logCamp,0,'hardcore'),'empty ground beats a downgrade');
+const millUp={uid:'mu',cardId:'lumbermill',bonus:false};
+resetGame();game.aiProfile='timber';game.ai.resources={food:9,metal:9,material:9,gold:9};
+game.ai.board[0].building=testSlot('logging');
+assert(aiActionScore(millUp,0,'hardcore')>0,'a genuine Sawmill upgrade over a Logging Camp still goes ahead');
+assert(aiActionScore(logCamp,0,'hardcore')<0,'and a Logging Camp will not pave an identical Logging Camp');
+
+// Deck awareness: the same replacement is judged against what is left to draw.
+function farmPaveScore(pending){
+  resetGame();game.aiProfile='general';game.ai.resources={food:9,metal:9,material:9,gold:9};
+  game.ai.deck=pending.slice();game.ai.board[0].building=testSlot('farm');
+  return aiActionScore({uid:'kn',cardId:'townhall',bonus:false},0,'hardcore');
+}
+assert(farmPaveScore(['farm','soldier'])>farmPaveScore(['soldier','soldier']),'paving the last Farm is worse when no Farm remains to draw');
+assert.equal(aiScarcity({board:Array.from({length:4},()=>({building:null,unit:null})),deck:[],hand:[]},'food'),2.6,'an unproducible resource is hoarded');
+assert.equal(aiScarcity({board:Array.from({length:4},()=>({building:null,unit:null})),deck:['farm'],hand:[]},'food'),1.6,'a drawable producer softens that');
+resetGame();game.ai.board[0].building=testSlot('farm');
+assert.equal(aiScarcity(game.ai,'food'),1,'a standing producer makes it renewable');
+
 function stockedAI(profile,difficulty){
   resetGame();game.aiProfile=profile;game.aiDifficulty=difficulty;
   game.ai.resources={food:9,metal:9,material:9,gold:9};
