@@ -404,18 +404,17 @@ body.in-battle{overflow:hidden}
 @keyframes river-flow{to{background-position:0 180px}}
 @media(prefers-reduced-motion:reduce){.river-lane{animation:none}}
 
-/* Compact next-clash forecasts for workers, open-lane damage, and siege effects. */
-.forecast-stack{position:absolute;z-index:3;top:5px;left:5px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none;text-shadow:none}
-.forecast-chip{height:22px;display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border:1px solid #ffffff33;border-radius:11px;color:#fff;box-shadow:0 1px 4px #07100b99;backdrop-filter:blur(3px);font:700 var(--t-micro) "DM Sans";white-space:nowrap}
-.forecast-chip .resource-icon{width:10px;height:10px;stroke-width:1.8}
-.forecast-chip>i{font-style:normal;font-size:var(--t-micro);letter-spacing:.5px;opacity:.72}
-.forecast-chip.harvest-ready{background:#32633ee8;color:#eaffd8;border-color:#a9d88788}
-.forecast-chip.harvest-ready:before{content:"";width:4px;height:4px;border-radius:50%;background:#b9ec7d;box-shadow:0 0 5px #b9ec7d}
-.forecast-chip.harvest-waiting{background:#29342de0;color:#d7ddd4;border-color:#b8c1b455}
-.forecast-chip.harvest-waiting .resource-icon{opacity:.7}
-.forecast-chip.damage-forecast{background:#71382fe8;color:#ffe3d9;border-color:#e69a8588}
-.forecast-chip.siege-forecast{background:#6a5528e8;color:#ffedb8;border-color:#dfbd6388}
-@media(max-width:600px){.forecast-stack{top:3px;left:3px}.forecast-chip{height:17px;padding:1px 4px}.forecast-chip>i{display:none}}
+/* Production is announced only when it will resolve after this clash. A resource
+   seal carries the whole message; there is no NEXT/NOW prose competing with the
+   card name or asking the player to decode two different forecast systems. */
+.forecast-stack{position:absolute;z-index:3;top:6px;left:6px;pointer-events:none;text-shadow:none}
+.production-cue{--cue:#d3ad5d;position:relative;width:29px;height:29px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--cue) 72%,white);border-radius:50%;background:#142219e8;color:var(--cue);box-shadow:0 2px 7px #07100b99,0 0 0 0 color-mix(in srgb,var(--cue) 32%,transparent);animation:productionPulse 2.4s ease-in-out infinite}
+.production-cue.food{--cue:#9ecf65}.production-cue.material{--cue:#d49a63}.production-cue.metal{--cue:#a9c7dd}.production-cue.gold{--cue:#ebc763}
+.production-cue .resource-icon{width:14px;height:14px;stroke-width:1.8}
+.production-cue b{position:absolute;right:-5px;bottom:-4px;min-width:17px;height:17px;padding:0 3px;display:grid;place-items:center;border:1px solid #f2e1b5;border-radius:9px;background:#213426;color:#fff3d2;font:bold 9px/1 "DM Sans";box-shadow:0 1px 3px #07100bcc}
+@keyframes productionPulse{0%,100%{box-shadow:0 2px 7px #07100b99,0 0 0 0 color-mix(in srgb,var(--cue) 28%,transparent)}50%{box-shadow:0 2px 7px #07100b99,0 0 0 4px transparent}}
+@media(prefers-reduced-motion:reduce){.production-cue{animation:none}}
+@media(max-width:600px){.forecast-stack{top:4px;left:4px}.production-cue{width:25px;height:25px}.production-cue .resource-icon{width:12px;height:12px}}
 
 /* Collection: the owned roster, or the whole card pool with the undiscovered greyed back. */
 .collection-actions{display:flex;align-items:flex-end;gap:22px}
@@ -625,4 +624,61 @@ body[data-screen="game"] .hand-area{background:#ece1cbdc;backdrop-filter:blur(12
   body.in-hall .hero-intro{font-size:var(--t-body)}
   .game-card h3{font-size:19px}
   .slot-card b,.slot-card.board-painted b{font-size:12px}
+}
+
+/* Realm ledger — the resource sigil belongs to the game language, so it remains
+   intact. The old dark plaque around the player's tracker did not: it read as a
+   card sitting inside the hand dock. This unboxed ledger uses a fine divider and
+   a keep-integrity scale shared by both rulers. */
+.dock-keep{
+  flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:2px 20px 2px 0;background:none;border:0;border-right:1px solid #8b785249;
+  border-radius:0;box-shadow:none
+}
+.dock-keep .resources{width:clamp(100px,8.5vw,126px)}
+.health{
+  display:grid;grid-template-columns:auto auto;grid-template-areas:"caption value" "pips pips";
+  align-items:end;justify-content:start;column-gap:8px;row-gap:4px;width:max-content;
+  color:#d8b76a;font-family:"DM Sans",sans-serif;letter-spacing:0
+}
+.health .keep-caption{grid-area:caption;font:bold 10px/1 "DM Sans",sans-serif;letter-spacing:2px;color:#aeb8ae}
+.health strong{grid-area:value;font:400 22px/.8 "MedievalSharp",serif;color:#efd18c}
+.keep-pips{grid-area:pips;display:grid;grid-template-columns:repeat(10,6px);gap:2px}
+.keep-pips i{display:block;width:6px;height:5px;background:#c4573d;clip-path:polygon(0 0,35% 0,35% 35%,65% 35%,65% 0,100% 0,100% 100%,0 100%);transition:opacity .2s,background .2s}
+.keep-pips i.fallen{background:#69493f;opacity:.32}
+.dock-keep .health{order:2;color:#8f3829}
+.dock-keep .health .keep-caption{color:#776b59}
+.dock-keep .health strong{color:#8f3829}
+.dock-keep .resources{order:1;margin:0}
+.dock-keep .keep-pips i{background:#a84d32}
+.dock-keep .keep-pips i.fallen{background:#927b6b}
+.ruler-id{gap:6px}
+.ruler-id .health{transform-origin:left center}
+.hp-hit .keep-pips i.standing{background:#ff6547;box-shadow:0 0 7px #ff5a3c99}
+
+/* Played-unit power sits to the left of the name. The copy reserves the shield's
+   footprint, so long names and the combat value never occupy the same pixels. */
+.slot-card.board-painted .slot-card-copy{left:45px;right:8px;bottom:7px}
+.slot-card.board-painted .slot-power{
+  left:6px;right:auto;top:auto;bottom:6px;width:33px;height:37px;padding:2px 0 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  clip-path:polygon(50% 0,100% 13%,100% 60%,50% 100%,0 60%,0 13%);
+  background:linear-gradient(165deg,#9a4630,#571f12);border:0;
+  filter:drop-shadow(0 0 1px #e5c87e88) drop-shadow(0 2px 3px #07110b88);
+  text-shadow:0 1px 2px #1e0804;box-shadow:none
+}
+.slot-card.board-painted .slot-power i{font:normal 11px/1 "DM Sans";color:#dcb36c}
+.slot-card.board-painted .slot-power b{font:bold 16px/1 "DM Sans";color:#fff1d5}
+@media(max-width:600px){
+  .slot-card.board-painted .slot-card-copy{left:37px;right:5px;bottom:5px}
+  .slot-card.board-painted .slot-power{left:4px;right:auto;top:auto;bottom:4px;width:28px;height:32px;padding:2px 0 0}
+  .slot-card.board-painted .slot-power i{font-size:9px}
+  .slot-card.board-painted .slot-power b{font-size:13px}
+}
+
+@media(max-width:640px){
+  .dock-keep{flex-direction:row;gap:10px;padding:3px 12px 3px 0}
+  .dock-keep .resources{width:78px}
+  .keep-pips{grid-template-columns:repeat(5,6px)}
+  .health strong{font-size:20px}
 }

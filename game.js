@@ -734,23 +734,27 @@ function nextRound(){
 }
 function endGame(result){if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
 
-function workerForecastHtml(slot){
-  const card=CARDS[slot?.cardId];if(card?.special!=='worker')return'';
-  const [resource,base]=Object.entries(card.produce)[0],ready=game.round>slot.round&&(game.round-slot.round)%2===1,gain=base+(currentRule.id==='winter'?1:0),name=RESOURCE_NAMES[resource].toLowerCase();
-  return ready
-    ?`<span class="forecast-chip harvest-ready" title="Produces ${gain} ${name} after this clash">${resourceIcon(resource)}<b>+${gain}</b><i>NOW</i></span>`
-    :`<span class="forecast-chip harvest-waiting" title="Must survive until the next clash to produce ${gain} ${name}"><b>◷</b>${resourceIcon(resource)}<i>NEXT</i></span>`;
+function productionForecastHtml(slot){
+  const card=CARDS[slot?.cardId];if(!card)return'';
+  let resource,gain=0;
+  if(card.produce){
+    [resource,gain]=Object.entries(card.produce)[0];
+    if(card.special==='worker'){
+      if(!(game.round>slot.round&&(game.round-slot.round)%2===1))return'';
+      if(currentRule.id==='winter')gain++;
+    }else{
+      if(currentRule.id==='winter'&&resource!=='gold')gain=Math.max(0,gain-1);
+      if(currentRule.id==='tradefair'&&resource==='gold')gain++;
+    }
+  }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>slot.round&&(game.round-slot.round)%2===1)){
+    resource='gold';gain=1;
+  }
+  if(!resource||gain<=0)return'';
+  const name=RESOURCE_NAMES[resource].toLowerCase(),label=`Produces ${gain} ${name} after this clash`;
+  return `<span class="production-cue ${resource}" title="${label}" aria-label="${label}">${resourceIcon(resource)}<b>+${gain}</b></span>`;
 }
-function damageForecastHtml(side,lane,reveal){
-  const slot=side.board[lane].unit,card=CARDS[slot?.cardId];if(!slot||card.special==='sapper')return'';
-  const defender=side===game.player?game.ai:game.player;if(defender.board[lane].unit)return'';
-  if(card.special==='ram'&&defender.board[lane].building)return'<span class="forecast-chip siege-forecast" title="Destroys the opposing building after the clash"><b>♜×</b><i>SIEGE</i></span>';
-  const amount=unitPower(side,lane);
-  const damage=adjustedDamage(defender,amount,lane),uncertain=reveal?'':'?';
-  return `<span class="forecast-chip damage-forecast" title="${reveal?'Will deal':'Potential'} ${damage} ruler damage if this lane remains unblocked"><b>♥−${damage}${uncertain}</b><i>${reveal?'HIT':'IF CLEAR'}</i></span>`;
-}
-function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" data-card="${slot.cardId}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power">⚔ ${power}</span>`:''}</div>`}
-function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round)}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),workerForecastHtml(lane.unit)+damageForecastHtml(side,i,reveal))}</div></div>`:'').join('')}
+function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" data-card="${slot.cardId}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power"><i>⚔</i><b>${power}</b></span>`:''}</div>`}
+function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round,null,productionForecastHtml(lane.building))}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),productionForecastHtml(lane.unit))}</div></div>`:'').join('')}
 // The realm sigil: three resources at the points of a triangle, gold at its heart.
 // The spokes are the rule made visible — gold flows out to stand in for any of the three.
 // The same mark, without counts, is the game's logo in the top bar and the favicon.
@@ -784,8 +788,13 @@ function renderResources(el,resources){
   el.setAttribute('aria-label',`Food ${resources.food}, Wood ${resources.material}, Metal ${resources.metal}, Gold ${resources.gold}. Gold can replace any other resource.`);
   el.innerHTML=resourceEmblemHtml(resources);
 }
+function renderHealth(el,value,owner){
+  const health=Math.max(0,value),maximum=10;
+  el.setAttribute('aria-label',`${owner} keep integrity: ${health} of ${maximum}`);
+  el.innerHTML=`<span class="keep-caption">KEEP</span><strong>${health}</strong><span class="keep-pips" aria-hidden="true">${Array.from({length:maximum},(_,i)=>`<i class="${i<health?'standing':'fallen'}"></i>`).join('')}</span>`;
+}
 function renderGame(reveal=false){
-  if(!game)return;$('#roundNumber').textContent=game.round;$('#playerHealth').textContent=`♥ ${Math.max(0,game.player.health)}`;$('#aiHealth').textContent=`♥ ${Math.max(0,game.ai.health)}`;renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
+  if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your');renderHealth($('#aiHealth'),game.ai.health,'Rival');renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
   $('#playerBoard').innerHTML=boardHtml(game.player,false,reveal);$('#aiBoard').innerHTML=boardHtml(game.ai,true,reveal);
   $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,effectiveCost(h.cardId))?'':'unaffordable'}`})).join('');
