@@ -190,6 +190,17 @@ assert.equal(CARDS[game.player.hand[handBefore+1].cardId].type,'unit');
 resetGame();game.player=testSide();game.player.pendingDraws=2;settleDraws(game.player);
 assert.equal(game.player.pendingDraws,0,'empty piles clear the prompt');
 
+// The hand holds ten; draws and gifts beyond that are turned away.
+resetGame();const packed=testSide();packed.structures=['farm','farm'];
+for(let i=0;i<10;i++)packed.hand.push({uid:'p'+i,cardId:'soldier',bonus:false});
+assert.equal(drawFromPile(packed,'structures'),null,'a full hand negates the draw');
+assert.equal(packed.hand.length,10);assert.equal(packed.structures.length,2,'the negated card stays on its pile');
+gainBonusCard(packed,'peasant');assert.equal(packed.hand.length,10,'bonus cards respect the limit');
+packed.pendingDraws=2;settleDraws(packed);assert.equal(packed.pendingDraws,0,'a full hand clears the prompt');
+packed.hand.pop();gainBonusCard(packed,'peasant');assert.equal(packed.hand.length,10,'one seat free admits one card');
+game.player=packed;game.player.board[0].unit=testSlot('rabblerouser',2);resolveOnBuild(game.player,'Your');
+assert.equal(game.player.hand.length,10,'a Rabble-Rouser cannot overfill the hand');
+
 // The AI reaches for units when its lanes are bare and structures while it is still ramping.
 resetGame();game.ai=testSide();
 assert.equal(aiDrawChoice(game.ai),'structures','an empty board in the early rounds ramps first');

@@ -74,7 +74,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const SAVE_VERSION=5;
 // The collection is a fixed roster of designs; decks are drawn from it and may repeat a design.
-const COLLECTION_SIZE=20, DECK_SIZE=20, MAX_COPIES=4;
+const COLLECTION_SIZE=20, DECK_SIZE=20, MAX_COPIES=4, HAND_LIMIT=10;
 const startOfDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const weekKey=()=>{const d=startOfDay(new Date()),jan=new Date(d.getFullYear(),0,1),days=Math.round((d-jan)/86400000);return `${d.getFullYear()}-${Math.ceil((days+jan.getDay()+1)/7)}`};
 const weekIndex=()=>Number(weekKey().split('-')[1]);
@@ -352,10 +352,12 @@ function resolveOnlinePlans(hostSide,guestSide){
   log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);beginClash();
 }
 // The armies visibly lunge at each other before the outcome lands: the pause is the wind-up.
+// ?slow=N stretches the whole theatre N× for tuning the choreography frame by frame.
+const THEATRE_SPEED=(()=>{try{const s=Number(new URLSearchParams(location.search).get('slow'));return s>=1&&s<=20?s:1}catch(e){return 1}})();
 function beginClash(){
   const wrap=$('#battlefieldWrap');
-  if(wrap){wrap.classList.add('clashing');setTimeout(()=>wrap.classList.remove('clashing'),1150)}
-  setTimeout(resolveRound,1100);
+  if(wrap){wrap.classList.add('clashing');setTimeout(()=>wrap.classList.remove('clashing'),1150*THEATRE_SPEED)}
+  setTimeout(resolveRound,1100*THEATRE_SPEED);
 }
 function laneIsActive(lane){return game?.blockedLane!==lane}
 const PILES=['structures','units'];
@@ -370,12 +372,17 @@ function refillPile(side,pile){
   side.discard=side.discard.filter(id=>pileOf(id)!==pile);side[pile]=shuffle(returning);return true;
 }
 function pileCount(side,pile){return side[pile].length+side.discard.filter(id=>pileOf(id)===pile).length}
-// Asking for an exhausted pile falls back to the other one, so a draw is never simply lost.
+// Asking for an exhausted pile falls back to the other one, so a draw is never simply lost —
+// unless the hand is already at its limit, in which case the draw is negated and the card
+// stays on its pile.
 function drawFromPile(side,pile){
+  if(side.hand.length>=HAND_LIMIT)return null;
   let from=pile;
   if(!refillPile(side,from)){from=otherPile(pile);if(!refillPile(side,from))return null}
   const id=side[from].pop();if(id)side.hand.push(makeHandCard(id));return id;
 }
+// Generated cards respect the same ceiling: a full hand turns them away too.
+function gainBonusCard(side,cardId){if(side.hand.length<HAND_LIMIT)side.hand.push(makeHandCard(cardId,true))}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
 function randomWorker(){return WORKERS[Math.floor(Math.random()*WORKERS.length)]}
 function openingHandSize(){return currentRule.id==='longmuster'?3:5}
@@ -390,14 +397,15 @@ function drawOpeningHand(side){
 function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'university')}
 // Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
 function drawTurnBonuses(side){
-  for(let i=0;i<countBuilding(side,'townhall');i++)side.hand.push(makeHandCard(randomWorker(),true));
+  for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker());
   const commons=countBuilding(side,'commons'),emptyLanes=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.unit).length;
-  for(let i=0;i<Math.min(commons,emptyLanes);i++)side.hand.push(makeHandCard('peasant',true));
+  for(let i=0;i<Math.min(commons,emptyLanes);i++)gainBonusCard(side,'peasant');
 }
 function makeHandCard(cardId,bonus=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-// With both piles spent there is nothing left to choose between, so the ruler is not held at the prompt.
-function settleDraws(side){if(side.pendingDraws&&!pileCount(side,'structures')&&!pileCount(side,'units'))side.pendingDraws=0}
+// With both piles spent — or a full hand turning every draw away — there is nothing left to
+// choose, so the ruler is not held at the prompt.
+function settleDraws(side){if(side.pendingDraws&&(side.hand.length>=HAND_LIMIT||!pileCount(side,'structures')&&!pileCount(side,'units')))side.pendingDraws=0}
 function chooseDraw(pile){
   const side=game?.player;if(!side||game.locked||!side.pendingDraws)return;
   const id=drawFromPile(side,pile);side.pendingDraws--;
@@ -559,8 +567,9 @@ function resolveOnBuild(side,label){
     }
     const unit=lane.unit;
     if(unit?.round===game.round&&CARDS[unit.cardId].special==='rabble'&&!unit.effectResolved){
-      side.hand.push(makeHandCard('peasant',true));unit.effectResolved=true;
-      log(`${label} Rabble-Rouser gathers a Peasant to the cause.`)
+      unit.effectResolved=true;
+      if(side.hand.length<HAND_LIMIT){gainBonusCard(side,'peasant');log(`${label} Rabble-Rouser gathers a Peasant to the cause.`)}
+      else log(`${label} Rabble-Rouser finds no room in a full hand.`)
     }
   })
 }
@@ -650,8 +659,8 @@ function resolveRound(){
   if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
   // The aftermath holds long enough for the ghosts and damage numbers to finish telling it;
   // nextRound's re-render wipes any overlay still standing.
-  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},1800);
-  setTimeout(nextRound,1800);
+  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},1800*THEATRE_SPEED);
+  setTimeout(nextRound,1800*THEATRE_SPEED);
 }
 // ---- Battle effects. The resolvers below report what happened as they compute it;
 // playFx then tells the story on the freshly rendered board: fallen cards linger as
@@ -679,7 +688,7 @@ function playFx(){
   }
   const gs=$('#gameScreen');
   if(gs&&(hurt.player||hurt.ai)){gs.classList.add('quake');setTimeout(()=>gs.classList.remove('quake'),450)}
-  setTimeout(()=>$$('.fx-slain,.fx-dmg,.fx-absorb').forEach(x=>x.remove()),1700);
+  setTimeout(()=>$$('.fx-slain,.fx-dmg,.fx-absorb').forEach(x=>x.remove()),1700*THEATRE_SPEED);
   fx=[];
 }
 function discardUnit(side,lane){const unit=side.board[lane].unit;if(unit){fx.push({t:'slain',who:fxSide(side),lane,cardId:unit.cardId});if(!unit.handCard?.bonus)side.discard.push(unit.cardId)}side.board[lane].unit=null}
@@ -718,7 +727,9 @@ function nextRound(){
   if(window.kingdomMultiplayer?.active)settleDraws(game.ai);else aiDrawTurn(game.ai);
   settleDraws(game.player);
   const draws=game.player.pendingDraws;renderGame();
-  log(`Round ${game.round} begins. ${draws?`Choose ${draws===1?'one card':draws===2?'two cards':`${draws} cards`} from your structures or your units.`:'Both piles are spent; no cards are drawn.'}`);
+  log(`Round ${game.round} begins. ${draws?`Choose ${draws===1?'one card':draws===2?'two cards':`${draws} cards`} from your structures or your units.`
+    :game.player.hand.length>=HAND_LIMIT?`Your hand is full at ${HAND_LIMIT}; this round's draws are forfeited.`
+    :'Both piles are spent; no cards are drawn.'}`);
 }
 function endGame(result){if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
 
