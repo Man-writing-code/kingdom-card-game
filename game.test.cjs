@@ -78,7 +78,14 @@ for(const [profile,deck] of Object.entries(AI_DECKS)){
   for(const [id,n] of Object.entries(counts)){assert(COLLECTIBLE_IDS.includes(id),id+' is a real design');assert(n<=4,profile+' keeps '+id+' to four copies')}
 }
 assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
-  {logging:4,lumbermill:4,goldmine:1,university:2,lumberjack:1,archer:4,firesapper:4},'Timber Scholars runs the requested list');
+  {logging:4,lumbermill:4,farm:2,university:2,archer:4,firesapper:4},'Timber Scholars runs the requested list');
+assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its own Sawmill food');
+
+resetGame();game.aiProfile='timber';game.ai.resources={food:2,metal:0,material:4,gold:0};
+const timberFarm={uid:'tf',cardId:'farm',bonus:false},timberMill={uid:'tm',cardId:'lumbermill',bonus:false};
+const firstFarm=aiActionScore(timberFarm,0,'hard');game.ai.board[1].building=testSlot('farm');
+assert(firstFarm>aiActionScore(timberFarm,0,'hard'),'the first Farm outranks a second');
+assert(aiActionScore(timberMill,1,'hard')<aiActionScore(timberMill,0,'hard'),'a Sawmill avoids paving the last Farm');
 
 resetGame();game.aiProfile='timber';game.ai.resources={food:0,metal:0,material:3,gold:0};
 const timberSapper={uid:'ts',cardId:'firesapper',bonus:false};

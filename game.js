@@ -54,7 +54,7 @@ const AI_DECKS={
   wood:['logging','logging','logging','farm','farm','goldmine','townhall','university','lumbermill','lumbermill','palisade','palisade','wallwarden','wallwarden','archer','archer','firesapper','huntsman','huntsman','huntinglodge'],
   food:['farm','farm','farm','farm','villagecommons','villagecommons','villagecommons','villagecommons','peasantmob','peasantmob','peasantmob','farmer','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','boarriders','boarriders','boarriders'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
-  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','lumbermill','goldmine','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
+  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','lumbermill','farm','farm','university','university','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
 };
 const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
@@ -414,8 +414,11 @@ function aiActionScore(hc,lane,difficulty){
   if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard','lancer','bannercaptain'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='timber'){
-    // The banner runs no farm, so the lone Gold Mine is the only thing paying the food on a Sawmill.
-    if(hc.cardId==='goldmine')score+=side.resources.gold?2:5;
+    const farms=side.board.filter(x=>x.building&&CARDS[x.building.cardId].produce?.food).length;
+    // Sawmills carry the only food cost in the banner, so a Farm has to land before they can.
+    if(hc.cardId==='farm')score+=farms?1:6;
+    // Paving over the last Farm strands every Sawmill still in hand.
+    if(old&&CARDS[old.cardId].produce?.food&&farms<=1)score-=6;
     if(['logging','lumbermill'].includes(hc.cardId))score+=game.round<6?4:2;
     if(c.special==='university')score+=game.round<6?5:2;
     // Archers are the whole clock: worth most pointed at an open lane.
