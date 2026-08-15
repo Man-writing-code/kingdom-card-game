@@ -340,6 +340,13 @@ body.in-battle{overflow:hidden}
 .clash-line b{font-size:16px;text-shadow:0 0 8px #c99b4830}
 .clash-line span{height:1px;background:linear-gradient(90deg,transparent,#c99b4870 20%,#c99b4870 80%,transparent)}
 
+/* The hall frieze: two hosts marching on a keep, drawn flat and linear in the earth
+   palette the tapestries used. It is the page's spine — the rule between the claim
+   and the launcher — so it carries the border bands above and below like a register. */
+.hall-frieze{margin:22px 0 26px;padding:13px 0;border-top:1px solid #d8cfb9;border-bottom:1px solid #d8cfb9}
+.hall-frieze svg{display:block;width:100%;height:clamp(84px,11vw,140px)}
+@media(max-width:720px){.hall-frieze{margin:16px 0 20px;padding:9px 0}}
+
 /* Draw step: a round opens here and planning stays locked until every draw is spent. */
 .draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
 .draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
