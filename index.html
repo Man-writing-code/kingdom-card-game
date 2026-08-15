@@ -168,6 +168,13 @@
       </div>
       <div id="handArea" class="hand-area compact">
         <div class="hand-heading"><span>YOUR HAND</span><div class="hand-heading-actions"><small id="handHint">Select a card, then choose a valid slot</small><button id="handSizeToggle" aria-pressed="true">EXPAND CARDS ↑</button></div></div>
+        <div id="drawPrompt" class="draw-prompt" hidden>
+          <div class="draw-prompt-head"><span>CHOOSE YOUR DRAW</span><small id="drawRemaining"></small></div>
+          <div class="draw-piles">
+            <button class="draw-pile" data-pile="structures"><b>♧ Structures</b><small></small></button>
+            <button class="draw-pile" data-pile="units"><b>⚔ Units</b><small></small></button>
+          </div>
+        </div>
         <div id="playerHand" class="hand"></div>
         <button id="commitButton" class="button primary commit">Commit plans <span>⚔</span></button>
       </div>

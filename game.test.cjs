@@ -9,7 +9,8 @@ const tests=`
 renderGame=()=>{};renderLog=()=>{};
 currentRule={id:'guilds'};
 
-function testSide(){return {health:10,resources:{food:0,metal:0,material:0,gold:0},deck:[],discard:[],hand:[],board:Array.from({length:4},()=>({building:null,unit:null}))}}
+function testSide(){return {health:10,resources:{food:0,metal:0,material:0,gold:0},structures:[],units:[],discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}}
+function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return side}
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
@@ -121,12 +122,12 @@ assert(aiActionScore(logCamp,0,'hardcore')<0,'and a Logging Camp will not pave a
 // Deck awareness: the same replacement is judged against what is left to draw.
 function farmPaveScore(pending){
   resetGame();game.aiProfile='general';game.ai.resources={food:9,metal:9,material:9,gold:9};
-  game.ai.deck=pending.slice();game.ai.board[0].building=testSlot('farm');
+  pileUp(game.ai,pending);game.ai.board[0].building=testSlot('farm');
   return aiActionScore({uid:'kn',cardId:'townhall',bonus:false},0,'hardcore');
 }
 assert(farmPaveScore(['farm','soldier'])>farmPaveScore(['soldier','soldier']),'paving the last Farm is worse when no Farm remains to draw');
-assert.equal(aiScarcity({board:Array.from({length:4},()=>({building:null,unit:null})),deck:[],hand:[]},'food'),2.6,'an unproducible resource is hoarded');
-assert.equal(aiScarcity({board:Array.from({length:4},()=>({building:null,unit:null})),deck:['farm'],hand:[]},'food'),1.6,'a drawable producer softens that');
+assert.equal(aiScarcity(testSide(),'food'),2.6,'an unproducible resource is hoarded');
+assert.equal(aiScarcity(pileUp(testSide(),['farm']),'food'),1.6,'a drawable producer softens that');
 resetGame();game.ai.board[0].building=testSlot('farm');
 assert.equal(aiScarcity(game.ai,'food'),1,'a standing producer makes it renewable');
 
@@ -149,6 +150,55 @@ for(const profile of Object.keys(AI_DECKS)){
   assert.equal(placements(stockedAI(profile,'hard')),4,profile+' on Hard still stops at four');
 }
 assert.equal(aiPlaysBest('hardcore'),true);assert.equal(aiPlaysBest('hard'),true);assert.equal(aiPlaysBest('normal'),false);
+
+// Split piles and the chosen draw.
+const splitSide=createSide(AI_DECKS.timber);
+assert.equal(splitSide.structures.length,11,'structures pile takes every building');
+assert.equal(splitSide.units.length,9,'units pile takes every unit');
+assert.equal(splitSide.structures.length+splitSide.units.length,DECK_SIZE,'the two piles are the whole banner');
+assert(splitSide.structures.every(id=>CARDS[id].type==='building')&&splitSide.units.every(id=>CARDS[id].type==='unit'),'piles never mix types');
+
+const opener=createSide(AI_DECKS.timber);drawOpeningHand(opener);
+assert.equal(opener.hand.length,5,'the opening hand is still five cards');
+assert.equal(opener.hand.filter(hc=>CARDS[hc.cardId].type==='building').length,3,'three of them are structures');
+assert.equal(opener.hand.filter(hc=>CARDS[hc.cardId].type==='unit').length,2,'and two are units');
+
+resetGame();const drawer=testSide();drawer.units.push('archer');
+assert.equal(drawFromPile(drawer,'structures'),'archer','an empty pile falls back to the other');
+assert.equal(drawFromPile(drawer,'structures'),null,'with both piles spent the draw yields nothing');
+const recycler=testSide();recycler.discard=['farm','soldier'];
+assert.equal(drawFromPile(recycler,'structures'),'farm','a pile reclaims its own discards');
+assert.deepEqual(recycler.discard,['soldier'],'and leaves the other type in the discard');
+
+resetGame(1);game.player=createSide(AI_DECKS.timber);game.ai=createSide(AI_DECKS.timber);
+game.aiProfile='timber';game.aiDifficulty='hardcore';
+nextRound();
+assert.equal(game.round,2);
+assert.equal(game.player.pendingDraws,turnDrawCount(),'the player is left a choice to make');
+assert.equal(game.ai.pendingDraws,0,'the AI resolves its own draws immediately');
+assert.equal(game.ai.hand.length,turnDrawCount(),'and actually took them');
+const handBefore=game.player.hand.length;
+commitTurn();assert.equal(game.locked,false,'planning is blocked until the draws are spent');
+chooseDraw('structures');
+assert.equal(game.player.hand.length,handBefore+1);
+assert.equal(CARDS[game.player.hand[handBefore].cardId].type,'building','the chosen pile is the one that pays out');
+chooseDraw('units');
+assert.equal(game.player.pendingDraws,0);
+assert.equal(CARDS[game.player.hand[handBefore+1].cardId].type,'unit');
+
+// A ruler is never held at the prompt with nothing left to draw.
+resetGame();game.player=testSide();game.player.pendingDraws=2;settleDraws(game.player);
+assert.equal(game.player.pendingDraws,0,'empty piles clear the prompt');
+
+// The AI reaches for units when its lanes are bare and structures while it is still ramping.
+resetGame();game.ai=testSide();
+assert.equal(aiDrawChoice(game.ai),'structures','an empty board in the early rounds ramps first');
+game.ai.board.forEach(l=>l.building=testSlot('logging',1));
+assert.equal(aiDrawChoice(game.ai),'units','bare lanes behind a built economy pull for units');
+game.ai.board.forEach(l=>l.unit=testSlot('archer',1));
+assert.equal(aiDrawChoice(game.ai),'structures','a held front line pulls back to structures');
+game.ai.board.forEach(l=>{l.unit=null});game.ai.health=4;game.ai.hand=[{uid:'x',cardId:'archer'},{uid:'y',cardId:'archer'}];
+assert.equal(aiDrawChoice(game.ai),'units','a thin castle reaches for defenders even holding units');
 
 assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
 assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');

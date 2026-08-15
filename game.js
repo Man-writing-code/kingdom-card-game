@@ -310,7 +310,15 @@ function chooseSacrifice(newId){
   $$('[data-sacrifice]').forEach(b=>b.onclick=()=>{const old=b.dataset.sacrifice;meta.unlocked=meta.unlocked.filter(x=>x!==old);meta.unlocked.push(newId);meta.decks.forEach(d=>{d.cards=d.cards.map(x=>x===old?newId:x)});meta.packWeek=weekKey();saveMeta();closeModal();renderCollection();showModal(`<p class="eyebrow">NEW DESIGN</p><h2>${CARDS[newId].name} joins your realm</h2><p>${CARDS[newId].text}</p><div class="modal-actions"><button class="button primary" data-go-deck>Review deck</button></div>`);$('[data-go-deck]').onclick=()=>{closeModal();showScreen('deck')}});
 }
 
-function createSide(deck){return {health:10,resources:{food:1,metal:1,material:1,gold:0},deck:shuffle(deck.slice()),discard:[],hand:[],board:Array.from({length:4},()=>({building:null,unit:null}))}}
+// A banner is split into two piles at the start of a battle. Nothing moves between them: a card
+// always returns to the pile its type belongs to.
+function createSide(deck){
+  const cards=deck.slice();
+  return {health:10,resources:{food:1,metal:1,material:1,gold:0},
+    structures:shuffle(cards.filter(id=>CARDS[id].type==='building')),
+    units:shuffle(cards.filter(id=>CARDS[id].type==='unit')),
+    discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}
+}
 function startGame(){
   const chosen=activeDeck();
   if(!deckIsPlayable(chosen)){showScreen('deck');$('#deckMessage').textContent=`“${chosen.name}” holds ${chosen.cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`;return}
@@ -338,21 +346,67 @@ function resolveOnlinePlans(hostSide,guestSide){
   log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
 }
 function laneIsActive(lane){return game?.blockedLane!==lane}
-function drawCard(side){if(!side.deck.length){side.deck=shuffle(side.discard);side.discard=[]}return side.deck.pop()}
+const PILES=['structures','units'];
+const PILE_LABELS={structures:'structures',units:'units'};
+const pileOf=id=>CARDS[id].type==='building'?'structures':'units';
+const otherPile=pile=>pile==='structures'?'units':'structures';
+// A pile reclaims its own share of the discard before it counts as exhausted.
+function refillPile(side,pile){
+  if(side[pile].length)return true;
+  const returning=side.discard.filter(id=>pileOf(id)===pile);
+  if(!returning.length)return false;
+  side.discard=side.discard.filter(id=>pileOf(id)!==pile);side[pile]=shuffle(returning);return true;
+}
+function pileCount(side,pile){return side[pile].length+side.discard.filter(id=>pileOf(id)===pile).length}
+// Asking for an exhausted pile falls back to the other one, so a draw is never simply lost.
+function drawFromPile(side,pile){
+  let from=pile;
+  if(!refillPile(side,from)){from=otherPile(pile);if(!refillPile(side,from))return null}
+  const id=side[from].pop();if(id)side.hand.push(makeHandCard(id));return id;
+}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
-function drawCards(side,amount){for(let i=0;i<amount;i++){const id=drawCard(side);if(id)side.hand.push(makeHandCard(id))}}
 function randomWorker(){return WORKERS[Math.floor(Math.random()*WORKERS.length)]}
 function openingHandSize(){return currentRule.id==='longmuster'?3:5}
 function turnDrawCount(){return currentRule.id==='leancourt'?1:currentRule.id==='longmuster'?3:2}
-function drawOpeningHand(side){drawCards(side,openingHandSize())}
-function drawTurnCards(side){
-  drawCards(side,turnDrawCount()+countBuilding(side,'university'));
+// The opening hand is dealt rather than chosen: three structures and two units at the usual five.
+function openingSplit(){const size=openingHandSize(),structures=Math.ceil(size*.6);return {structures,units:size-structures}}
+function drawOpeningHand(side){
+  const split=openingSplit();
+  for(let i=0;i<split.structures;i++)drawFromPile(side,'structures');
+  for(let i=0;i<split.units;i++)drawFromPile(side,'units');
+}
+function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'university')}
+// Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
+function drawTurnBonuses(side){
   for(let i=0;i<countBuilding(side,'townhall');i++)side.hand.push(makeHandCard(randomWorker(),true));
   const commons=countBuilding(side,'commons'),emptyLanes=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.unit).length;
   for(let i=0;i<Math.min(commons,emptyLanes);i++)side.hand.push(makeHandCard('peasant',true));
 }
 function makeHandCard(cardId,bonus=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+// With both piles spent there is nothing left to choose between, so the ruler is not held at the prompt.
+function settleDraws(side){if(side.pendingDraws&&!pileCount(side,'structures')&&!pileCount(side,'units'))side.pendingDraws=0}
+function chooseDraw(pile){
+  const side=game?.player;if(!side||game.locked||!side.pendingDraws)return;
+  const id=drawFromPile(side,pile);side.pendingDraws--;
+  if(id){
+    const landed=pileOf(id);
+    log(`You draw ${CARDS[id].name}${landed===pile?` from the ${PILE_LABELS[pile]} pile`:` — the ${PILE_LABELS[pile]} pile was spent, so the draw came from your ${PILE_LABELS[landed]}`}.`);
+  }
+  settleDraws(side);renderGame();
+}
+// The AI leans towards whichever pile its position is shorter on: open lanes and a thin castle pull for
+// units, empty building ground and the early ramp pull for structures.
+function aiDrawChoice(side){
+  const openLanes=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.unit).length;
+  const openGround=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.building).length;
+  const unitsHeld=side.hand.filter(hc=>CARDS[hc.cardId].type==='unit').length;
+  const structuresHeld=side.hand.filter(hc=>CARDS[hc.cardId].type==='building').length;
+  const unitPull=openLanes*1.5+(side.health<=5?2:0)-unitsHeld*1.2;
+  const structurePull=openGround*1.5+(game.round<4?2:0)-structuresHeld*1.2;
+  return unitPull>structurePull?'units':'structures';
+}
+function aiDrawTurn(side){settleDraws(side);while(side.pendingDraws>0){drawFromPile(side,aiDrawChoice(side));side.pendingDraws--;settleDraws(side)}}
 
 function canAfford(side,cost){let shortage=0;for(const r of ['food','metal','material'])shortage+=Math.max(0,(cost[r]||0)-side.resources[r]);return side.resources.gold-(cost.gold||0)>=shortage}
 function payCost(side,cost){
@@ -365,7 +419,7 @@ function refund(side,spent){Object.entries(spent).forEach(([r,n])=>side.resource
 
 function selectHand(uid){if(game.locked)return;selectedUid=selectedUid===uid?null:uid;renderGame()}
 function slotClick(lane,type){
-  if(game.locked||!laneIsActive(lane))return;const slot=game.player.board[lane][type];
+  if(game.locked||game.player.pendingDraws||!laneIsActive(lane))return;const slot=game.player.board[lane][type];
   if(slot?.round===game.round){game.player.hand.push(slot.handCard);refund(game.player,slot.spent);game.player.board[lane][type]=slot.replaced||null;selectedUid=null;renderGame();return}
   if(!selectedUid)return;
   const idx=game.player.hand.findIndex(x=>x.uid===selectedUid);if(idx<0)return;const hc=game.player.hand[idx],card=CARDS[hc.cardId];if(card.type!==type||!canAfford(game.player,effectiveCost(hc.cardId)))return;
@@ -384,7 +438,7 @@ function aiCardValue(id){
 const aiPlaysBest=d=>d==='hard'||d==='hardcore';
 // Every card the banner has not committed yet. Cards already on the board are gone from here, so this
 // is what the AI can still count on drawing to rebuild or to spend on.
-function aiPending(side){return side.deck.concat(side.hand.map(hc=>hc.cardId))}
+function aiPending(side){return side.structures.concat(side.units,side.hand.map(hc=>hc.cardId))}
 const aiProducerCount=(ids,resource)=>ids.filter(id=>CARDS[id].produce?.[resource]).length;
 const aiBoardProducers=(side,resource,except)=>side.board.filter(l=>l.building&&l.building!==except&&CARDS[l.building.cardId].produce?.[resource]).length;
 // Spending a resource the banner cannot replace should hurt more than spending a renewable one.
@@ -501,7 +555,7 @@ function resolveOnBuild(side,label){
   })
 }
 function commitTurn(){
-  if(game.locked)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
+  if(game.locked||game.player.pendingDraws)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);setTimeout(resolveRound,750);
 }
 function isPureMetalUnit(card){return card.type==='unit'&&card.cost.metal>0&&Object.keys(card.cost).length===1}
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
@@ -621,7 +675,16 @@ function harvest(side,label){
     if(lane.unit){const worker=CARDS[lane.unit.cardId];if(worker.special==='worker'&&game.round>lane.unit.round&&(game.round-lane.unit.round)%2===1)Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)})}
   });log(`${label} realm gathers its harvest.`)
 }
-function nextRound(){game.round++;game.locked=false;const draws=turnDrawCount();drawTurnCards(game.player);drawTurnCards(game.ai);renderGame();log(`Round ${game.round} begins. Each ruler draws ${draws===1?'one':draws===2?'two':'three'} base card${draws===1?'':'s'} and keeps the rest.`)}
+function nextRound(){
+  game.round++;game.locked=false;
+  drawTurnBonuses(game.player);drawTurnBonuses(game.ai);
+  game.player.pendingDraws=turnDrawTotal(game.player);game.ai.pendingDraws=turnDrawTotal(game.ai);
+  // Online, the rival is a person who resolves their own draws on their own client.
+  if(window.kingdomMultiplayer?.active)settleDraws(game.ai);else aiDrawTurn(game.ai);
+  settleDraws(game.player);
+  const draws=game.player.pendingDraws;renderGame();
+  log(`Round ${game.round} begins. ${draws?`Choose ${draws===1?'one card':draws===2?'two cards':`${draws} cards`} from your structures or your units.`:'Both piles are spent; no cards are drawn.'}`);
+}
 function endGame(result){if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
 
 function workerForecastHtml(slot){
@@ -650,7 +713,17 @@ function renderGame(reveal=false){
   $$('#playerHand .game-card').forEach(el=>el.onclick=()=>selectHand(el.dataset.uid));
   const selected=game.player.hand.find(x=>x.uid===selectedUid);if(selected){$$(`#playerBoard .slot.${CARDS[selected.cardId].type}`).forEach(s=>s.classList.add('valid'))}
   $$('#playerBoard .slot').forEach(s=>s.onclick=()=>slotClick(Number(s.dataset.lane),s.dataset.type));
-  $('#commitButton').disabled=game.locked;$('#commitButton').innerHTML=game.locked?'Resolving…':'Commit plans <span>⚔</span>';
+  settleDraws(game.player);
+  const pending=game.player.pendingDraws||0;
+  $('#drawPrompt').hidden=!pending||game.locked;
+  $('#drawRemaining').textContent=pending===1?'1 draw left':`${pending} draws left`;
+  PILES.forEach(pile=>{
+    const button=$(`#drawPrompt [data-pile="${pile}"]`),remaining=pileCount(game.player,pile);
+    button.disabled=!remaining;button.querySelector('small').textContent=`${remaining} left`;
+    button.onclick=()=>chooseDraw(pile);
+  });
+  $('#handHint').textContent=pending?'Draw before you plan — pick a pile above':'Select a card, then choose a valid slot';
+  $('#commitButton').disabled=game.locked||pending>0;$('#commitButton').innerHTML=game.locked?'Resolving…':'Commit plans <span>⚔</span>';
 }
 function renderLog(){
   const entries=$('#gameLogEntries');if(!entries||!game)return;

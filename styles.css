@@ -118,6 +118,18 @@
 .hand-area.compact .commit{bottom:24px}
 @media(max-width:900px){.hand-heading-actions small{display:none}.hand-area.compact .game-card{min-width:96px;width:96px}}
 
+/* Draw step: a round opens here and planning stays locked until every draw is spent. */
+.draw-prompt{margin:0 0 8px;padding:8px 10px;border:1px solid #d3ad5d3d;border-radius:6px;background:#1a2419b8}
+.draw-prompt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.draw-prompt-head span{color:#d3ad5d;font:bold 8px "DM Sans";letter-spacing:1.6px}
+.draw-prompt-head small{color:#8b806c;font:italic 10px Georgia,serif}
+.draw-piles{display:flex;gap:8px}
+.draw-pile{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 6px;border:1px solid #d3ad5d40;border-radius:5px;background:#ffffff08;color:#efe2c5;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.draw-pile b{font:bold 11px "DM Sans";letter-spacing:.5px}
+.draw-pile small{color:#8b806c;font:10px Georgia,serif}
+.draw-pile:hover:not(:disabled){background:#d3ad5d24;border-color:#d3ad5d;transform:translateY(-1px)}
+.draw-pile:disabled{opacity:.4;cursor:not-allowed}
+
 .slot-card.board-painted.damaged{filter:saturate(.48) brightness(.78);box-shadow:inset 0 0 0 1px #d8c7aa40,inset 0 -24px 35px #0b140ddb}
 .slot-card.board-painted.damaged .slot-power{background:#d4c9b7;color:#6f3730}
 

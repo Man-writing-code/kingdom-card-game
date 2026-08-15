@@ -26,7 +26,9 @@ Then visit `http://127.0.0.1:4173`.
 - Development builds expose the weekly decree pool, including Guild Charters, The Grand Fair, The Long Winter, The Lean Court, The Long Muster, and The River Runs High. Choose Calendar Rotation or override it while balancing.
 - Units clash lane by lane. Higher power survives; ties destroy both, except where a card says otherwise — the Pavise Guard survives its first defeat permanently damaged at 1 power.
 - An unblocked unit deals its power as direct damage. Rulers begin at 10 health.
-- Each ruler normally starts with five cards, keeps unplayed cards, and draws two each new round; weekly decrees may change those base draw numbers.
+- A banner splits into two piles when a battle begins: structures and units. Cards always return to the pile their type belongs to, and neither pile is shuffled into the other.
+- Each ruler is dealt three structures and two units to open, keeps unplayed cards, and then **chooses** where each new draw comes from. A round opens on the draw step and planning stays locked until every draw is spent. Two base draws a round, plus one per University; weekly decrees may change the base number, and Town Hall workers and Commons Peasants arrive on top of the choice rather than as part of it.
+- Choosing an exhausted pile reshuffles that pile's own discards first, and falls back to the other pile if there is genuinely nothing left, so a draw is never lost. A banner with no structures or no units is legal and simply always draws from the pile it has.
 - Occupied unit and building slots may be replaced; the old card is sacrificed to the discard pile on commitment.
 - Tier-two resource buildings produce two per round: the Mill costs 2 wood + 1 metal, while the Forge and Sawmill cost 2 wood + 1 food.
 - Farmers, Lumberjacks, and Miners are 1-power workers that produce their matching resource after surviving a full round, then every second round.
