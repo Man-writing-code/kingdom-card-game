@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,38,'global collectible pool (Charge designs shelved)');
-assert.equal(Object.keys(CARDS).length,39,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,39,'global collectible pool (Charge designs shelved, Mason added)');
+assert.equal(Object.keys(CARDS).length,40,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -137,6 +137,18 @@ assert.equal(game.player.fortification,1,'the stone wore instead');
 dealDamage(game.player,3,0);
 assert.equal(game.player.fortification,0,'stone is spent before flesh');
 assert.equal(game.player.health,8,'and the remainder carries through to the keep');
+
+// The Mason lays stone every round it holds its lane — a worker whose yield goes on the keep.
+assert.deepEqual(CARDS.mason.cost,{metal:1});assert.equal(CARDS.mason.power,1);
+assert(COLLECTIBLE_IDS.includes('mason'),'the Mason joins the pack pool');
+resetGame(3);game.player.board[0].unit=testSlot('mason',3);
+harvest(game.player,'Your');
+assert.equal(game.player.fortification,1,'a Mason lays stone the round it arrives');
+assert.deepEqual(game.player.resources,{food:0,metal:0,material:0,gold:0},'and nothing reaches the stores');
+harvest(game.player,'Your');assert.equal(game.player.fortification,2,'and again each round it holds');
+// Stone laid is stone that takes the blow, so it stacks past the keep's own ten.
+game.player.fortification=1;assert.equal(dealDamage(game.player,3,0),3);
+assert.equal(game.player.fortification,0);assert.equal(game.player.health,8,'the stone spends first');
 
 assert.equal(CARDS.gatehouse.name,'Gatehouse','the Gatehouse keeps a name a card face can hold');
 assert.deepEqual(CARDS.gatehouse.cost,{material:1,metal:2},'and is priced to be built, not saved for');

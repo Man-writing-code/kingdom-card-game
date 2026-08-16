@@ -821,6 +821,11 @@ body[data-screen="game"] .hand-area{
    the card, so it must declare its own ink colour instead of inheriting the room. */
 .deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}
 
+/* A Mason's cue is stone, not harvest — it borrows the fortification slate rather than a
+   resource colour, and carries a glyph instead of a resource icon. */
+.production-cue.fortify{--cue:#a8bccd}
+.production-cue.fortify i{font-style:normal;font-size:15px;line-height:1}
+
 /* Fortification: stone standing in front of the keep. The pip row becomes a wrapping strip
    rather than a fixed ten, because a walled ruler can carry more than their starting integrity. */
 .keep-pips{display:flex;flex-wrap:wrap;max-width:78px;grid-template-columns:none}

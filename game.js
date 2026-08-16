@@ -37,7 +37,8 @@ const CARDS = {
   huntsman:{name:'Huntsman',type:'unit',icon:'➶',accent:'#557448',cost:{food:1,material:1},power:2,text:'After winning a unit clash and surviving, gain 1 wood.',special:'huntsman'},
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
   ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
-  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'}
+  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'},
+  mason:{name:'Mason',type:'unit',icon:'▨',accent:'#7c8792',cost:{metal:1},power:1,text:'Raises 1 fortification after each clash.',special:'mason'}
 };
 // The Lancer and Banner Captain (the Charge mechanic) are shelved for now; their art stays under
 // assets/cards/ and normaliseCollection/sanitizeDeck already scrub them from old saves.
@@ -213,7 +214,9 @@ const CARD_ART={
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
   wallwarden:'assets/cards/wall-warden.webp',royalguard:'assets/cards/royal-guard.webp',armoury:'assets/cards/armoury.webp',
   huntsman:'assets/cards/huntsman.webp',huntinglodge:'assets/cards/hunting-lodge.webp',ballista:'assets/cards/ballista-emplacement.webp',
-  paviseguard:'assets/cards/pavise-guard.webp'
+  paviseguard:'assets/cards/pavise-guard.webp',
+  // Placeholder: the Mason borrows the Wall Warden's portrait until it has one of its own.
+  mason:'assets/cards/wall-warden.webp'
 };
 function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
@@ -483,6 +486,8 @@ function aiCardValue(id){
   // A Pikeman is a 2 that becomes the biggest thing on the field if it is left alone.
   if(c.special==='entrench')return 3.5;
   if(c.special==='worker')return 3;
+  // A Mason banks keep integrity every round it lives, which outlasts any single clash.
+  if(c.special==='mason')return 3;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
@@ -535,6 +540,8 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
     if(c.special==='pavise')score+=enemy?3:1;
+    // A Mason only lays stone from a lane it holds, so it wants quiet ground like any worker.
+    if(c.special==='mason')score+=enemy?-3:3;
     // Mob units want a neighbour on each side, so value the lane by how many flanks are already held.
     if(MOB_SPECIALS.includes(c.special))score+=adjacentAllies(side,lane)*2.5;
     if(side.board[lane].building)score+=1;
@@ -851,7 +858,12 @@ function harvest(side,label){
     if(!laneIsActive(index))return;
     if(lane.building){const c=CARDS[lane.building.cardId];if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);if(currentRule.id==='tradefair'&&r==='gold')gain++;side.resources[r]+=gain});if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++}
     // A worker pays out at the end of every round it lives through, the round it arrives included.
-    if(lane.unit){const worker=CARDS[lane.unit.cardId];if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)})}
+    if(lane.unit){
+      const worker=CARDS[lane.unit.cardId];
+      if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
+      // A Mason lays stone rather than gathering: the yield goes on the keep, not into the stores.
+      if(worker.special==='mason'){side.fortification=(side.fortification||0)+1;log(`${label} ${worker.name} raises 1 fortification.`)}
+    }
   });log(`${label} realm gathers its harvest.`)
 }
 function nextRound(){
@@ -881,6 +893,10 @@ function productionForecastHtml(slot){
     }
   }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>slot.round&&(game.round-slot.round)%2===1)){
     resource='gold';gain=1;
+  }else if(card.special==='mason'){
+    // A Mason's yield never reaches the stores, so it needs its own cue rather than a resource one.
+    const label='Raises 1 fortification after this clash';
+    return `<span class="production-cue fortify" title="${label}" aria-label="${label}"><i>▚</i><b>+1</b></span>`;
   }
   if(!resource||gain<=0)return'';
   const name=RESOURCE_NAMES[resource].toLowerCase(),label=`Produces ${gain} ${name} after this clash`;
