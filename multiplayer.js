@@ -3,7 +3,7 @@
   const SUPABASE_KEY='sb_publishable_7ULebdQSBz9PXz-W-j6vlA_cB73Y0Sy';
   const statusEl=$('#onlineStatus'),nameEl=$('#onlineName'),codeEl=$('#roomCode');
   const savedName=localStorage.getItem('kingdom-online-name');if(savedName)nameEl.value=savedName;
-  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,initializing:false};
+  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,initializing:false,poll:null};
   let client=null;
 
   const setStatus=(message,error=false)=>{statusEl.textContent=message||'';statusEl.classList.toggle('error',error)};
@@ -37,11 +37,35 @@
     ctx.channel=client.channel(`kingdom-${row.id}`).on('postgres_changes',{
       event:'UPDATE',schema:'public',table:'kingdom_matches',filter:`id=eq.${row.id}`
     },payload=>handleMatch(payload.new)).subscribe();
+    startPolling(row.id);
     handleMatch(row);
   }
 
+  // Realtime carries the duel, but a single dropped message would strand it: both rulers
+  // committed, neither board advancing, nobody able to do anything about it. This reads the
+  // match every few seconds and feeds anything new through the same handler, so a lost
+  // event costs a moment rather than the game.
+  function startPolling(id){
+    clearInterval(ctx.poll);
+    ctx.poll=setInterval(async()=>{
+      if(!ctx.active||document.hidden)return;
+      const {data,error}=await client.from('kingdom_matches').select('*').eq('id',id).maybeSingle();
+      if(error||!data)return;
+      const stalled=data.phase==='resolving'&&ctx.seat==='host'&&ctx.resolvingVersion!==data.version;
+      if(data.version>ctx.loadedVersion||stalled)handleMatch(data);
+    },4000);
+  }
+
+  // Setting up the battlefield is a once-per-match act. The guards are deliberately layered:
+  // a match past the lobby has already begun, a version above zero has already been written,
+  // and a client that has ever loaded a state is mid-duel. Any one of them firing wrongly
+  // would stamp a fresh round one over a live match.
   async function initializeMatch(row){
-    if(ctx.initializing||!row.guest_deck||row.game_state)return;ctx.initializing=true;
+    if(ctx.initializing||!row.guest_deck||row.game_state)return;
+    if(row.phase!=='lobby'||row.version>0||ctx.loadedVersion>=0){
+      setStatus('The battlefield is already prepared. Reload if the board looks wrong.',true);return;
+    }
+    ctx.initializing=true;
     try{
       const rule=ruleById(row.decree_id)||calendarRule();currentRule=rule;
       game={round:1,player:createSide(row.host_deck),ai:createSide(row.guest_deck),aiProfile:'online',aiDifficulty:'online',decreeId:rule.id,blockedLane:rule.id==='river'?3:null,locked:false,logs:[]};
@@ -61,7 +85,9 @@
 
   async function handleMatch(row){
     if(!ctx.active||row.id!==ctx.match.id)return;ctx.match=row;
-    if(ctx.seat==='host'&&row.status==='playing'&&!row.game_state){setStatus(`${row.guest_name} joined. Preparing the battlefield…`);await initializeMatch(row);return}
+    // Only a match still in the lobby wants preparing. Keying this on a missing game_state
+    // meant any payload the host read as stateless reset a duel in progress to round one.
+    if(ctx.seat==='host'&&row.status==='playing'&&row.phase==='lobby'&&!row.game_state){setStatus(`${row.guest_name} joined. Preparing the battlefield…`);await initializeMatch(row);return}
     if(row.status==='waiting'){setStatus(`Room ${row.room_code} is ready. Share this code and keep this page open.`);return}
     if(row.game_state&&row.version>ctx.loadedVersion){
       ctx.loadedVersion=row.version;startOnlineGame(row.game_state,ctx.seat,names());
@@ -103,14 +129,27 @@
   async function resolved(result){
     if(!ctx.active||ctx.seat!=='host')return;
     const finished=Boolean(result),winner=result==='draw'?'draw':result==='win'?'host':result==='loss'?'guest':null;
-    const state=onlineCanonicalState(),nextVersion=ctx.match.version+1;
-    const values={game_state:state,round:game.round,version:nextVersion,revealed_plans:null,phase:finished?'finished':'planning',status:finished?'finished':'playing',winner,updated_at:new Date().toISOString()};
-    const {error}=await client.from('kingdom_matches').update(values).eq('id',ctx.match.id).eq('version',ctx.match.version);if(error){setStatus(error.message,true);return}
+    // The expected version is read once. Reading it again for the guard would let a payload
+    // arriving mid-call move the target, writing a version derived from a row we never saw.
+    const expected=ctx.match.version,matchId=ctx.match.id;
+    const state=onlineCanonicalState();
+    const values={game_state:state,round:game.round,version:expected+1,revealed_plans:null,phase:finished?'finished':'planning',status:finished?'finished':'playing',winner,updated_at:new Date().toISOString()};
+    const {data,error}=await client.from('kingdom_matches').update(values).eq('id',matchId).eq('version',expected).select('version');
+    if(error){setStatus(error.message,true);return}
+    // No row matched: another writer moved the match on, so this resolution is stale. Saying so
+    // beats diverging in silence, which is how one ruler ends up a round ahead of the other.
+    // No row matched: the match moved on beneath us. Rather than diverge in silence, take
+    // whatever is authoritative now and carry on from there.
+    if(!data||!data.length){
+      const {data:fresh}=await client.from('kingdom_matches').select('*').eq('id',matchId).maybeSingle();
+      if(fresh){ctx.resolvingVersion=-1;handleMatch(fresh)}
+      return;
+    }
     if(finished)showOnlineResult({...ctx.match,...values});
   }
 
   async function leave(){
-    ctx.active=false;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');setRoomView('setup');
+    ctx.active=false;clearInterval(ctx.poll);ctx.poll=null;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');setRoomView('setup');
   }
 
   codeEl.addEventListener('input',()=>{codeEl.value=cleanCode()});
