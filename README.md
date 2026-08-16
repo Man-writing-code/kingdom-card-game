@@ -34,9 +34,10 @@ Then visit `http://127.0.0.1:4173`.
 - A hand holds at most ten cards. Draws into a full hand are negated — the card stays on its pile — and generated workers and Peasants are turned away the same; a full hand skips the draw step entirely.
 - Occupied unit and building slots may be replaced; the old card is sacrificed to the discard pile on commitment.
 - Tier-two resource buildings harvest two per round and are each bought with two of the very resource they make, so any realm can ramp on its own harvest: the Mill costs 2 food + 1 wood, the Sawmill 2 wood + 1 food, and the Forge 2 metal + 1 food. With a free Farm, Logging Camp or Mining Camp down on round one, its matching engine is affordable on round two. These are printed costs; no decree rewrites them.
-- Farmers, Lumberjacks, and Miners are 1-power workers that produce their matching resource after surviving a full round, then every second round.
+- Farmers, Lumberjacks, and Miners are 1-power workers bought with the very resource they make — a Lumberjack costs 1 wood, a Miner 1 metal — and each produces 1 at the end of every round it survives, the round it arrives included. A Town Hall recruits one at random each round, and that recruit costs nothing to deploy.
+- The Knight carries 2 power and gains +2 while an opposing unit stands in its lane, so it is a duellist rather than a raider: 4 against anything that blocks it, 2 through an open lane.
 - The 1-building-material Fire Sapper burns itself out at the clash and destroys any opposing unit in its lane.
-- The Archer costs 3 wood and has a flat 2 power, following normal tie rules.
+- The Archer costs 2 wood and has a flat 2 power, following normal tie rules.
 - Village Commons generate temporary Peasants to refill empty unit lanes. Peasant Mobs and Boar Riders each gain 1 power per friendly unit in an adjacent lane, so a contiguous line beats a scattered one.
 - Metal decks gain 3-power Men-at-Arms, healing Reinforced Gatehouses, and 4-power Battering Rams. A Ram only breaks the opposing building when its lane holds no defending unit, damaging itself to 1 power in the process; blocked, it simply fights.
 - The 38-design global pool supports five identities: Food swarms and Boar Rider finishers; Wood Palisade defence; pure-Metal elites; Food–Wood hunting engines; and Metal–Wood Ballista and Pavise fortifications. (The Metal–Food Charge identity is shelved for now; old saves shed those cards automatically.)

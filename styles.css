@@ -821,6 +821,9 @@ body[data-screen="game"] .hand-area{
    the card, so it must declare its own ink colour instead of inheriting the room. */
 .deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}
 
+/* A granted card shows a seal where its price would be — it is deployed, not bought. */
+.cost.granted{background:linear-gradient(165deg,#e6c274,#c39a3f);color:#2a2010;font-size:12px}
+
 /* The room card: what the online panel becomes while a match is forming. The code is
    the largest thing on it because sharing the code is the host's entire task. */
 .room-wait{display:grid;justify-items:center;gap:7px;padding:18px 16px 16px;text-align:center}

@@ -2,21 +2,21 @@ const CARDS = {
   logging:{name:'Logging Camp',type:'building',icon:'♧',accent:'#51734d',cost:{},text:'Harvest 1 wood after each clash.',produce:{material:1}},
   mining:{name:'Mining Camp',type:'building',icon:'◆',accent:'#65717a',cost:{},text:'Harvest 1 metal after each clash.',produce:{metal:1}},
   farm:{name:'Farm',type:'building',icon:'♨',accent:'#87964c',cost:{},text:'Harvest 1 food after each clash.',produce:{food:1}},
-  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{material:1},text:'Produce 1 gold after every second clash.',special:'goldmine'},
-  townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round.',special:'townhall'},
+  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
+  townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
   university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
   soldier:{name:'Soldier',type:'unit',icon:'⚔',accent:'#8b4b38',cost:{food:1,metal:1},power:2,text:'A dependable fighter with 2 power.'},
-  farmer:{name:'Farmer',type:'unit',icon:'♟',accent:'#87964c',cost:{food:1},power:1,text:'After surviving a full round, produces 1 food every second round.',special:'worker',produce:{food:1}},
-  lumberjack:{name:'Lumberjack',type:'unit',icon:'♣',accent:'#51734d',cost:{food:1},power:1,text:'After surviving a full round, produces 1 wood every second round.',special:'worker',produce:{material:1}},
-  miner:{name:'Miner',type:'unit',icon:'♦',accent:'#65717a',cost:{food:1},power:1,text:'After surviving a full round, produces 1 metal every second round.',special:'worker',produce:{metal:1}},
+  farmer:{name:'Farmer',type:'unit',icon:'♟',accent:'#87964c',cost:{food:1},power:1,text:'Produces 1 food at the end of every round it survives.',special:'worker',produce:{food:1}},
+  lumberjack:{name:'Lumberjack',type:'unit',icon:'♣',accent:'#51734d',cost:{material:1},power:1,text:'Produces 1 wood at the end of every round it survives.',special:'worker',produce:{material:1}},
+  miner:{name:'Miner',type:'unit',icon:'♦',accent:'#65717a',cost:{metal:1},power:1,text:'Produces 1 metal at the end of every round it survives.',special:'worker',produce:{metal:1}},
   firesapper:{name:'Fire Sapper',type:'unit',icon:'♨',accent:'#a84d32',cost:{material:1},power:0,text:'At the clash, burns itself out and destroys the opposing unit in its lane.',special:'sapper'},
-  knight:{name:'Knight',type:'unit',icon:'♞',accent:'#475b73',cost:{food:1,metal:2},power:3,text:'Armoured cavalry with 3 power.'},
+  knight:{name:'Knight',type:'unit',icon:'♞',accent:'#475b73',cost:{food:1,metal:2},power:2,text:'Gains +2 power when facing an opposing unit.',special:'knight'},
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
-  archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:3},power:2,text:'A ranged fighter with 2 power.'},
+  archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:'A ranged fighter with 2 power.'},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:3,text:'Gains +1 power against Knights.',special:'pikeman'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:'A versatile 3-power unit.'},
@@ -215,11 +215,15 @@ const CARD_ART={
 };
 function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
-  return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span></div><div class="costs">${costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3><p>${c.text}</p>${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
+  return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} ${opts.free?'data-free="1"':''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span></div><div class="costs">${opts.free?'<span class="cost granted" title="Granted — costs nothing to deploy">✦</span>':costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3><p>${c.text}</p>${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
 }
 // No decree currently rewrites a printed cost, but every purchase reads through here, so this
 // is where one would.
 function effectiveCost(id){return {...CARDS[id].cost}}
+// A particular copy may be granted rather than bought — a Town Hall's recruit turns up ready
+// to deploy. The grant belongs to that copy in hand, not to the design, so it is read from the
+// hand card wherever a price is actually charged.
+function handCost(hc){return hc?.free?{}:effectiveCost(hc.cardId)}
 
 const selectedRule=value=>value==='calendar'?calendarRule():ruleById(value)||calendarRule();
 function setupRuleSelector(){
@@ -385,8 +389,9 @@ function drawFromPile(side,pile){
   if(!refillPile(side,from)){from=otherPile(pile);if(!refillPile(side,from))return null}
   const id=side[from].pop();if(id)side.hand.push(makeHandCard(id));return id;
 }
-// Generated cards respect the same ceiling: a full hand turns them away too.
-function gainBonusCard(side,cardId){if(side.hand.length<HAND_LIMIT)side.hand.push(makeHandCard(cardId,true))}
+// Generated cards respect the same ceiling: a full hand turns them away too. A granted card is
+// also free to deploy, which is what makes a Town Hall's recruit worth the hall.
+function gainBonusCard(side,cardId,free=false){if(side.hand.length<HAND_LIMIT)side.hand.push(makeHandCard(cardId,true,free))}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
 function randomWorker(){return WORKERS[Math.floor(Math.random()*WORKERS.length)]}
 function openingHandSize(){return currentRule.id==='longmuster'?3:5}
@@ -401,11 +406,11 @@ function drawOpeningHand(side){
 function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'university')}
 // Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
 function drawTurnBonuses(side){
-  for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker());
+  for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker(),true);
   const commons=countBuilding(side,'commons'),emptyLanes=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.unit).length;
   for(let i=0;i<Math.min(commons,emptyLanes);i++)gainBonusCard(side,'peasant');
 }
-function makeHandCard(cardId,bonus=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus}}
+function makeHandCard(cardId,bonus=false,free=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus,free}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 // With both piles spent — or a full hand turning every draw away — there is nothing left to
 // choose, so the ruler is not held at the prompt.
@@ -462,8 +467,8 @@ function slotClick(lane,type){
   if(game.locked||game.player.pendingDraws||!laneIsActive(lane))return;const slot=game.player.board[lane][type];
   if(slot?.round===game.round){game.player.hand.push(slot.handCard);refund(game.player,slot.spent);game.player.board[lane][type]=slot.replaced||null;selectedUid=null;renderGame();return}
   if(!selectedUid)return;
-  const idx=game.player.hand.findIndex(x=>x.uid===selectedUid);if(idx<0)return;const hc=game.player.hand[idx],card=CARDS[hc.cardId];if(card.type!==type||!canAfford(game.player,effectiveCost(hc.cardId)))return;
-  const spent=payCost(game.player,effectiveCost(hc.cardId));game.player.hand.splice(idx,1);game.player.board[lane][type]={cardId:hc.cardId,round:game.round,spent,handCard:hc,replaced:slot||null};selectedUid=null;renderGame();
+  const idx=game.player.hand.findIndex(x=>x.uid===selectedUid);if(idx<0)return;const hc=game.player.hand[idx],card=CARDS[hc.cardId];if(card.type!==type||!canAfford(game.player,handCost(hc)))return;
+  const spent=payCost(game.player,handCost(hc));game.player.hand.splice(idx,1);game.player.board[lane][type]={cardId:hc.cardId,round:game.round,spent,handCard:hc,replaced:slot||null};selectedUid=null;renderGame();
 }
 
 function aiVisiblePlayerSlot(lane,type){const slot=game.player.board[lane][type];return slot?.round===game.round?(slot.replaced||null):slot}
@@ -471,6 +476,10 @@ function aiCardValue(id){
   const c=CARDS[id];
   if(['ram','boarriders'].includes(c.special))return 5;
   if(['sapper','mob','gatehouse','pavise'].includes(c.special)||id==='royalguard')return 3.5;
+  // A Knight is a 2 that fights as a 4, and a worker is a 1 that pays every round it lives —
+  // both are worth more than the number printed on them.
+  if(c.special==='knight')return 3.5;
+  if(c.special==='worker')return 3;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
@@ -507,13 +516,16 @@ function aiReplacementCost(side,old,incoming){
   return penalty;
 }
 function aiActionScore(hc,lane,difficulty){
-  const side=game.ai,c=CARDS[hc.cardId],cost=effectiveCost(hc.cardId),old=side.board[lane][c.type];
+  const side=game.ai,c=CARDS[hc.cardId],cost=handCost(hc),old=side.board[lane][c.type];
   let score=aiCardValue(hc.cardId)*2-Object.entries(cost).reduce((a,[r,n])=>a+n*aiScarcity(side,r),0)*.3;
   if(old)score-=aiReplacementCost(side,old,hc.cardId);
   if(c.type==='unit'){
-    const enemy=aiVisiblePlayerSlot(lane,'unit'),enemyBuilding=aiVisiblePlayerSlot(lane,'building'),power=c.power||0;
+    const enemy=aiVisiblePlayerSlot(lane,'unit'),enemyBuilding=aiVisiblePlayerSlot(lane,'building');
+    // A Knight reads as a 2 on the card and fights as a 4, so weigh it against what it will
+    // actually meet in the lane rather than against its printed number.
+    const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
-    else if(enemy){const enemyPower=CARDS[enemy.cardId].power||0;score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
+    else if(enemy){const enemyPower=(CARDS[enemy.cardId].power||0)+(CARDS[enemy.cardId].special==='knight'?2:0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
     else score+=power*1.25+(game.player.health<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
@@ -583,11 +595,11 @@ function aiPlan(){
   while(actions<limit){
     const options=[];
     for(const hc of side.hand){
-      const c=CARDS[hc.cardId];if(!canAfford(side,effectiveCost(hc.cardId)))continue;
+      const c=CARDS[hc.cardId];if(!canAfford(side,handCost(hc)))continue;
       for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&!aiPlaysBest(difficulty))continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty)})}
     }
     if(!options.length)break;options.sort((a,b)=>b.score-a.score);const choice=aiPlaysBest(difficulty)?options[0]:options[Math.floor(Math.random()*Math.min(3,options.length))];if(choice.score<0)break;
-    const c=CARDS[choice.hc.cardId],idx=side.hand.findIndex(x=>x.uid===choice.hc.uid),old=side.board[choice.lane][c.type],spent=payCost(side,effectiveCost(choice.hc.cardId));side.hand.splice(idx,1);side.board[choice.lane][c.type]={cardId:choice.hc.cardId,round:game.round,spent,handCard:choice.hc,replaced:old||null};actions++;
+    const c=CARDS[choice.hc.cardId],idx=side.hand.findIndex(x=>x.uid===choice.hc.uid),old=side.board[choice.lane][c.type],spent=payCost(side,handCost(choice.hc));side.hand.splice(idx,1);side.board[choice.lane][c.type]={cardId:choice.hc.cardId,round:game.round,spent,handCard:choice.hc,replaced:old||null};actions++;
   }
 }
 function commitReplacements(side){side.board.forEach(lane=>['building','unit'].forEach(type=>{const slot=lane[type];if(slot?.round===game.round&&slot.replaced){if(!slot.replaced.handCard?.bonus)side.discard.push(slot.replaced.cardId);slot.replaced=null}}))}
@@ -622,6 +634,9 @@ function unitPower(side,lane){
   if(building&&['watchtower','gatehouse'].includes(CARDS[building.cardId].special))p++;
   if(building&&CARDS[building.cardId].special==='armoury'&&isPureMetalUnit(card))p+=2;
   const enemySide=side===game.player?game.ai:game.player,enemy=enemySide.board[lane].unit;
+  // A Knight is a duellist, not a raider: strong against anything that stands in its lane,
+  // ordinary when the lane is open and it rides at the ruler instead.
+  if(card.special==='knight'&&enemy)p+=2;
   if(card.special==='pikeman'&&enemy?.cardId==='knight')p++;
   if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
@@ -755,7 +770,8 @@ function harvest(side,label){
   side.board.forEach((lane,index)=>{
     if(!laneIsActive(index))return;
     if(lane.building){const c=CARDS[lane.building.cardId];if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);if(currentRule.id==='tradefair'&&r==='gold')gain++;side.resources[r]+=gain});if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++}
-    if(lane.unit){const worker=CARDS[lane.unit.cardId];if(worker.special==='worker'&&game.round>lane.unit.round&&(game.round-lane.unit.round)%2===1)Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)})}
+    // A worker pays out at the end of every round it lives through, the round it arrives included.
+    if(lane.unit){const worker=CARDS[lane.unit.cardId];if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)})}
   });log(`${label} realm gathers its harvest.`)
 }
 function nextRound(){
@@ -778,7 +794,6 @@ function productionForecastHtml(slot){
   if(card.produce){
     [resource,gain]=Object.entries(card.produce)[0];
     if(card.special==='worker'){
-      if(!(game.round>slot.round&&(game.round-slot.round)%2===1))return'';
       if(currentRule.id==='winter')gain++;
     }else{
       if(currentRule.id==='winter'&&resource!=='gold')gain=Math.max(0,gain-1);
@@ -835,7 +850,7 @@ function renderGame(reveal=false){
   if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your');renderHealth($('#aiHealth'),game.ai.health,'Rival');renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
   $('#playerBoard').innerHTML=boardHtml(game.player,false,reveal);$('#aiBoard').innerHTML=boardHtml(game.ai,true,reveal);
-  $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,effectiveCost(h.cardId))?'':'unaffordable'}`})).join('');
+  $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,handCost(h))?'':'unaffordable'}`,free:h.free})).join('');
   $$('#playerHand .game-card').forEach(el=>el.onclick=()=>selectHand(el.dataset.uid));
   const selected=game.player.hand.find(x=>x.uid===selectedUid);if(selected){$$(`#playerBoard .slot.${CARDS[selected.cardId].type}`).forEach(s=>s.classList.add('valid'))}
   $$('#playerBoard .slot').forEach(s=>s.onclick=()=>slotClick(Number(s.dataset.lane),s.dataset.type));
@@ -895,18 +910,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&game?.player.pendin
 // The realm sigil doubles as the game's mark in the top bar.
 $$('.brand-mark').forEach(el=>{el.textContent='';el.innerHTML=resourceEmblemHtml({food:'',material:'',metal:'',gold:''},{logo:true})});
 // ---- Card tooltip: hover any card on the battlefield or in hand and it tells you what it does. ----
-function cardTipHtml(id){
-  const c=CARDS[id],cost=effectiveCost(id);
+function cardTipHtml(id,granted=false){
+  const c=CARDS[id],cost=granted?{}:effectiveCost(id);
   return `<div class="tip-head"><b>${esc(c.name)}</b><span>${c.token?'token':c.type}</span></div>
     ${c.power!==undefined?`<div class="tip-power">⚔ ${c.power} power</div>`:''}
-    ${Object.keys(cost).length?`<div class="tip-cost">${costsHtml(cost)}</div>`:'<div class="tip-cost free">Free to play</div>'}
+    ${Object.keys(cost).length?`<div class="tip-cost">${costsHtml(cost)}</div>`:`<div class="tip-cost free">${granted?'Granted — costs nothing to deploy':'Free to play'}</div>`}
     <p>${esc(c.text)}</p>`;
 }
 document.addEventListener('mouseover',ev=>{
   const tip=$('#cardTip');if(!tip||!document.body.classList.contains('in-battle'))return;
   const t=ev.target.closest?.('[data-card]');
   if(!t||t.classList.contains('hidden')||!CARDS[t.dataset.card]){tip.hidden=true;return}
-  tip.innerHTML=cardTipHtml(t.dataset.card);tip.hidden=false;
+  tip.innerHTML=cardTipHtml(t.dataset.card,t.dataset.free==='1');tip.hidden=false;
   const r=t.getBoundingClientRect(),tw=tip.offsetWidth;
   tip.style.left=Math.min(Math.max(10,r.left+r.width/2-tw/2),innerWidth-tw-10)+'px';
   const above=r.top-tip.offsetHeight-10;

@@ -29,7 +29,7 @@ resetGame();game.player.board[0].unit=testSlot('peasant',1,{handCard:{cardId:'pe
 
 resetGame();game.player.board[0].unit=testSlot('wallwarden');assert.equal(unitPower(game.player,0),1);game.player.board[0].building=testSlot('logging');assert.equal(unitPower(game.player,0),3);
 game.player.board[0].unit=testSlot('manatarms');game.player.board[0].building=testSlot('armoury');assert.equal(unitPower(game.player,0),5);
-game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),3,'Armoury excludes mixed-cost units');
+game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),2,'Armoury excludes mixed-cost units — the Knight is left on its base 2');
 
 resetGame();game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,3,0),1);assert.equal(dealDamage(game.player,3,0),3);game.round++;assert.equal(dealDamage(game.player,3,0),1,'Palisade refreshes next round');
 resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');assert.equal(dealDamage(game.player,4,0),4);game.round++;assert.equal(dealDamage(game.player,4,0),1);currentRule={id:'none'};
@@ -61,6 +61,41 @@ assert(game.ai.board[0].building,'a Ram that wins a clash leaves the building st
 resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(combatDefeat(game.player,0),false);assert.equal(unitPower(game.player,0),1);assert.equal(combatDefeat(game.player,0),true);assert.equal(game.player.board[0].unit,null);
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();assert(game.player.board[0].unit?.damaged);assert.equal(game.ai.board[0].unit,null,'Pavise Guard survives a normal tie');
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('firesapper');resolveRound();assert.equal(game.player.board[0].unit,null,'Fire Sapper bypasses Pavise resilience');
+
+// Card revisions.
+assert.deepEqual(CARDS.archer.cost,{material:2},'Archer costs 2 wood');
+assert.deepEqual(CARDS.goldmine.cost,{},'the Gold Mine is free to raise');
+assert.deepEqual(CARDS.farmer.cost,{food:1},'each worker is bought with what it produces');
+assert.deepEqual(CARDS.lumberjack.cost,{material:1});
+assert.deepEqual(CARDS.miner.cost,{metal:1});
+for(const id of ['farmer','lumberjack','miner'])assert.equal(Object.keys(CARDS[id].produce)[0],Object.keys(CARDS[id].cost)[0],id+' pays in its own coin');
+
+// A worker pays out at the end of every round it survives, the round it arrives included.
+resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');
+assert.equal(game.player.resources.material,1,'a worker produces the round it is deployed');
+harvest(game.player,'Your');assert.equal(game.player.resources.material,2,'and again the next round');
+
+// A Knight fights as a 4 and raids as a 2.
+resetGame();game.player.board[0].unit=testSlot('knight',1);
+assert.equal(unitPower(game.player,0),2,'a Knight facing an open lane hits for its base');
+game.ai.board[0].unit=testSlot('soldier',1);
+assert.equal(unitPower(game.player,0),4,'and gains 2 against anything standing in its way');
+game.ai.board[0].unit=null;assert.equal(unitPower(game.player,0),2,'the bonus leaves with the defender');
+resetGame();game.player.board[0].unit=testSlot('knight',1);game.ai.board[0].unit=testSlot('pikeman',1);
+assert.equal(unitPower(game.ai,0),4,'a Pikeman still counters the Knight');
+assert.equal(unitPower(game.player,0),4,'and the Knight still answers back');
+
+// A granted card is free to deploy; a drawn copy of the same design is not.
+const granted=makeHandCard('lumberjack',true,true),bought=makeHandCard('lumberjack');
+assert.deepEqual(handCost(granted),{},'a Town Hall recruit costs nothing');
+assert.deepEqual(handCost(bought),{material:1},'a drawn worker still pays');
+resetGame();game.player.resources={food:0,metal:0,material:0,gold:0};
+assert(canAfford(game.player,handCost(granted)),'a bankrupt realm can still deploy its recruit');
+assert(!canAfford(game.player,handCost(bought)),'but cannot buy one');
+resetGame();game.player.board[0].building=testSlot('townhall',1);drawTurnBonuses(game.player);
+assert.equal(game.player.hand.length,1,'a Town Hall recruits');
+assert(game.player.hand[0].free,'and the recruit arrives granted');
+assert(WORKERS.includes(game.player.hand[0].cardId),'and it is a worker');
 
 // Every tier-two engine is bought with 2 of what it harvests, so an archetype can ramp itself.
 currentRule={id:'none'};
