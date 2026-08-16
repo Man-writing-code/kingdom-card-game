@@ -217,6 +217,11 @@ assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {logging:4,lumbermill:3,farm:2,university:2,lumberjack:1,archer:4,firesapper:4},'Timber Scholars runs the requested list');
 assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its own Sawmill food');
 
+assert.deepEqual(AI_DECKS.uprising.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
+  {farm:4,farmer:2,rabblerouser:4,peasantmob:4,villagecommons:2,granary:2,lumberjack:2},'the Village Uprising runs the requested list');
+for(const gone of ['general','wood','food'])assert(!AI_DECKS[gone],gone+' is retired from the roster');
+assert(Object.keys(AI_DECKS).every(k=>AI_PROFILE_NAMES[k]),'every surviving banner still has a display name');
+
 assert.deepEqual(AI_DECKS.siege.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {mining:4,logging:2,foundry:1,batteringram:4,manatarms:4,paviseguard:2,firesapper:3},'the Siege Train runs the requested list');
 
@@ -273,7 +278,7 @@ assert(aiActionScore(logCamp,0,'hardcore')<0,'and a Logging Camp will not pave a
 
 // Deck awareness: the same replacement is judged against what is left to draw.
 function farmPaveScore(pending){
-  resetGame();game.aiProfile='general';game.ai.resources={food:9,metal:9,material:9,gold:9};
+  resetGame();game.aiProfile=null;game.ai.resources={food:9,metal:9,material:9,gold:9};
   pileUp(game.ai,pending);game.ai.board[0].building=testSlot('farm');
   return aiActionScore({uid:'kn',cardId:'townhall',bonus:false},0,'hardcore');
 }

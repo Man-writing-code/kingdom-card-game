@@ -49,15 +49,15 @@ const COLLECTIBLE_IDS=Object.keys(CARDS).filter(id=>!CARDS[id].token);
 const INITIAL_UNLOCKED=['logging','mining','farm','goldmine','townhall','university','soldier','farmer','lumberjack','miner','firesapper','knight','archer',...TIER_TWO,...ARCHETYPE_CARDS];
 const PRE_ARCHER_DEFAULT=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','archer'];
+// The General, Wood Architect and Commons Rush banners are retired for now; their cards remain
+// in the pool, and git history holds the lists if any of them is wanted back.
 const AI_DECKS={
-  general:DEFAULT_DECK.slice(),
-  wood:['logging','logging','logging','farm','farm','goldmine','townhall','university','lumbermill','lumbermill','palisade','palisade','wallwarden','wallwarden','archer','archer','firesapper','huntsman','huntsman','huntinglodge'],
-  food:['farm','farm','farm','farm','villagecommons','villagecommons','villagecommons','villagecommons','peasantmob','peasantmob','peasantmob','farmer','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','boarriders','boarriders','boarriders'],
+  uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','peasantmob','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
   timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper'],
   siege:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']
 };
-const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
+const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
 // Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
@@ -336,8 +336,8 @@ function createSide(deck){
 function startGame(){
   const chosen=activeDeck();
   if(!deckIsPlayable(chosen)){showScreen('deck');const cards=deckCards(chosen);$('#deckMessage').textContent=devMode?`The dev deck holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`:`“${chosen.name}” holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`;return}
-  const aiProfile=$('#aiDeckSelect').value||'general',aiDifficulty=$('#aiDifficultySelect').value||'normal';
-  game={round:1,player:createSide(deckCards(chosen)),ai:createSide(AI_DECKS[aiProfile]||AI_DECKS.general),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
+  const aiProfile=$('#aiDeckSelect').value||Object.keys(AI_DECKS)[0],aiDifficulty=$('#aiDifficultySelect').value||'normal';
+  game={round:1,player:createSide(deckCards(chosen)),ai:createSide(AI_DECKS[aiProfile]||Object.values(AI_DECKS)[0]),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
   $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
   drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(false);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
 }
@@ -552,8 +552,14 @@ function aiActionScore(hc,lane,difficulty){
     // worth raising early; a thin keep still wants it most.
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
   }
-  if(game.aiProfile==='wood'&&['logging','lumbermill','university','townhall','archer','firesapper','palisade','wallwarden','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
-  if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
+  if(game.aiProfile==='uprising'){
+    // The uprising wins by mass, so what prints bodies matters more than any single body.
+    if(['villagecommons','rabblerouser'].includes(hc.cardId))score+=game.round<6?4:2;
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)<2?3:1;
+    // Mobs pay for a contiguous line, so a body beside a body is worth more than a body alone.
+    if(c.type==='unit')score+=adjacentAllies(side,lane)*1.2;
+    if(MOB_SPECIALS.includes(c.special))score+=2;
+  }
   if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='timber'){
     // Sawmills carry the only food cost in the banner, so a Farm has to land before they can.
