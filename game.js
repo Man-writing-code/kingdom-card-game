@@ -410,14 +410,30 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 // With both piles spent — or a full hand turning every draw away — there is nothing left to
 // choose, so the ruler is not held at the prompt.
 function settleDraws(side){if(side.pendingDraws&&(side.hand.length>=HAND_LIMIT||!pileCount(side,'structures')&&!pileCount(side,'units')))side.pendingDraws=0}
+// The draw dialog covers the battlefield, so a ruler can fold it away to study the board
+// and their hand before committing to a pile. Kept out of `game` because that object is
+// serialised to the other client in an online duel; this is one viewer's screen state.
+let drawMinimised=false;
+function setDrawMinimised(state){drawMinimised=state;renderGame()}
+// What the last draw turned up, held just long enough to inform the next choice.
+let drawReveal=null;
 function chooseDraw(pile){
   const side=game?.player;if(!side||game.locked||!side.pendingDraws)return;
   const id=drawFromPile(side,pile);side.pendingDraws--;
   if(id){
     const landed=pileOf(id);
+    drawReveal={cardId:id,uid:side.hand[side.hand.length-1]?.uid||null,fallback:landed!==pile};
     log(`You draw ${CARDS[id].name}${landed===pile?` from the ${PILE_LABELS[pile]} pile`:` — the ${PILE_LABELS[pile]} pile was spent, so the draw came from your ${PILE_LABELS[landed]}`}.`);
   }
-  settleDraws(side);renderGame();
+  settleDraws(side);
+  // On the last draw the dialog closes, so the reveal has nowhere to sit and the card takes
+  // its bow in hand instead. Noted before the render, which clears the reveal as it goes.
+  const lastUid=!side.pendingDraws&&drawReveal?drawReveal.uid:null;
+  renderGame();
+  if(lastUid){
+    const card=$(`#playerHand .game-card[data-uid="${lastUid}"]`);
+    if(card){card.classList.add('just-drawn');card.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'})}
+  }
 }
 // The AI leans towards whichever pile its position is shorter on: open lanes and a thin castle pull for
 // units, empty building ground and the early ramp pull for structures.
@@ -818,9 +834,20 @@ function renderGame(reveal=false){
   const selected=game.player.hand.find(x=>x.uid===selectedUid);if(selected){$$(`#playerBoard .slot.${CARDS[selected.cardId].type}`).forEach(s=>s.classList.add('valid'))}
   $$('#playerBoard .slot').forEach(s=>s.onclick=()=>slotClick(Number(s.dataset.lane),s.dataset.type));
   settleDraws(game.player);
-  const pending=game.player.pendingDraws||0;
-  $('#drawPrompt').hidden=!pending||game.locked;
+  const pending=game.player.pendingDraws||0,drawing=Boolean(pending)&&!game.locked;
+  if(!drawing){drawMinimised=false;drawReveal=null}
+  // The restore summons sits just above the dock, whose height moves with the hand.
+  const dock=$('#handArea');if(dock)$('#gameScreen').style.setProperty('--dock-height',`${Math.round(dock.getBoundingClientRect().height)}px`);
+  $('#drawPrompt').hidden=!drawing||drawMinimised;
+  $('#drawRestore').hidden=!drawing||!drawMinimised;
+  $('#drawRestoreCount').textContent=pending===1?'1 draw left':`${pending} draws left`;
   $('#drawRemaining').textContent=pending===1?'1 draw left':`${pending} draws left`;
+  // A card already turned up is shown inside the dialog, so it can inform the next pick.
+  const revealBox=$('#drawReveal');revealBox.hidden=!drawReveal;
+  if(drawReveal){
+    revealBox.innerHTML=`<span class="reveal-label">YOU DREW</span>${cardHtml(drawReveal.cardId)}${drawReveal.fallback?'<em>That pile was spent, so it came from the other.</em>':''}`;
+    revealBox.classList.remove('flash');void revealBox.offsetWidth;revealBox.classList.add('flash');
+  }
   PILES.forEach(pile=>{
     const button=$(`#drawPrompt [data-pile="${pile}"]`),remaining=pileCount(game.player,pile);
     button.disabled=!remaining;button.querySelector('small').textContent=`${remaining} left`;
@@ -858,6 +885,9 @@ $('#newDeck').onclick=()=>{if(meta.decks.length>=12)return;const d=makeDeck(`Ban
 $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeDeck(),d=makeDeck(`${a.name} copy`,a.cards.slice());meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Banner duplicated.'};
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
 $('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
+$('#drawMinimise').onclick=()=>setDrawMinimised(true);$('#drawRestore').onclick=()=>setDrawMinimised(false);
+// Escape folds the dialog away rather than dismissing a decision that still has to be made.
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&game?.player.pendingDraws&&!game.locked)setDrawMinimised(!drawMinimised)});
 // The realm sigil doubles as the game's mark in the top bar.
 $$('.brand-mark').forEach(el=>{el.textContent='';el.innerHTML=resourceEmblemHtml({food:'',material:'',metal:'',gold:''},{logo:true})});
 // ---- Card tooltip: hover any card on the battlefield or in hand and it tells you what it does. ----
