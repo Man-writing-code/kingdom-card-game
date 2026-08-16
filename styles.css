@@ -821,6 +821,21 @@ body[data-screen="game"] .hand-area{
    the card, so it must declare its own ink colour instead of inheriting the room. */
 .deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}
 
+/* Fortification: stone standing in front of the keep. The pip row becomes a wrapping strip
+   rather than a fixed ten, because a walled ruler can carry more than their starting integrity. */
+.keep-pips{display:flex;flex-wrap:wrap;max-width:78px;grid-template-columns:none}
+.keep-pips i{flex:0 0 6px}
+.keep-pips i.fortified{background:#a8bccd;box-shadow:0 0 6px #a8bccd7a;opacity:1}
+.health strong em{font-style:normal;font-size:.6em;color:#a8bccd;margin-left:3px;vertical-align:super;letter-spacing:0}
+.fx-fort{position:absolute;left:50%;top:38%;z-index:7;font:22px "MedievalSharp",serif;color:#cfe0ee;text-shadow:0 2px 0 #22333f,0 0 14px #7ea3bd99;animation:fxFort 1.5s ease-out forwards;pointer-events:none}
+@keyframes fxFort{
+  0%{opacity:0;transform:translate(-50%,8px) scale(.7)}
+  18%{opacity:1;transform:translate(-50%,0) scale(1.15)}
+  70%{opacity:1;transform:translate(-50%,-6px) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-22px) scale(.95)}
+}
+@media(max-width:900px){.keep-pips{max-width:40px}}
+
 /* A granted card shows a seal where its price would be — it is deployed, not bought. */
 .cost.granted{background:linear-gradient(165deg,#e6c274,#c39a3f);color:#2a2010;font-size:12px}
 

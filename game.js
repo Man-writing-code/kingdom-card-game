@@ -26,7 +26,7 @@ const CARDS = {
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
   manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
-  gatehouse:{name:'Reinforced Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:2,metal:2},text:'When revealed, restore 2 health. The friendly unit in this lane has +1 power.',special:'gatehouse'},
+  gatehouse:{name:'Reinforced Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:2,metal:2},text:'When revealed, raise 2 fortification. Fortification takes damage before the keep does and is not capped at 10. The friendly unit in this lane has +1 power.',special:'gatehouse'},
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
   boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
@@ -328,7 +328,7 @@ function chooseSacrifice(newId){
 // always returns to the pile its type belongs to.
 function createSide(deck){
   const cards=deck.slice();
-  return {health:10,resources:{food:1,metal:1,material:1,gold:0},
+  return {health:10,fortification:0,resources:{food:1,metal:1,material:1,gold:0},
     structures:shuffle(cards.filter(id=>CARDS[id].type==='building')),
     units:shuffle(cards.filter(id=>CARDS[id].type==='unit')),
     discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}
@@ -527,7 +527,7 @@ function aiActionScore(hc,lane,difficulty){
     const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
     else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-enemy.round)):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
-    else score+=power*1.25+(game.player.health<=power?8:0);
+    else score+=power*1.25+(game.player.health+(game.player.fortification||0)<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
@@ -548,7 +548,9 @@ function aiActionScore(hc,lane,difficulty){
     // A Commons pays a Peasant a round whatever the board looks like, so it is worth most
     // while there are rounds left for it to pay out over.
     if(c.special==='commons')score+=game.round<6?3:1.5;
-    if(c.special==='gatehouse'&&side.health<=7)score+=3;
+    // Fortification is banked ahead of the blow rather than spent healing after it, so it is
+    // worth raising early; a thin keep still wants it most.
+    if(c.special==='gatehouse')score+=side.health<=7?4:2;
   }
   if(game.aiProfile==='wood'&&['logging','lumbermill','university','townhall','archer','firesapper','palisade','wallwarden','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
   if(game.aiProfile==='food'&&['farm','villagecommons','peasant','peasantmob','farmer','soldier','ranger','rabblerouser','boarriders','huntsman','huntinglodge'].includes(hc.cardId))score+=2;
@@ -610,8 +612,8 @@ function resolveOnBuild(side,label){
   side.board.forEach((lane,index)=>{
     const building=lane.building;
     if(building?.round===game.round&&CARDS[building.cardId].special==='gatehouse'&&!building.effectResolved){
-      const restored=Math.min(2,10-side.health);side.health+=restored;building.effectResolved=true;
-      log(restored?`${label} Reinforced Gatehouse repairs ${restored} health in lane ${index+1}.`:`${label} Reinforced Gatehouse secures lane ${index+1}; the castle is already at full health.`)
+      side.fortification=(side.fortification||0)+2;building.effectResolved=true;
+      log(`${label} Reinforced Gatehouse raises 2 fortification over the keep from lane ${index+1}.`)
     }
     const unit=lane.unit;
     if(unit?.round===game.round&&CARDS[unit.cardId].special==='rabble'&&!unit.effectResolved){
@@ -743,6 +745,8 @@ function playFx(){
       hurt[e.who]+=e.dmg;
       if(slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-dmg">−${e.dmg}</span>`);
     }else if(e.t==='absorb'&&slot)slot.insertAdjacentHTML('beforeend','<span class="fx-absorb">◈</span>');
+    // Stone taking the blow reads differently from the keep taking it: no red, no quake.
+    else if(e.t==='fort'&&slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-fort">▚${e.amount}</span>`);
   }
   for(const who of ['player','ai']){
     if(!hurt[who])continue;
@@ -767,10 +771,15 @@ function adjustedDamage(side,amount,lane){
   return damage
 }
 function dealDamage(side,amount,lane){
-  const palisade=side.board[lane]?.building,dmg=adjustedDamage(side,amount,lane);side.health-=dmg;
+  const palisade=side.board[lane]?.building,dmg=adjustedDamage(side,amount,lane);
   const target=side===game.player?'player':'ai';
+  // Fortification is spent stone: it takes the blow before the keep does, and unlike health it
+  // is not capped at ten, so a well-walled ruler can stand above their starting integrity.
+  const held=Math.min(side.fortification||0,dmg);
+  if(held){side.fortification-=held;fx.push({t:'fort',who:target,lane,amount:held})}
+  side.health-=dmg-held;
   if(dmg<amount)fx.push({t:'absorb',who:target,lane});
-  if(dmg>0)fx.push({t:'hit',who:target,lane,dmg});
+  if(dmg-held>0)fx.push({t:'hit',who:target,lane,dmg:dmg-held});
   if(currentRule.id==='walls')game.wallUsed[target]=true;
   if(CARDS[palisade?.cardId]?.special==='palisade'&&palisade.usedRound!==game.round)palisade.usedRound=game.round;
   return dmg
@@ -850,13 +859,16 @@ function renderResources(el,resources){
   el.setAttribute('aria-label',`Food ${resources.food}, Wood ${resources.material}, Metal ${resources.metal}, Gold ${resources.gold}. Gold can replace any other resource.`);
   el.innerHTML=resourceEmblemHtml(resources);
 }
-function renderHealth(el,value,owner){
-  const health=Math.max(0,value),maximum=10;
-  el.setAttribute('aria-label',`${owner} keep integrity: ${health} of ${maximum}`);
-  el.innerHTML=`<span class="keep-caption">KEEP</span><strong>${health}</strong><span class="keep-pips" aria-hidden="true">${Array.from({length:maximum},(_,i)=>`<i class="${i<health?'standing':'fallen'}"></i>`).join('')}</span>`;
+function renderHealth(el,value,owner,fortification=0){
+  const health=Math.max(0,value),maximum=10,fort=Math.max(0,fortification);
+  el.setAttribute('aria-label',`${owner} keep integrity: ${health} of ${maximum}${fort?`, behind ${fort} fortification`:''}`);
+  // Fortification pips sit ahead of the keep's own, because that is the order damage meets them.
+  const pips=Array.from({length:fort},()=>'<i class="fortified"></i>').join('')
+    +Array.from({length:maximum},(_,i)=>`<i class="${i<health?'standing':'fallen'}"></i>`).join('');
+  el.innerHTML=`<span class="keep-caption">KEEP</span><strong>${health}${fort?`<em>+${fort}</em>`:''}</strong><span class="keep-pips" aria-hidden="true">${pips}</span>`;
 }
 function renderGame(reveal=false){
-  if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your');renderHealth($('#aiHealth'),game.ai.health,'Rival');renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
+  if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your',game.player.fortification);renderHealth($('#aiHealth'),game.ai.health,'Rival',game.ai.fortification);renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
   $('#playerBoard').innerHTML=boardHtml(game.player,false,reveal);$('#aiBoard').innerHTML=boardHtml(game.ai,true,reveal);
   $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,handCost(h))?'':'unaffordable'}`,free:h.free})).join('');
