@@ -136,7 +136,15 @@
   async function commit(){
     if(!ctx.active||game.locked)return;game.locked=true;selectedUid=null;renderGame();$('#commitButton').textContent='Waiting for rival…';setStatus('Plans committed. Your rival still cannot see them.');
     try{const side=JSON.parse(JSON.stringify(game.player));const {error}=await client.rpc('submit_kingdom_plan',{p_match:ctx.match.id,p_round:game.round,p_side:side});if(error)throw error}
-    catch(error){game.locked=false;renderGame();setStatus(formatError(error),true)}
+    catch(error){
+      game.locked=false;renderGame();setStatus(formatError(error),true);
+      // Refused because the table is on a different round or still resolving: this board is
+      // out of step rather than broken, so pull the authoritative row and fall back into line.
+      if(/no longer accepting plans/i.test(error?.message||'')){
+        const {data}=await client.from('kingdom_matches').select('*').eq('id',ctx.match.id).maybeSingle();
+        if(data){ctx.loadedVersion=-1;ctx.resolvingVersion=-1;handleMatch(data);setStatus('That round had already moved on — your board is back in step. Commit again.',true)}
+      }
+    }
   }
 
   async function resolved(result){

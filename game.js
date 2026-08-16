@@ -692,7 +692,13 @@ function resolveRound(){
   if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
   // The aftermath holds long enough for the ghosts and damage numbers to finish telling it;
   // nextRound's re-render wipes any overlay still standing.
-  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{nextRound();window.kingdomMultiplayer.resolved(null)},1800*THEATRE_SPEED);
+  // The host opens the next round locally, but the table only has it once the write lands.
+  // Unlocking before then let a quick host commit a plan for a round the database had not
+  // started, which the plan guard refuses outright. Hold the board until it is published.
+  if(window.kingdomMultiplayer?.active)return setTimeout(()=>{
+    nextRound();game.locked=true;renderGame();
+    Promise.resolve(window.kingdomMultiplayer.resolved(null)).finally(()=>{game.locked=false;renderGame()});
+  },1800*THEATRE_SPEED);
   setTimeout(nextRound,1800*THEATRE_SPEED);
 }
 // ---- Battle effects. The resolvers below report what happened as they compute it;
