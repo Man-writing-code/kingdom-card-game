@@ -69,6 +69,9 @@ assert.deepEqual(CARDS.farmer.cost,{food:1},'each worker is bought with what it 
 assert.deepEqual(CARDS.lumberjack.cost,{material:1});
 assert.deepEqual(CARDS.miner.cost,{metal:1});
 for(const id of ['farmer','lumberjack','miner'])assert.equal(Object.keys(CARDS[id].produce)[0],Object.keys(CARDS[id].cost)[0],id+' pays in its own coin');
+// Workers and resource buildings harvest on the same beat, so they say it the same way.
+for(const id of ['farmer','lumberjack','miner','farm','logging','mining'])
+  assert.match(CARDS[id].text,/^Harvest 1 (food|wood|metal) after each clash\.$/,id+' uses the shared harvest wording');
 
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');
