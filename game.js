@@ -836,8 +836,6 @@ function renderGame(reveal=false){
   settleDraws(game.player);
   const pending=game.player.pendingDraws||0,drawing=Boolean(pending)&&!game.locked;
   if(!drawing){drawMinimised=false;drawReveal=null}
-  // The restore summons sits just above the dock, whose height moves with the hand.
-  const dock=$('#handArea');if(dock)$('#gameScreen').style.setProperty('--dock-height',`${Math.round(dock.getBoundingClientRect().height)}px`);
   $('#drawPrompt').hidden=!drawing||drawMinimised;
   $('#drawRestore').hidden=!drawing||!drawMinimised;
   $('#drawRestoreCount').textContent=pending===1?'1 draw left':`${pending} draws left`;

@@ -764,20 +764,23 @@ body[data-screen="game"] .hand-area{
 }
 .draw-minimise b{font-size:11px;line-height:1}
 .draw-minimise:hover{background:#d3ad5d1f;border-color:#d3ad5d;color:#f6e5bb}
+/* The summons lives in the dock's heading, where the hint it replaces already sat. Inline
+   it can never drift over the board or collide with a label, and it moves with the dock. */
 .draw-restore{
-  position:fixed;left:50%;bottom:calc(var(--dock-height,190px) + 16px);transform:translateX(-50%);
-  z-index:49;display:flex;align-items:center;gap:10px;padding:11px 20px;
-  border:1px solid #d3ad5d7a;border-radius:3px;color:#f3ead7;cursor:pointer;
-  background:linear-gradient(165deg,#25422e,#122318);
-  box-shadow:0 12px 32px #030805a8,inset 0 0 0 1px #fff6df0f;
-  animation:restorePulse 2.1s ease-in-out infinite
+  display:inline-flex;align-items:center;gap:8px;padding:5px 13px;
+  border:1px solid #c8a961a3;border-radius:999px;cursor:pointer;
+  background:#2a4632;color:#f6edd9;
+  transition:background .15s,border-color .15s,box-shadow .15s;
+  animation:restorePulse 2.2s ease-in-out infinite
 }
-.draw-restore b{font-size:16px;color:#e8c67c;line-height:1}
-.draw-restore span{font:bold var(--t-small) "DM Sans";letter-spacing:1.1px}
-.draw-restore small{font:italic var(--t-tiny) Georgia,serif;color:#bdb6a3}
-.draw-restore:hover{border-color:#e8c67c;animation:none}
-@keyframes restorePulse{0%,100%{box-shadow:0 12px 32px #030805a8,inset 0 0 0 1px #fff6df0f}
-  50%{box-shadow:0 12px 32px #030805a8,inset 0 0 0 1px #fff6df0f,0 0 20px 2px #d3ad5d3d}}
+.draw-restore[hidden]{display:none}
+.draw-restore b{font-size:13px;color:#f0cd78;line-height:1}
+.draw-restore span{font:bold var(--t-micro) "DM Sans";letter-spacing:1.2px;text-transform:uppercase}
+.draw-restore small{font:italic var(--t-tiny) Georgia,serif;color:#cfc7b2}
+.draw-restore:hover{background:#33553c;border-color:#f0cd78;animation:none}
+@keyframes restorePulse{0%,100%{box-shadow:0 0 0 0 #d3ad5d00}50%{box-shadow:0 0 0 3px #d3ad5d2e}}
+/* With the summons showing, the hint has nothing left to say. */
+.hand-heading:has(.draw-restore:not([hidden])) #handHint{display:none}
 
 /* A card already turned up sits between the title and the piles, because what it is may
    well decide where the next draw comes from. */
