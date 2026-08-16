@@ -54,9 +54,10 @@ const AI_DECKS={
   wood:['logging','logging','logging','farm','farm','goldmine','townhall','university','lumbermill','lumbermill','palisade','palisade','wallwarden','wallwarden','archer','archer','firesapper','huntsman','huntsman','huntinglodge'],
   food:['farm','farm','farm','farm','villagecommons','villagecommons','villagecommons','villagecommons','peasantmob','peasantmob','peasantmob','farmer','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','boarriders','boarriders','boarriders'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
-  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']
+  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper'],
+  siege:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']
 };
-const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS'};
+const AI_PROFILE_NAMES={general:'GENERAL',wood:'WOOD ARCHITECT',food:'COMMONS RUSH',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
 // Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
@@ -538,6 +539,20 @@ function aiActionScore(hc,lane,difficulty){
       if(enemy)score+=aiCardValue(enemy.cardId)>=3?4:0;
       else score+=side.health<=5?7:-4;
     }
+  }
+  if(game.aiProfile==='siege'){
+    // The train runs on metal: camps before all else while the Rams are still in the pile.
+    if(hc.cardId==='mining')score+=game.round<5?4:2;
+    if(['manatarms','paviseguard'].includes(hc.cardId))score+=2;
+    // A Ram is a siege engine, not a soldier: it wants a lane where a building stands
+    // unguarded, and settles for fighting only when nothing better is on offer.
+    if(c.special==='ram'){
+      const wall=aiVisiblePlayerSlot(lane,'building'),guard=aiVisiblePlayerSlot(lane,'unit');
+      score+=wall?(guard?1:6):0;
+    }
+    // A Sapper here is a siege tool too — burning the guard off a walled lane tonight
+    // is what lets a Ram through it tomorrow.
+    if(c.special==='sapper'&&aiVisiblePlayerSlot(lane,'unit')&&aiVisiblePlayerSlot(lane,'building'))score+=5;
   }
   if(currentRule.id==='winter'){if(c.special==='worker')score+=3;if(c.produce&&c.type==='building'&&!c.produce.gold)score-=2}
   if(currentRule.id==='tradefair'&&['goldmine','market','merchant'].includes(hc.cardId))score+=3;

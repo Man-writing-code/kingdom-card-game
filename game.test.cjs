@@ -119,6 +119,19 @@ assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {logging:4,lumbermill:3,farm:2,university:2,lumberjack:1,archer:4,firesapper:4},'Timber Scholars runs the requested list');
 assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its own Sawmill food');
 
+assert.deepEqual(AI_DECKS.siege.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
+  {mining:4,logging:2,foundry:1,batteringram:4,manatarms:4,paviseguard:2,firesapper:3},'the Siege Train runs the requested list');
+
+// A Ram hunts walls: an unguarded enemy building beats an empty lane, and a guarded one
+// still beats nothing at all. A Sapper burns the guard off a walled lane to open it.
+resetGame();game.aiProfile='siege';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const siegeRam={uid:'sr',cardId:'batteringram',bonus:false},siegeSap={uid:'ss',cardId:'firesapper',bonus:false};
+game.player.board[0].building=testSlot('watchtower',1);
+game.player.board[1].building=testSlot('watchtower',1);game.player.board[1].unit=testSlot('soldier',1);
+const openWall=aiActionScore(siegeRam,0,'hardcore'),guardedWall=aiActionScore(siegeRam,1,'hardcore'),bareLane=aiActionScore(siegeRam,2,'hardcore');
+assert(openWall>guardedWall&&openWall>bareLane,'a Ram wants the unguarded wall above all');
+assert(aiActionScore(siegeSap,1,'hardcore')>aiActionScore(siegeSap,2,'hardcore'),'a Sapper opens the guarded wall rather than an empty lane');
+
 resetGame();game.aiProfile='timber';game.ai.resources={food:2,metal:0,material:4,gold:0};
 const timberFarm={uid:'tf',cardId:'farm',bonus:false},timberMill={uid:'tm',cardId:'lumbermill',bonus:false};
 const firstFarm=aiActionScore(timberFarm,0,'hard');game.ai.board[1].building=testSlot('farm');
