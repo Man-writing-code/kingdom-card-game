@@ -17,7 +17,7 @@ const CARDS = {
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:'A ranged fighter with 2 power.'},
-  pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:3,text:'Gains +1 power against Knights.',special:'pikeman'},
+  pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:'A versatile 3-power unit.'},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:'An elite warrior with 5 power.'},
@@ -479,6 +479,8 @@ function aiCardValue(id){
   // A Knight is a 2 that fights as a 4, and a worker is a 1 that pays every round it lives —
   // both are worth more than the number printed on them.
   if(c.special==='knight')return 3.5;
+  // A Pikeman is a 2 that becomes the biggest thing on the field if it is left alone.
+  if(c.special==='entrench')return 3.5;
   if(c.special==='worker')return 3;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
@@ -525,7 +527,7 @@ function aiActionScore(hc,lane,difficulty){
     // actually meet in the lane rather than against its printed number.
     const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
-    else if(enemy){const enemyPower=(CARDS[enemy.cardId].power||0)+(CARDS[enemy.cardId].special==='knight'?2:0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
+    else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.max(0,game.round-enemy.round):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
     else score+=power*1.25+(game.player.health<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
@@ -637,7 +639,9 @@ function unitPower(side,lane){
   // A Knight is a duellist, not a raider: strong against anything that stands in its lane,
   // ordinary when the lane is open and it rides at the ruler instead.
   if(card.special==='knight'&&enemy)p+=2;
-  if(card.special==='pikeman'&&enemy?.cardId==='knight')p++;
+  // Ground held is ground dug in: a lane it still occupies is a round it survived, so the
+  // rounds elapsed since it deployed are exactly its service, with no extra bookkeeping.
+  if(card.special==='entrench')p+=Math.max(0,game.round-u.round);
   if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
 }

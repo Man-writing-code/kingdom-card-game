@@ -84,9 +84,14 @@ assert.equal(unitPower(game.player,0),2,'a Knight facing an open lane hits for i
 game.ai.board[0].unit=testSlot('soldier',1);
 assert.equal(unitPower(game.player,0),4,'and gains 2 against anything standing in its way');
 game.ai.board[0].unit=null;assert.equal(unitPower(game.player,0),2,'the bonus leaves with the defender');
-resetGame();game.player.board[0].unit=testSlot('knight',1);game.ai.board[0].unit=testSlot('pikeman',1);
-assert.equal(unitPower(game.ai,0),4,'a Pikeman still counters the Knight');
-assert.equal(unitPower(game.player,0),4,'and the Knight still answers back');
+// A Pikeman digs in: every round it holds the lane is another point of power.
+resetGame(2);game.player.board[0].unit=testSlot('pikeman',2);
+assert.equal(unitPower(game.player,0),2,'a Pikeman starts on its base the round it deploys');
+game.round=3;assert.equal(unitPower(game.player,0),3,'a round held adds one');
+game.round=6;assert.equal(unitPower(game.player,0),6,'and it keeps growing while it holds');
+assert.equal(CARDS.pikeman.text.includes('Knight'),false,'its rule no longer hangs on one rival card');
+// The old holder of this slot lost nothing else: a fresh copy is still just a 2.
+resetGame(4);game.player.board[0].unit=testSlot('pikeman',4);assert.equal(unitPower(game.player,0),2);
 
 // A granted card is free to deploy; a drawn copy of the same design is not.
 const granted=makeHandCard('lumberjack',true,true),bought=makeHandCard('lumberjack');
