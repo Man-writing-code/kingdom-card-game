@@ -28,7 +28,10 @@ resolveOnBuild(game.player,'Your');assert.equal(game.player.hand.length,1,'Rabbl
 resetGame();game.player.board[0].unit=testSlot('peasant',1,{handCard:{cardId:'peasant',bonus:true}});discardUnit(game.player,0);assert.deepEqual(game.player.discard,[],'generated Peasant vanishes');
 
 resetGame();game.player.board[0].unit=testSlot('wallwarden');assert.equal(unitPower(game.player,0),1);game.player.board[0].building=testSlot('logging');assert.equal(unitPower(game.player,0),3);
+assert.deepEqual(CARDS.armoury.cost,{metal:2},'the Armoury is 2 metal for +2 power');
 game.player.board[0].unit=testSlot('manatarms');game.player.board[0].building=testSlot('armoury');assert.equal(unitPower(game.player,0),5);
+// The worker cost change made the Miner pure metal, so the Armoury now arms it too.
+game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),3,'a Miner is pure metal now, so the Armoury arms it');
 game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),2,'Armoury excludes mixed-cost units — the Knight is left on its base 2');
 
 resetGame();game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,3,0),1);assert.equal(dealDamage(game.player,3,0),3);game.round++;assert.equal(dealDamage(game.player,3,0),1,'Palisade refreshes next round');
