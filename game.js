@@ -17,7 +17,7 @@ const CARDS = {
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:'A ranged fighter with 2 power.'},
-  pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane.',special:'entrench'},
+  pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:'A versatile 3-power unit.'},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:'An elite warrior with 5 power.'},
@@ -527,7 +527,7 @@ function aiActionScore(hc,lane,difficulty){
     // actually meet in the lane rather than against its printed number.
     const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
-    else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.max(0,game.round-enemy.round):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
+    else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-enemy.round)):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
     else score+=power*1.25+(game.player.health<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
@@ -627,6 +627,9 @@ function isPureMetalUnit(card){return card.type==='unit'&&card.cost.metal>0&&Obj
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
 // Counting neighbours rather than the whole board keeps these cards working when a decree closes a lane.
 const MOB_SPECIALS=['mob','boarriders'];
+// How far a Pikeman may dig in. Three rounds of service is a 5-power unit — worth answering,
+// and still inside what a Ballista or a Fire Sapper can take off the board.
+const ENTRENCH_CAP=3;
 function adjacentAllies(side,lane){return [lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&side.board[i].unit).length}
 function unitPower(side,lane){
   const u=side.board[lane].unit;if(!u)return 0;const card=CARDS[u.cardId];let p=['ram','pavise'].includes(card.special)&&u.damaged?1:card.power||0;
@@ -641,7 +644,8 @@ function unitPower(side,lane){
   if(card.special==='knight'&&enemy)p+=2;
   // Ground held is ground dug in: a lane it still occupies is a round it survived, so the
   // rounds elapsed since it deployed are exactly its service, with no extra bookkeeping.
-  if(card.special==='entrench')p+=Math.max(0,game.round-u.round);
+  // Capped, so a lane left alone becomes a problem to answer rather than an unanswerable one.
+  if(card.special==='entrench')p+=Math.min(ENTRENCH_CAP,Math.max(0,game.round-u.round));
   if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
 }
