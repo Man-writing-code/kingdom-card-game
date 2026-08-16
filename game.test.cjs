@@ -138,6 +138,8 @@ dealDamage(game.player,3,0);
 assert.equal(game.player.fortification,0,'stone is spent before flesh');
 assert.equal(game.player.health,8,'and the remainder carries through to the keep');
 
+assert.equal(CARDS.gatehouse.name,'Gatehouse','the Gatehouse keeps a name a card face can hold');
+assert.deepEqual(CARDS.gatehouse.cost,{material:1,metal:2},'and is priced to be built, not saved for');
 // A Gatehouse raises fortification rather than repairing, so it is worth building at full health.
 resetGame(1);game.player.board[0].building=testSlot('gatehouse',1);resolveOnBuild(game.player,'Your');
 assert.equal(game.player.health,10,'a full keep is not healed');

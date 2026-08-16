@@ -26,7 +26,7 @@ const CARDS = {
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
   manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
-  gatehouse:{name:'Reinforced Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:2,metal:2},text:'When revealed, raise 2 fortification. Fortification takes damage before the keep does and is not capped at 10. The friendly unit in this lane has +1 power.',special:'gatehouse'},
+  gatehouse:{name:'Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:1,metal:2},text:'When revealed, raise 2 fortification. The friendly unit in this lane has +1 power.',special:'gatehouse'},
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
   boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
@@ -676,7 +676,7 @@ function resolveOnBuild(side,label){
     const building=lane.building;
     if(building?.round===game.round&&CARDS[building.cardId].special==='gatehouse'&&!building.effectResolved){
       side.fortification=(side.fortification||0)+2;building.effectResolved=true;
-      log(`${label} Reinforced Gatehouse raises 2 fortification over the keep from lane ${index+1}.`)
+      log(`${label} ${CARDS[building.cardId].name} raises 2 fortification over the keep from lane ${index+1}.`)
     }
     const unit=lane.unit;
     if(unit?.round===game.round&&CARDS[unit.cardId].special==='rabble'&&!unit.effectResolved){
