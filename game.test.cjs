@@ -219,6 +219,17 @@ assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its
 
 assert.deepEqual(AI_DECKS.uprising.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {farm:4,farmer:2,rabblerouser:4,peasantmob:4,villagecommons:2,granary:2,lumberjack:2},'the Village Uprising runs the requested list');
+assert.deepEqual(AI_DECKS.forestfire.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
+  {firesapper:4,logging:4,lumbermill:3,farm:2,university:3,lumberjack:3,wallwarden:1},'Forest Fire runs the requested list');
+// Its whole plan rests on a back row, so the scoring must want that before it wants a fight.
+resetGame();game.aiProfile='forestfire';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const ffHall={uid:'fh',cardId:'university',bonus:false},ffWarden={uid:'fw',cardId:'wallwarden',bonus:false};
+const firstHall=aiActionScore(ffHall,0,'hardcore');
+game.ai.board[0].building=testSlot('university');game.ai.board[1].building=testSlot('university');
+assert(firstHall>aiActionScore(ffHall,2,'hardcore'),'a third University is worth far less than the first two');
+// The Warden is the only clock, and only behind a building.
+assert(aiActionScore(ffWarden,0,'hardcore')>aiActionScore(ffWarden,3,'hardcore'),'the Wall Warden wants a built lane');
+
 for(const gone of ['general','wood','food'])assert(!AI_DECKS[gone],gone+' is retired from the roster');
 assert(Object.keys(AI_DECKS).every(k=>AI_PROFILE_NAMES[k]),'every surviving banner still has a display name');
 

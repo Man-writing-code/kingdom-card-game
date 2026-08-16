@@ -53,11 +53,12 @@ const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','g
 // in the pool, and git history holds the lists if any of them is wanted back.
 const AI_DECKS={
   uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','peasantmob','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
+  forestfire:['firesapper','firesapper','firesapper','firesapper','logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','university','lumberjack','lumberjack','lumberjack','wallwarden'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
   timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper'],
   siege:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']
 };
-const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
+const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',forestfire:'FOREST FIRE',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
 // Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
@@ -551,6 +552,22 @@ function aiActionScore(hc,lane,difficulty){
     // Fortification is banked ahead of the blow rather than spent healing after it, so it is
     // worth raising early; a thin keep still wants it most.
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
+  }
+  if(game.aiProfile==='forestfire'){
+    // The banner buys a back row before it buys a fight: two Universities to keep the hand
+    // full and Sawmills to pay for it. Everything after that is answers, drawn faster than
+    // the rival can present threats — which is why the setup is worth being slow for.
+    const halls=countBuilding(side,'university');
+    if(c.special==='university')score+=halls<2?7:2;
+    if(hc.cardId==='lumbermill')score+=game.round<8?4:2;
+    if(hc.cardId==='logging')score+=aiBoardProducers(side,'material',null)?1:4;
+    // A Sawmill wants food, and the two Farms are the only source of it.
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?0:5;
+    // The lone Wall Warden is the whole clock, and it is only a threat behind a building.
+    if(c.special==='wallwarden')score+=side.board[lane].building?6:-4;
+    // Sappers are the answer to everything, so they are worth holding for a real target.
+    if(c.special==='sapper'&&aiVisiblePlayerSlot(lane,'unit'))score+=3;
+    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-3:2;
   }
   if(game.aiProfile==='uprising'){
     // The uprising wins by mass, so what prints bodies matters more than any single body.
