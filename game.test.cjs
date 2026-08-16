@@ -219,6 +219,16 @@ assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its
 
 assert.deepEqual(AI_DECKS.uprising.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {farm:4,farmer:2,rabblerouser:4,peasantmob:4,villagecommons:2,granary:2,lumberjack:2},'the Village Uprising runs the requested list');
+assert.deepEqual(AI_DECKS.strikesteel.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
+  {royalguard:4,manatarms:4,armoury:2,mining:4,miner:4,foundry:1,goldmine:1},'Strike Steel runs the requested list');
+// It is a body deck: an open lane is the plan, and a big body is worth more there than a small one.
+resetGame();game.aiProfile='strikesteel';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const ssGuard={uid:'sg',cardId:'royalguard',bonus:false},ssArmoury={uid:'sa',cardId:'armoury',bonus:false};
+assert(aiActionScore(ssGuard,0,'hardcore')>0,'a Royal Guard wants the open lane');
+const bare=aiActionScore(ssArmoury,0,'hardcore');
+game.ai.board[0].unit=testSlot('manatarms',1);
+assert(aiActionScore(ssArmoury,0,'hardcore')>bare,'an Armoury waits for a body to arm');
+
 assert.deepEqual(AI_DECKS.forestfire.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {firesapper:4,logging:4,lumbermill:3,farm:2,university:3,lumberjack:3,wallwarden:1},'Forest Fire runs the requested list');
 // Its whole plan rests on a back row, so the scoring must want that before it wants a fight.

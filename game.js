@@ -54,11 +54,12 @@ const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','g
 const AI_DECKS={
   uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','peasantmob','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
   forestfire:['firesapper','firesapper','firesapper','firesapper','logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','university','lumberjack','lumberjack','lumberjack','wallwarden'],
+  strikesteel:['royalguard','royalguard','royalguard','royalguard','manatarms','manatarms','manatarms','manatarms','armoury','armoury','mining','mining','mining','mining','miner','miner','miner','miner','foundry','goldmine'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
   timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper'],
   siege:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']
 };
-const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',forestfire:'FOREST FIRE',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
+const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',forestfire:'FOREST FIRE',strikesteel:'STRIKE STEEL',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
 // Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
@@ -553,6 +554,16 @@ function aiActionScore(hc,lane,difficulty){
     // Fortification is banked ahead of the blow rather than spent healing after it, so it is
     // worth raising early; a thin keep still wants it most.
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
+  }
+  if(game.aiProfile==='strikesteel'){
+    // No tricks in the banner at all: mine metal, put the biggest body available in the way,
+    // and keep swinging. Camps come first because everything else is priced in metal.
+    if(hc.cardId==='mining')score+=game.round<5?4:2;
+    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-2:3;
+    // An Armoury is only worth its slot beside a body, and the deck has bodies to spare.
+    if(c.special==='armoury')score+=side.board[lane].unit?3:-3;
+    // A lane the rival has left open is a lane that hits the keep, and that is the whole plan.
+    if(c.type==='unit'&&!aiVisiblePlayerSlot(lane,'unit'))score+=(c.power||0)>=3?4:1;
   }
   if(game.aiProfile==='forestfire'){
     // The banner buys a back row before it buys a fight: two Universities to keep the hand
