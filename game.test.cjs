@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,39,'global collectible pool (Charge designs shelved, Mason added)');
-assert.equal(Object.keys(CARDS).length,40,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,40,'global collectible pool (Charge designs shelved, Granary added)');
+assert.equal(Object.keys(CARDS).length,41,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -39,6 +39,15 @@ for(const yard of ['armoury','watchtower']){
   game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),3,yard+' arms a mixed-cost unit too');
   game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),2,yard+' even arms a worker');
 }
+
+// The Granary provisions the whole realm: every friendly unit with food in its printed cost
+// gains 1 power per standing Granary, wherever the unit is deployed.
+assert.deepEqual(CARDS.foodgranary.cost,{food:4},'the Granary costs 4 food');
+resetGame();game.player.board[3].building=testSlot('foodgranary');
+game.player.board[0].unit=testSlot('farmer');assert.equal(unitPower(game.player,0),2,'a food-only worker is provisioned across lanes');
+game.player.board[1].unit=testSlot('knight');assert.equal(unitPower(game.player,1),3,'a mixed-cost unit is provisioned too');
+game.player.board[2].unit=testSlot('archer');assert.equal(unitPower(game.player,2),2,'a unit without a food cost is unchanged');
+game.player.board[2].building=testSlot('foodgranary');assert.equal(unitPower(game.player,0),3,'multiple Granaries stack');
 
 // A lane resolves once a round, so the Palisade has no once-per-round limit to track: it simply
 // blunts direct damage through its lane, every time it is asked.

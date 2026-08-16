@@ -14,6 +14,7 @@ const CARDS = {
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
+  foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:4},text:'All friendly units that cost food have +1 power.',special:'granary'},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
@@ -205,7 +206,7 @@ function costsHtml(cost={}){return Object.entries(cost).map(([k,v])=>`<span clas
 const CARD_ART={
   logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',goldmine:'assets/cards/gold-mine.webp',
   townhall:'assets/cards/town-hall.webp',university:'assets/cards/university.webp',lumbermill:'assets/cards/sawmill.webp',
-  foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
+  foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
   merchant:'assets/cards/merchant.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
@@ -708,6 +709,7 @@ function unitPower(side,lane){
   if(card.special==='wallwarden'&&building)p+=2;
   // The Armoury, Watchtower and Gatehouse all arm the lane they stand in, and all by the same 1.
   if(building&&['watchtower','gatehouse','armoury'].includes(CARDS[building.cardId].special))p++;
+  if(card.cost.food)p+=countBuilding(side,'granary');
   const enemySide=side===game.player?game.ai:game.player,enemy=enemySide.board[lane].unit;
   // A Knight is a duellist, not a raider: strong against anything that stands in its lane,
   // ordinary when the lane is open and it rides at the ruler instead.
