@@ -23,7 +23,7 @@ const CARDS = {
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
   peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
-  villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand while you have an empty unit lane.',special:'commons'},
+  villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
   manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
   gatehouse:{name:'Reinforced Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:2,metal:2},text:'When revealed, restore 2 health. The friendly unit in this lane has +1 power.',special:'gatehouse'},
@@ -407,8 +407,7 @@ function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'universi
 // Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
 function drawTurnBonuses(side){
   for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker(),true);
-  const commons=countBuilding(side,'commons'),emptyLanes=side.board.filter((lane,index)=>laneIsActive(index)&&!lane.unit).length;
-  for(let i=0;i<Math.min(commons,emptyLanes);i++)gainBonusCard(side,'peasant');
+  for(let i=0;i<countBuilding(side,'commons');i++)gainBonusCard(side,'peasant');
 }
 function makeHandCard(cardId,bonus=false,free=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus,free}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -546,7 +545,9 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='ballista'){
       const enemy=aiVisiblePlayerSlot(lane,'unit');score+=enemy&&(CARDS[enemy.cardId].power||0)>=4?8:-2;
     }
-    if(c.special==='commons')score+=side.board.filter(x=>!x.unit).length*.75;
+    // A Commons pays a Peasant a round whatever the board looks like, so it is worth most
+    // while there are rounds left for it to pay out over.
+    if(c.special==='commons')score+=game.round<6?3:1.5;
     if(c.special==='gatehouse'&&side.health<=7)score+=3;
   }
   if(game.aiProfile==='wood'&&['logging','lumbermill','university','townhall','archer','firesapper','palisade','wallwarden','huntsman','huntinglodge'].includes(hc.cardId))score+=2;

@@ -109,6 +109,18 @@ assert.deepEqual(handCost(bought),{material:1},'a drawn worker still pays');
 resetGame();game.player.resources={food:0,metal:0,material:0,gold:0};
 assert(canAfford(game.player,handCost(granted)),'a bankrupt realm can still deploy its recruit');
 assert(!canAfford(game.player,handCost(bought)),'but cannot buy one');
+// A Commons pays regardless of the board: it no longer waits for an empty lane.
+resetGame();game.player.board[0].building=testSlot('villagecommons',1);
+game.player.board.forEach(l=>{l.unit=testSlot('soldier',1)});
+drawTurnBonuses(game.player);
+assert.equal(game.player.hand.length,1,'a full front line still earns its Peasant');
+assert.equal(game.player.hand[0].cardId,'peasant');
+resetGame();game.player.board[0].building=testSlot('villagecommons',1);game.player.board[1].building=testSlot('villagecommons',1);
+drawTurnBonuses(game.player);assert.equal(game.player.hand.length,2,'each Commons pays its own Peasant');
+resetGame();game.player.board[0].building=testSlot('villagecommons',1);
+game.player.hand=Array.from({length:HAND_LIMIT},()=>makeHandCard('soldier'));
+drawTurnBonuses(game.player);assert.equal(game.player.hand.length,HAND_LIMIT,'but a full hand still turns it away');
+
 resetGame();game.player.board[0].building=testSlot('townhall',1);drawTurnBonuses(game.player);
 assert.equal(game.player.hand.length,1,'a Town Hall recruits');
 assert(game.player.hand[0].free,'and the recruit arrives granted');
