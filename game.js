@@ -214,9 +214,7 @@ const CARD_ART={
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
   wallwarden:'assets/cards/wall-warden.webp',royalguard:'assets/cards/royal-guard.webp',armoury:'assets/cards/armoury.webp',
   huntsman:'assets/cards/huntsman.webp',huntinglodge:'assets/cards/hunting-lodge.webp',ballista:'assets/cards/ballista-emplacement.webp',
-  paviseguard:'assets/cards/pavise-guard.webp',
-  // Placeholder: the Mason borrows the Wall Warden's portrait until it has one of its own.
-  mason:'assets/cards/wall-warden.webp'
+  paviseguard:'assets/cards/pavise-guard.webp',mason:'assets/cards/mason.webp'
 };
 function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
