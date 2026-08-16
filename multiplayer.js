@@ -47,9 +47,15 @@
   // event costs a moment rather than the game.
   function startPolling(id){
     clearInterval(ctx.poll);
-    ctx.poll=setInterval(async()=>{
-      if(!ctx.active||document.hidden)return;
-      const {data,error}=await client.from('kingdom_matches').select('*').eq('id',id).maybeSingle();
+    ctx.poll=setInterval(()=>syncNow(id),4000);
+  }
+  // Deliberately runs whether or not the tab is on screen. Only the host may write a
+  // resolution — the row's update policy allows nobody else — so a host sitting in a
+  // background tab holds up both boards, and skipping the check to save a little work
+  // is how a duel ends up waiting for a rival who already committed.
+  async function syncNow(id){
+      if(!ctx.active)return;
+      const {data,error}=await client.from('kingdom_matches').select('*').eq('id',id||ctx.match?.id).maybeSingle();
       if(error||!data)return;
       // A resolution that never finished looks identical from here whatever killed it — a lost
       // event, a throw mid-clash, a tab asleep at the wrong moment. Rather than diagnose, give
@@ -59,7 +65,6 @@
       const overdue=resolving&&ctx.resolvingAt&&Date.now()-ctx.resolvingAt>15000;
       if(overdue)ctx.resolvingVersion=-1;
       if(data.version>ctx.loadedVersion||unseen||overdue)handleMatch(data);
-    },4000);
   }
 
   // Setting up the battlefield is a once-per-match act. The guards are deliberately layered:
@@ -101,7 +106,7 @@
       if(row.phase==='finished')showOnlineResult(row);
     }
     if(row.phase==='resolving'){
-      setStatus('Both rulers committed. Revealing the battlefield…');
+      setStatus(ctx.seat==='host'?'Both rulers committed. Revealing the battlefield…':'Both rulers committed. Waiting on the host to reveal…');
       if(ctx.seat==='host'&&row.revealed_plans&&ctx.resolvingVersion!==row.version){
         ctx.resolvingVersion=row.version;ctx.resolvingAt=Date.now();
         // A throw anywhere in the clash would otherwise end the duel here: the version is
@@ -173,9 +178,21 @@
     ctx.active=false;clearInterval(ctx.poll);ctx.poll=null;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');setRoomView('setup');
   }
 
+  // A hidden tab has its timers throttled to a crawl, so the poll above may not have run for
+  // some time. Catch up the moment the ruler looks back at the board.
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ctx.active)syncNow()});
+  window.addEventListener('focus',()=>{if(ctx.active)syncNow()});
+
   codeEl.addEventListener('input',()=>{codeEl.value=cleanCode()});
   $('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#leaveRoom').onclick=leave;
   const originalLeave=$('#leaveGame').onclick;$('#leaveGame').onclick=()=>ctx.active?leave():originalLeave();
   const originalRestart=$('#restartGame').onclick;$('#restartGame').onclick=()=>ctx.active?setStatus('Leave the room before starting a different battle.',true):originalRestart();
-  window.kingdomMultiplayer={get active(){return ctx.active},commit,resolved,leave};
+  // An escape hatch for a duel that has gone quiet: re-reads the table and, for a host,
+  // re-attempts a resolution it had already marked as handled.
+  function nudge(){if(!ctx.active)return;ctx.resolvingVersion=-1;ctx.loadedVersion=Math.min(ctx.loadedVersion,ctx.match?.version??ctx.loadedVersion);syncNow()}
+  window.kingdomMultiplayer={get active(){return ctx.active},commit,resolved,leave,nudge,
+    get diagnostics(){return {seat:ctx.seat,active:ctx.active,loadedVersion:ctx.loadedVersion,resolvingVersion:ctx.resolvingVersion,
+      resolvingFor:ctx.resolvingAt?Math.round((Date.now()-ctx.resolvingAt)/1000)+'s':null,
+      row:ctx.match&&{phase:ctx.match.phase,round:ctx.match.round,version:ctx.match.version,hasPlans:!!ctx.match.revealed_plans},
+      local:game&&{round:game.round,locked:game.locked,pending:game.player?.pendingDraws}}}};
 })();
