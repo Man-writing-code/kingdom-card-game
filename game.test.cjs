@@ -40,8 +40,18 @@ for(const yard of ['armoury','watchtower']){
   game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),2,yard+' even arms a worker');
 }
 
-resetGame();game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,3,0),1);assert.equal(dealDamage(game.player,3,0),3);game.round++;assert.equal(dealDamage(game.player,3,0),1,'Palisade refreshes next round');
-resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');assert.equal(dealDamage(game.player,4,0),4);game.round++;assert.equal(dealDamage(game.player,4,0),1);currentRule={id:'none'};
+// A lane resolves once a round, so the Palisade has no once-per-round limit to track: it simply
+// blunts direct damage through its lane, every time it is asked.
+resetGame();game.player.board[0].building=testSlot('palisade');
+assert.equal(dealDamage(game.player,3,0),1,'a Palisade takes 2 off the strike');
+assert.equal(dealDamage(game.player,3,0),1,'and does not tire within a round');
+game.round++;assert.equal(dealDamage(game.player,3,0),1,'nor across one');
+assert.equal(dealDamage(game.player,1,0),0,'and never turns a strike into healing');
+// High Walls is per ruler rather than per lane, so it does still spend for the round.
+resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');
+assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');
+assert.equal(dealDamage(game.player,4,0),2,'the walls having been spent, the Palisade holds alone');
+game.round++;assert.equal(dealDamage(game.player,4,0),1,'and the walls return with the round');currentRule={id:'none'};
 
 resetGame();const hunter=testSlot('huntsman');game.player.board[0].unit=hunter;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1);
 game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1,'defeated Huntsman earns nothing');

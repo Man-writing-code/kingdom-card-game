@@ -30,7 +30,7 @@ const CARDS = {
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
   boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
-  palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces the first direct strike through this lane by 2 each round.',special:'palisade'},
+  palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces direct damage through this lane by 2.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
   royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
   armoury:{name:'Armoury',type:'building',icon:'⚒',accent:'#566779',cost:{metal:2},text:'The friendly unit in this lane has +1 power.',special:'armoury'},
@@ -828,12 +828,13 @@ function adjustedDamage(side,amount,lane){
   if(game.damageRound!==game.round){game.damageRound=game.round;game.wallUsed={player:false,ai:false}}
   const target=side===game.player?'player':'ai';
   if(currentRule.id==='walls'&&!game.wallUsed[target])damage=Math.max(0,damage-1);
-  const palisade=side.board[lane]?.building;
-  if(CARDS[palisade?.cardId]?.special==='palisade'&&palisade.usedRound!==game.round)damage=Math.max(0,damage-2);
+  // A lane resolves once a round, so a Palisade cannot be asked to hold twice — it needs no
+  // once-per-round guard, and its text needs no "first".
+  if(CARDS[side.board[lane]?.building?.cardId]?.special==='palisade')damage=Math.max(0,damage-2);
   return damage
 }
 function dealDamage(side,amount,lane){
-  const palisade=side.board[lane]?.building,dmg=adjustedDamage(side,amount,lane);
+  const dmg=adjustedDamage(side,amount,lane);
   const target=side===game.player?'player':'ai';
   // Fortification is spent stone: it takes the blow before the keep does, and unlike health it
   // is not capped at ten, so a well-walled ruler can stand above their starting integrity.
@@ -843,7 +844,6 @@ function dealDamage(side,amount,lane){
   if(dmg<amount)fx.push({t:'absorb',who:target,lane});
   if(dmg-held>0)fx.push({t:'hit',who:target,lane,dmg:dmg-held});
   if(currentRule.id==='walls')game.wallUsed[target]=true;
-  if(CARDS[palisade?.cardId]?.special==='palisade'&&palisade.usedRound!==game.round)palisade.usedRound=game.round;
   return dmg
 }
 function harvest(side,label){
