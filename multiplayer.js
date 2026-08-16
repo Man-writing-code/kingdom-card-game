@@ -3,7 +3,7 @@
   const SUPABASE_KEY='sb_publishable_7ULebdQSBz9PXz-W-j6vlA_cB73Y0Sy';
   const statusEl=$('#onlineStatus'),nameEl=$('#onlineName'),codeEl=$('#roomCode');
   const savedName=localStorage.getItem('kingdom-online-name');if(savedName)nameEl.value=savedName;
-  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,initializing:false,poll:null};
+  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,resolvingAt:0,initializing:false,poll:null};
   let client=null;
 
   const setStatus=(message,error=false)=>{statusEl.textContent=message||'';statusEl.classList.toggle('error',error)};
@@ -51,8 +51,14 @@
       if(!ctx.active||document.hidden)return;
       const {data,error}=await client.from('kingdom_matches').select('*').eq('id',id).maybeSingle();
       if(error||!data)return;
-      const stalled=data.phase==='resolving'&&ctx.seat==='host'&&ctx.resolvingVersion!==data.version;
-      if(data.version>ctx.loadedVersion||stalled)handleMatch(data);
+      // A resolution that never finished looks identical from here whatever killed it — a lost
+      // event, a throw mid-clash, a tab asleep at the wrong moment. Rather than diagnose, give
+      // it a deadline: still resolving well past when the clash should have ended means try again.
+      const resolving=data.phase==='resolving'&&ctx.seat==='host';
+      const unseen=resolving&&ctx.resolvingVersion!==data.version;
+      const overdue=resolving&&ctx.resolvingAt&&Date.now()-ctx.resolvingAt>15000;
+      if(overdue)ctx.resolvingVersion=-1;
+      if(data.version>ctx.loadedVersion||unseen||overdue)handleMatch(data);
     },4000);
   }
 
@@ -96,7 +102,14 @@
     }
     if(row.phase==='resolving'){
       setStatus('Both rulers committed. Revealing the battlefield…');
-      if(ctx.seat==='host'&&row.revealed_plans&&ctx.resolvingVersion!==row.version){ctx.resolvingVersion=row.version;resolveOnlinePlans(row.revealed_plans.host,row.revealed_plans.guest)}
+      if(ctx.seat==='host'&&row.revealed_plans&&ctx.resolvingVersion!==row.version){
+        ctx.resolvingVersion=row.version;ctx.resolvingAt=Date.now();
+        // A throw anywhere in the clash would otherwise end the duel here: the version is
+        // already marked handled, so nothing would ever try again. Failing loudly and
+        // clearing the mark lets the watchdog below pick it up.
+        try{resolveOnlinePlans(row.revealed_plans.host,row.revealed_plans.guest)}
+        catch(error){ctx.resolvingVersion=-1;setStatus('The clash failed to resolve — retrying. '+(error?.message||error),true)}
+      }
     }
   }
 
