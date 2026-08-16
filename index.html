@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b3225'/%3E%3Cpath d='M32 15 11 51h42Z' fill='none' stroke='%23d3ad5d' stroke-width='3'/%3E%3Cpath d='M32 39 32 15M32 39 11 51M32 39 53 51' stroke='%23e6ca85' stroke-width='2' opacity='.6'/%3E%3Ccircle cx='32' cy='15' r='7' fill='%238fb04e'/%3E%3Ccircle cx='11' cy='51' r='7' fill='%23c2884b'/%3E%3Ccircle cx='53' cy='51' r='7' fill='%2392a6ba'/%3E%3Ccircle cx='32' cy='39' r='9' fill='%23e9b54c'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=35">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
   <div class="grain"></div>
@@ -62,8 +62,14 @@
               <span class="room-divider">or</span>
               <label>Room code<input id="roomCode" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
               <button id="joinRoom" class="button online-button">Join room</button>
-              <p id="onlineStatus" role="status"></p>
             </div>
+            <div id="roomWait" class="room-wait" hidden>
+              <span class="room-wait-label">YOUR ROOM CODE</span>
+              <b id="roomWaitCode">······</b>
+              <p id="roomWaitNote">Share this code with your rival. The battle begins the moment they join.</p>
+              <button id="leaveRoom" class="button online-button ghost">Leave room</button>
+            </div>
+            <p id="onlineStatus" role="status"></p>
           </section>
           <div id="devRuleSetup" class="decree-setup" data-dev-only aria-label="Development weekly decree override" hidden>
             <span>DEVELOPMENT DECREE</span>
@@ -204,6 +210,6 @@
   <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="game.js?v=34"></script>
-  <script src="multiplayer.js?v=6"></script>
+  <script src="multiplayer.js?v=7"></script>
 </body>
 </html>

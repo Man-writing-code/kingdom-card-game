@@ -766,3 +766,13 @@ body[data-screen="game"] .hand-area{
 /* Deck screens use a light card on a dark room backdrop. The quantity sits inside
    the card, so it must declare its own ink colour instead of inheriting the room. */
 .deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}
+
+/* The room card: what the online panel becomes while a match is forming. The code is
+   the largest thing on it because sharing the code is the host's entire task. */
+.room-wait{display:grid;justify-items:center;gap:7px;padding:18px 16px 16px;text-align:center}
+.room-wait-label{font:bold var(--t-micro) "DM Sans";letter-spacing:2px;color:#d5b66f}
+#roomWaitCode{font:34px "MedievalSharp";letter-spacing:7px;color:#fff3d8;text-shadow:0 2px 12px #000;padding:2px 0 0 7px}
+#roomWaitNote{margin:0;max-width:420px;font:italic var(--t-small)/1.55 Georgia,serif;color:#b9b4a5}
+.room-wait .online-button{margin-top:9px;background:transparent;border:1px solid #b9a06b63;color:#d3b56b}
+.room-wait .online-button:hover{border-color:#d3b56b;color:#eed9a3}
+#onlineStatus{padding:0 16px 12px}

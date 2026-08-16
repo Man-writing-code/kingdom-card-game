@@ -7,6 +7,13 @@
   let client=null;
 
   const setStatus=(message,error=false)=>{statusEl.textContent=message||'';statusEl.classList.toggle('error',error)};
+  // The panel has two faces: the setup form, and the room card shown while a match is
+  // forming — the code writ large, because sharing it IS the hosting player's whole job.
+  function setRoomView(mode,code,note){
+    $('#roomWait').hidden=mode!=='waiting';
+    $('.multiplayer-setup').style.display=mode==='waiting'?'none':'';
+    if(mode==='waiting'){$('#roomWaitCode').textContent=code||'······';$('#roomWaitNote').textContent=note||''}
+  }
   const cleanName=()=>nameEl.value.trim().slice(0,24);
   const cleanCode=()=>codeEl.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
   const rowOf=data=>Array.isArray(data)?data[0]:data;
@@ -15,7 +22,10 @@
 
   async function connect(){
     if(!window.supabase?.createClient)throw new Error('The multiplayer library did not load. Check your connection and refresh.');
-    if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    // Sessions live per tab, not per browser: localStorage would make every tab the same
+    // anonymous ruler, and the join guard rightly refuses to seat a host against themself.
+    // With sessionStorage, a second tab is a second ruler, so one machine can hold a duel.
+    if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storage:window.sessionStorage}});
     let {data:{session}}=await client.auth.getSession();
     if(!session){const result=await client.auth.signInAnonymously();if(result.error)throw result.error;session=result.data.session}
     return session;
@@ -67,14 +77,15 @@
   async function createRoom(){
     const deck=playableDeck(),name=cleanName();if(!deck)return;if(!name){setStatus('Enter your ruler name first.',true);return}
     setStatus('Creating a private room…');
-    try{await connect();localStorage.setItem('kingdom-online-name',name);const {data,error}=await client.rpc('create_kingdom_match',{p_name:name,p_deck:deck,p_decree:currentRule.id});if(error)throw error;const row=rowOf(data);await watchMatch(row,'host');codeEl.value=row.room_code}
+    try{await connect();localStorage.setItem('kingdom-online-name',name);const {data,error}=await client.rpc('create_kingdom_match',{p_name:name,p_deck:deck,p_decree:currentRule.id});if(error)throw error;const row=rowOf(data);await watchMatch(row,'host');setRoomView('waiting',row.room_code,'Share this code with your rival. The battle begins the moment they join.')}
     catch(error){setStatus(formatError(error),true)}
   }
 
   async function joinRoom(){
     const deck=playableDeck(),name=cleanName(),code=cleanCode();if(!deck)return;if(!name){setStatus('Enter your ruler name first.',true);return}if(code.length!==6){setStatus('Enter the six-character room code.',true);return}
+    if(ctx.active&&ctx.seat==='host'&&code===ctx.match?.room_code){setStatus('That is your own room — the code is for your rival. Open another tab or device to duel yourself.',true);return}
     setStatus('Joining the room…');
-    try{await connect();localStorage.setItem('kingdom-online-name',name);const {data,error}=await client.rpc('join_kingdom_match',{p_code:code,p_name:name,p_deck:deck});if(error)throw error;await watchMatch(rowOf(data),'guest');setStatus('Joined. Waiting for the host to prepare the battlefield…')}
+    try{await connect();localStorage.setItem('kingdom-online-name',name);const {data,error}=await client.rpc('join_kingdom_match',{p_code:code,p_name:name,p_deck:deck});if(error)throw error;await watchMatch(rowOf(data),'guest');setRoomView('waiting',code,'Joined. Waiting for the host to prepare the battlefield…')}
     catch(error){setStatus(formatError(error),true)}
   }
 
@@ -99,11 +110,11 @@
   }
 
   async function leave(){
-    ctx.active=false;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');
+    ctx.active=false;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');setRoomView('setup');
   }
 
   codeEl.addEventListener('input',()=>{codeEl.value=cleanCode()});
-  $('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;
+  $('#createRoom').onclick=createRoom;$('#joinRoom').onclick=joinRoom;$('#leaveRoom').onclick=leave;
   const originalLeave=$('#leaveGame').onclick;$('#leaveGame').onclick=()=>ctx.active?leave():originalLeave();
   const originalRestart=$('#restartGame').onclick;$('#restartGame').onclick=()=>ctx.active?setStatus('Leave the room before starting a different battle.',true):originalRestart();
   window.kingdomMultiplayer={get active(){return ctx.active},commit,resolved,leave};
