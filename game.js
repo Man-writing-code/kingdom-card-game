@@ -14,12 +14,13 @@ const CARDS = {
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
-  foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:4},text:'All friendly units that cost food have +1 power.',special:'granary'},
+  foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:5},text:'All friendly units that cost food have +1 power.',special:'granary'},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
+  foreignmercenary:{name:'Foreign Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
@@ -209,7 +210,7 @@ const CARD_ART={
   foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
-  merchant:'assets/cards/merchant.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
+  merchant:'assets/cards/merchant.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
@@ -754,6 +755,13 @@ function directStrike(attacker,defender,lane,power,label,ramLabel){
   }
   log(`Lane ${lane+1}: ${label.toLowerCase()} ${label==='You'?'strike':'strikes'} for ${dmg} damage.`)
 }
+function resolveMercenaryContracts(side,label){
+  side.board.forEach((lane,index)=>{
+    const unit=lane.unit;if(!unit||CARDS[unit.cardId].special!=='mercenary')return;
+    unit.clashes=(unit.clashes||0)+1;
+    if(unit.clashes>=2){log(`${label} Foreign Mercenary leaves lane ${index+1} after its second clash.`);discardUnit(side,index,'departed')}
+  })
+}
 function resolveRound(){
   const p=game.player,a=game.ai;
   const pPowers=[0,1,2,3].map(lane=>unitPower(p,lane)),aPowers=[0,1,2,3].map(lane=>unitPower(a,lane));
@@ -783,6 +791,7 @@ function resolveRound(){
     }else if(pu)directStrike(p,a,lane,pp,'You','your');
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
   }
+  resolveMercenaryContracts(p,'Your');resolveMercenaryContracts(a,'Rival');
   harvest(p,'Your');harvest(a,'Rival');renderGame(true);playFx();
   if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
   // The aftermath holds long enough for the ghosts and damage numbers to finish telling it;
@@ -807,9 +816,9 @@ function playFx(){
   for(const e of fx){
     const slotType=e.t==='razed'||e.t==='absorb'?'building':'unit';
     const slot=$(`${boards[e.who]} .slot.${slotType}[data-lane="${e.lane}"]`);
-    if(e.t==='slain'||e.t==='razed'){
+    if(e.t==='slain'||e.t==='razed'||e.t==='departed'){
       if(!slot)continue;const c=CARDS[e.cardId],burn=c.special==='sapper';
-      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':burn?'burns out':'falls'}</small></span>`);
+      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':e.t==='departed'?'contract fulfilled':burn?'burns out':'falls'}</small></span>`);
     }else if(e.t==='hit'){
       hurt[e.who]+=e.dmg;
       if(slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-dmg">−${e.dmg}</span>`);
@@ -827,7 +836,7 @@ function playFx(){
   setTimeout(()=>$$('.fx-slain,.fx-dmg,.fx-absorb').forEach(x=>x.remove()),1700*THEATRE_SPEED);
   fx=[];
 }
-function discardUnit(side,lane){const unit=side.board[lane].unit;if(unit){fx.push({t:'slain',who:fxSide(side),lane,cardId:unit.cardId});if(!unit.handCard?.bonus)side.discard.push(unit.cardId)}side.board[lane].unit=null}
+function discardUnit(side,lane,departure='slain'){const unit=side.board[lane].unit;if(unit){fx.push({t:departure,who:fxSide(side),lane,cardId:unit.cardId});if(!unit.handCard?.bonus)side.discard.push(unit.cardId)}side.board[lane].unit=null}
 // Per-round damage reduction. Palisades stamp the building instance; High Walls support remains
 // compatible with decree rotations that include it without adding it back to the current archive.
 function adjustedDamage(side,amount,lane){
