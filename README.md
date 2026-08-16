@@ -45,7 +45,7 @@ Then visit `http://127.0.0.1:4173`.
 - The Pikeman is the Metal–Food idea in one card: 2 power, and +1 for every round it has held its lane, up to +3. Fed and armed, it is worth little the turn it lands and a 5-power problem three rounds later, so it asks the rival to spend something on a lane they would rather have walked past — while staying inside what a Ballista or a Fire Sapper can answer.
 - Ballistas fire before normal combat, while Palisades blunt the first direct strike through their lane each round.
 - The numbers behind those: a Palisade absorbs 2, and a Ballista removes one opposing unit of 4 or more power and collapses.
-- The Armoury and the Watchtower are the same idea in two resources: 2 of a resource for +1 power in their lane. The Armoury (2 metal) asks its unit to cost metal alone — which since the worker change includes the Miner — while the Watchtower (2 wood) asks nothing of it.
+- The Armoury and the Watchtower are the same idea in two resources: 2 metal or 2 wood for +1 power to whatever friendly unit stands in their lane. Neither asks anything of the unit, so a deck picks whichever resource it already has.
 - Other lane pairings: the Hunting Lodge pays food when its lane connects, Wall Wardens gain 2 power beside any friendly building, Huntsmen salvage wood for winning a clash, and Rabble-Rousers add a Peasant to hand when revealed.
 - Gold automatically substitutes for missing food, metal, or wood.
 - The weekly decree is chosen deterministically from the calendar week.

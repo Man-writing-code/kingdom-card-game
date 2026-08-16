@@ -33,7 +33,7 @@ const CARDS = {
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces the first direct strike through this lane by 2 each round.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
   royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
-  armoury:{name:'Armoury',type:'building',icon:'⚒',accent:'#566779',cost:{metal:2},text:'A friendly unit whose cost contains only metal gains +1 power in this lane.',special:'armoury'},
+  armoury:{name:'Armoury',type:'building',icon:'⚒',accent:'#566779',cost:{metal:2},text:'The friendly unit in this lane has +1 power.',special:'armoury'},
   huntsman:{name:'Huntsman',type:'unit',icon:'➶',accent:'#557448',cost:{food:1,material:1},power:2,text:'After winning a unit clash and surviving, gain 1 wood.',special:'huntsman'},
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
   ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
@@ -540,7 +540,7 @@ function aiActionScore(hc,lane,difficulty){
     if(['university','townhall'].includes(c.special))score+=game.round<5?3:1;
     if(['watchtower','gatehouse'].includes(c.special)&&side.board[lane].unit)score+=3;
     if(c.special==='palisade'&&!aiVisiblePlayerSlot(lane,'unit'))score+=3;
-    if(c.special==='armoury'&&side.board[lane].unit&&isPureMetalUnit(CARDS[side.board[lane].unit.cardId]))score+=5;
+    if(c.special==='armoury'&&side.board[lane].unit)score+=3;
     if(c.special==='huntinglodge'&&side.board[lane].unit&&!aiVisiblePlayerSlot(lane,'unit'))score+=4;
     if(c.special==='ballista'){
       const enemy=aiVisiblePlayerSlot(lane,'unit');score+=enemy&&(CARDS[enemy.cardId].power||0)>=4?8:-2;
@@ -626,7 +626,6 @@ function resolveOnBuild(side,label){
 function commitTurn(){
   if(game.locked||game.player.pendingDraws)return;if(window.kingdomMultiplayer?.active)return window.kingdomMultiplayer.commit();game.locked=true;selectedUid=null;aiPlan();commitReplacements(game.player);commitReplacements(game.ai);log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);beginClash();
 }
-function isPureMetalUnit(card){return card.type==='unit'&&card.cost.metal>0&&Object.keys(card.cost).length===1}
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
 // Counting neighbours rather than the whole board keeps these cards working when a decree closes a lane.
 const MOB_SPECIALS=['mob','boarriders'];
@@ -639,8 +638,8 @@ function unitPower(side,lane){
   if(MOB_SPECIALS.includes(card.special))p+=adjacentAllies(side,lane);
   const building=side.board[lane].building;
   if(card.special==='wallwarden'&&building)p+=2;
-  if(building&&['watchtower','gatehouse'].includes(CARDS[building.cardId].special))p++;
-  if(building&&CARDS[building.cardId].special==='armoury'&&isPureMetalUnit(card))p++;
+  // The Armoury, Watchtower and Gatehouse all arm the lane they stand in, and all by the same 1.
+  if(building&&['watchtower','gatehouse','armoury'].includes(CARDS[building.cardId].special))p++;
   const enemySide=side===game.player?game.ai:game.player,enemy=enemySide.board[lane].unit;
   // A Knight is a duellist, not a raider: strong against anything that stands in its lane,
   // ordinary when the lane is open and it rides at the ruler instead.

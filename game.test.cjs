@@ -29,15 +29,16 @@ resetGame();game.player.board[0].unit=testSlot('peasant',1,{handCard:{cardId:'pe
 
 resetGame();game.player.board[0].unit=testSlot('wallwarden');assert.equal(unitPower(game.player,0),1);game.player.board[0].building=testSlot('logging');assert.equal(unitPower(game.player,0),3);
 // The Armoury and the Watchtower are the metal and wood halves of one idea: 2 of a resource
-// for +1 power in the lane. The Armoury asks its unit to be metal-only; the Watchtower asks nothing.
+// for +1 power in the lane, asking nothing of the unit that stands there.
 assert.deepEqual(CARDS.armoury.cost,{metal:2},'the Armoury is 2 metal');
 assert.deepEqual(CARDS.watchtower.cost,{material:2},'and the Watchtower its 2 wood counterpart');
-game.player.board[0].unit=testSlot('manatarms');game.player.board[0].building=testSlot('armoury');assert.equal(unitPower(game.player,0),4,'metal-only units gain 1');
-// The worker cost change made the Miner pure metal, so the Armoury now arms it too.
-game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),2,'a Miner is pure metal now, so the Armoury arms it');
-game.player.board[0].unit=testSlot('manatarms');game.player.board[0].building=testSlot('watchtower');assert.equal(unitPower(game.player,0),4,'the Watchtower matches it');
-game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),3,'and unlike the Armoury it asks nothing of the unit');
-game.player.board[0].building=testSlot('armoury');assert.equal(unitPower(game.player,0),2,'Armoury excludes mixed-cost units — the Knight is left on its base 2');
+assert.equal(CARDS.armoury.text,CARDS.watchtower.text,'and they now say the same thing');
+for(const yard of ['armoury','watchtower']){
+  game.player.board[0].building=testSlot(yard);
+  game.player.board[0].unit=testSlot('manatarms');assert.equal(unitPower(game.player,0),4,yard+' arms a metal unit');
+  game.player.board[0].unit=testSlot('knight');assert.equal(unitPower(game.player,0),3,yard+' arms a mixed-cost unit too');
+  game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),2,yard+' even arms a worker');
+}
 
 resetGame();game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,3,0),1);assert.equal(dealDamage(game.player,3,0),3);game.round++;assert.equal(dealDamage(game.player,3,0),1,'Palisade refreshes next round');
 resetGame();currentRule={id:'walls'};game.player.board[0].building=testSlot('palisade');assert.equal(dealDamage(game.player,4,0),1,'Palisade stacks with High Walls');assert.equal(dealDamage(game.player,4,0),4);game.round++;assert.equal(dealDamage(game.player,4,0),1);currentRule={id:'none'};
