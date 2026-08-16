@@ -487,9 +487,10 @@ function aiCardValue(id){
 }
 // Hard and Hardcore both take the best-scoring line rather than a random pick off the top of the list.
 const aiPlaysBest=d=>d==='hard'||d==='hardcore';
-// Every card the banner has not committed yet. Cards already on the board are gone from here, so this
-// is what the AI can still count on drawing to rebuild or to spend on.
-function aiPending(side){return side.structures.concat(side.units,side.hand.map(hc=>hc.cardId))}
+// Every card the banner has not committed to the board. The discard belongs here: a pile
+// reclaims its own discards when it runs dry, so a spent card is not gone, only queued. Leaving
+// it out made the AI believe answers it would certainly see again were its last.
+function aiPending(side){return side.structures.concat(side.units,side.discard,side.hand.map(hc=>hc.cardId))}
 const aiProducerCount=(ids,resource)=>ids.filter(id=>CARDS[id].produce?.[resource]).length;
 const aiBoardProducers=(side,resource,except)=>side.board.filter(l=>l.building&&l.building!==except&&CARDS[l.building.cardId].produce?.[resource]).length;
 // Spending a resource the banner cannot replace should hurt more than spending a renewable one.
@@ -583,6 +584,12 @@ function aiActionScore(hc,lane,difficulty){
       const pressed=side.health+(side.fortification||0)<=6;
       if(incoming>=2)score+=incoming*(pressed?3:1.2);
     }
+    // The endgame line: a played card returns to its pile when the discard is reclaimed, so
+    // every non-Sapper it commits dilutes the next unit draw. Once the back row is up it keeps
+    // the others in hand and lets the units pile silt up with Sappers, which is what makes the
+    // cycle reliable. It still spends them to block — peeling is why the control matters.
+    const settled=halls>=2&&aiBoardProducers(side,'material',null)>=2;
+    if(settled&&c.type==='unit'&&c.special!=='sapper'&&!facing&&side.hand.length<HAND_LIMIT-1)score-=3;
     if(c.special==='worker'&&!facing)score+=2;
   }
   if(game.aiProfile==='uprising'){

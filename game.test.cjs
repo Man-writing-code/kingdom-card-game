@@ -249,6 +249,22 @@ assert(aiActionScore(ffJack,0,'hardcore')>aiActionScore(ffJack,1,'hardcore'),'bu
 game.ai.health=5;game.ai.fortification=6;
 assert(aiActionScore(ffJack,1,'hardcore')>aiActionScore(ffJack,0,'hardcore'),'fortification counts as keep enough to go back to farming');
 
+// A spent card is queued, not gone: the pile reclaims its own discards, so the AI must count
+// them when asking whether it will see another.
+resetGame();const recycler2=testSide();recycler2.discard=['firesapper','logging'];
+assert.equal(aiPending(recycler2).filter(id=>id==='firesapper').length,1,'a discarded Sapper is still to come');
+assert.equal(aiScarcity(recycler2,'material'),1.6,'and a discarded Logging Camp still counts as drawable');
+
+// Endgame: with the back row up, it keeps non-Sappers in hand so the units pile silts up with
+// Sappers — but it still spends one to block when something is standing opposite.
+resetGame(7);game.aiProfile='forestfire';game.ai.resources={food:9,metal:9,material:9,gold:9};
+game.ai.board[0].building=testSlot('university');game.ai.board[1].building=testSlot('university');
+game.ai.board[2].building=testSlot('lumbermill');game.ai.board[3].building=testSlot('lumbermill');
+const lateJack={uid:'lj',cardId:'lumberjack',bonus:false};
+const idle=aiActionScore(lateJack,0,'hardcore');
+game.player.board[0].unit=testSlot('royalguard',1);game.ai.health=5;
+assert(aiActionScore(lateJack,0,'hardcore')>idle,'a body still goes in the way when there is something to peel');
+
 for(const gone of ['general','wood','food'])assert(!AI_DECKS[gone],gone+' is retired from the roster');
 assert(Object.keys(AI_DECKS).every(k=>AI_PROFILE_NAMES[k]),'every surviving banner still has a display name');
 
