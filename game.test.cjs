@@ -359,10 +359,27 @@ for(const profile of Object.keys(AI_DECKS)){
   assert(placements(hardcore)<=8,profile+' on Hardcore still fits inside the eight board slots');
   for(const r of ['food','metal','material','gold'])assert(hardcore.resources[r]>=0,profile+' never overspends '+r+' on Hardcore');
   assert(hardcore.board.every(l=>['building','unit'].every(t=>!l[t]||l[t].round===game.round||!l[t].replaced)),profile+' fills each slot once per round');
-  assert.equal(boardPrint(hardcore),boardPrint(stockedAI(profile,'hardcore')),profile+' plays deterministically on Hardcore');
+  // Hardcore is decided by the evaluation, not by chance — the same cards come out every
+  // time — but which lane a tie lands in is not part of that and must not be predictable.
+  const cardsOf=side=>side.board.flatMap(l=>[l.building?.cardId,l.unit?.cardId]).filter(Boolean).sort().join(',');
+  assert.equal(cardsOf(hardcore),cardsOf(stockedAI(profile,'hardcore')),profile+' commits the same cards on Hardcore');
   assert.equal(placements(stockedAI(profile,'hard')),4,profile+' on Hard still stops at four');
 }
 assert.equal(aiPlaysBest('hardcore'),true);assert.equal(aiPlaysBest('hard'),true);assert.equal(aiPlaysBest('normal'),false);
+
+// An empty board gives every lane the same score. The westmost must not win every time, or the
+// opening is readable before it is played.
+const openingLanes=new Set();
+for(let i=0;i<60;i++){
+  resetGame(1);game.aiProfile='strikesteel';game.aiDifficulty='hardcore';
+  game.ai.resources={food:9,metal:9,material:9,gold:9};
+  game.ai.hand=[{uid:'o1',cardId:'manatarms',bonus:false}];
+  aiPlan();
+  const lane=game.ai.board.findIndex(l=>l.unit);
+  if(lane>=0)openingLanes.add(lane);
+}
+assert(openingLanes.size>1,'the opening body does not always take the same lane');
+assert(openingLanes.size>=3,'and spreads across the board rather than favouring one end');
 
 // Split piles and the chosen draw.
 const splitSide=createSide(AI_DECKS.timber);

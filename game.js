@@ -660,7 +660,13 @@ function aiPlan(){
       const c=CARDS[hc.cardId];if(!canAfford(side,handCost(hc)))continue;
       for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&!aiPlaysBest(difficulty))continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty)})}
     }
-    if(!options.length)break;options.sort((a,b)=>b.score-a.score);const choice=aiPlaysBest(difficulty)?options[0]:options[Math.floor(Math.random()*Math.min(3,options.length))];if(choice.score<0)break;
+    if(!options.length)break;
+    // Options are built lane by lane and sort is stable, so equal scores kept their insertion
+    // order and the westmost lane won every tie — on an empty board that meant the first unit
+    // always landed in lane one. Shuffling first leaves the ranking alone and lets genuine
+    // ties fall out at random, so a ruler with no reason to prefer a lane does not telegraph one.
+    shuffle(options);options.sort((a,b)=>b.score-a.score);
+    const choice=aiPlaysBest(difficulty)?options[0]:options[Math.floor(Math.random()*Math.min(3,options.length))];if(choice.score<0)break;
     const c=CARDS[choice.hc.cardId],idx=side.hand.findIndex(x=>x.uid===choice.hc.uid),old=side.board[choice.lane][c.type],spent=payCost(side,handCost(choice.hc));side.hand.splice(idx,1);side.board[choice.lane][c.type]={cardId:choice.hc.cardId,round:game.round,spent,handCard:choice.hc,replaced:old||null};actions++;
   }
 }
