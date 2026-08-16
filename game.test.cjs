@@ -230,6 +230,25 @@ assert(firstHall>aiActionScore(ffHall,2,'hardcore'),'a third University is worth
 // The Warden is the only clock, and only behind a building.
 assert(aiActionScore(ffWarden,0,'hardcore')>aiActionScore(ffWarden,3,'hardcore'),'the Wall Warden wants a built lane');
 
+// It cycles hard enough to spend a Sapper on a guess — while it still has Sappers to spare.
+resetGame();game.aiProfile='forestfire';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const ffSapper={uid:'fs',cardId:'firesapper',bonus:false};
+pileUp(game.ai,['firesapper','firesapper']);
+assert(aiActionScore(ffSapper,0,'hardcore')>0,'a spare Sapper is worth playing into an empty lane');
+game.ai.units=[];
+assert(aiActionScore(ffSapper,0,'hardcore')<0,'the last Sapper is held for a real target');
+
+// A cheap body is spent to peel a real threat away from the keep.
+resetGame();game.aiProfile='forestfire';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const ffJack={uid:'fj',cardId:'lumberjack',bonus:false};
+game.player.board[0].unit=testSlot('royalguard',1);
+assert(aiActionScore(ffJack,0,'hardcore')>0,'a Lumberjack will stand in front of a 4-power threat');
+assert(aiActionScore(ffJack,1,'hardcore')>aiActionScore(ffJack,0,'hardcore'),'though a whole keep would rather take the open lane and the harvest');
+game.ai.health=5;
+assert(aiActionScore(ffJack,0,'hardcore')>aiActionScore(ffJack,1,'hardcore'),'but a pressed one spends the body to peel the strike');
+game.ai.health=5;game.ai.fortification=6;
+assert(aiActionScore(ffJack,1,'hardcore')>aiActionScore(ffJack,0,'hardcore'),'fortification counts as keep enough to go back to farming');
+
 for(const gone of ['general','wood','food'])assert(!AI_DECKS[gone],gone+' is retired from the roster');
 assert(Object.keys(AI_DECKS).every(k=>AI_PROFILE_NAMES[k]),'every surviving banner still has a display name');
 

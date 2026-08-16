@@ -565,9 +565,25 @@ function aiActionScore(hc,lane,difficulty){
     if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?0:5;
     // The lone Wall Warden is the whole clock, and it is only a threat behind a building.
     if(c.special==='wallwarden')score+=side.board[lane].building?6:-4;
-    // Sappers are the answer to everything, so they are worth holding for a real target.
-    if(c.special==='sapper'&&aiVisiblePlayerSlot(lane,'unit'))score+=3;
-    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-3:2;
+    // Three Universities turn the banner over quickly, so a Sapper is a renewable answer
+    // rather than a treasure. Spending one on a guess costs less than the strike it would
+    // have stopped — provided more are still to come, which is the condition to check.
+    const facing=aiVisiblePlayerSlot(lane,'unit');
+    if(c.special==='sapper'){
+      const spare=aiPending(side).filter(id=>CARDS[id].special==='sapper').length;
+      score+=facing?3:(spare>=2?5:-3);
+    }
+    // A body thrown in front of a real threat buys the keep a round. This banner would
+    // rather spend a Lumberjack than take the hit, because the draw replaces the body and
+    // nothing replaces the health.
+    if(c.type==='unit'&&facing&&!old){
+      const fc=CARDS[facing.cardId],incoming=(fc.power||0)+(fc.special==='knight'?2:0)+(fc.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-facing.round)):0);
+      // What a block is worth depends on what the keep can still afford. Comfortable, it
+      // takes the open lane and the harvest; pressed, a body is cheaper than the damage.
+      const pressed=side.health+(side.fortification||0)<=6;
+      if(incoming>=2)score+=incoming*(pressed?3:1.2);
+    }
+    if(c.special==='worker'&&!facing)score+=2;
   }
   if(game.aiProfile==='uprising'){
     // The uprising wins by mass, so what prints bodies matters more than any single body.
