@@ -5,7 +5,7 @@ const CARDS = {
   goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
   townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
   university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
-  soldier:{name:'Soldier',type:'unit',icon:'⚔',accent:'#8b4b38',cost:{food:1,metal:1},power:2,text:'A dependable fighter with 2 power.'},
+  soldier:{name:'Soldier',type:'unit',icon:'⚔',accent:'#8b4b38',cost:{food:1,metal:1},power:2,text:''},
   farmer:{name:'Farmer',type:'unit',icon:'♟',accent:'#87964c',cost:{food:1},power:1,text:'Harvest 1 food after each clash.',special:'worker',produce:{food:1}},
   lumberjack:{name:'Lumberjack',type:'unit',icon:'♣',accent:'#51734d',cost:{material:1},power:1,text:'Harvest 1 wood after each clash.',special:'worker',produce:{material:1}},
   miner:{name:'Miner',type:'unit',icon:'♦',accent:'#65717a',cost:{metal:1},power:1,text:'Harvest 1 metal after each clash.',special:'worker',produce:{metal:1}},
@@ -16,23 +16,23 @@ const CARDS = {
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2,metal:1},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
-  archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:'A ranged fighter with 2 power.'},
+  archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
-  ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:'A versatile 3-power unit.'},
-  champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:'An elite warrior with 5 power.'},
-  militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:'A quickly raised 2-power fighting force.'},
+  ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
+  champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
+  militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
   peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand while you have an empty unit lane.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
-  manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:'Disciplined heavy infantry with 3 power.'},
+  manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
   gatehouse:{name:'Reinforced Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:2,metal:2},text:'When revealed, restore 2 health. The friendly unit in this lane has +1 power.',special:'gatehouse'},
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
   boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces the first direct strike through this lane by 2 each round.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
-  royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:'Elite heavy infantry with 4 power.'},
+  royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
   armoury:{name:'Armoury',type:'building',icon:'⚒',accent:'#566779',cost:{metal:3},text:'A friendly unit whose cost contains only metal gains +2 power in this lane.',special:'armoury'},
   huntsman:{name:'Huntsman',type:'unit',icon:'➶',accent:'#557448',cost:{food:1,material:1},power:2,text:'After winning a unit clash and surviving, gain 1 wood.',special:'huntsman'},
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
@@ -215,7 +215,7 @@ const CARD_ART={
 };
 function cardHtml(id,opts={}){
   const c=CARDS[id],art=CARD_ART[id];
-  return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} ${opts.free?'data-free="1"':''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span></div><div class="costs">${opts.free?'<span class="cost granted" title="Granted — costs nothing to deploy">✦</span>':costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3><p>${c.text}</p>${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
+  return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} ${opts.free?'data-free="1"':''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span></div><div class="costs">${opts.free?'<span class="cost granted" title="Granted — costs nothing to deploy">✦</span>':costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3>${c.text?`<p>${c.text}</p>`:''}${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
 }
 // No decree currently rewrites a printed cost, but every purchase reads through here, so this
 // is where one would.
@@ -321,7 +321,7 @@ function openPack(){
 function chooseSacrifice(newId){
   const copies=id=>meta.decks.reduce((n,d)=>n+d.cards.filter(x=>x===id).length,0);
   $('#modalContent').innerHTML=`<p class="eyebrow">THE PRICE OF PROGRESS</p><h2>Sacrifice a design</h2><p>Your collection stays at ${COLLECTION_SIZE} designs. Every copy across all your decks will be replaced by ${CARDS[newId].name}.</p><div class="sacrifice-list">${meta.unlocked.map(id=>`<button class="sacrifice-button" data-sacrifice="${id}">${CARDS[id].icon} ${CARDS[id].name} · ${copies(id)} in decks</button>`).join('')}</div>`;
-  $$('[data-sacrifice]').forEach(b=>b.onclick=()=>{const old=b.dataset.sacrifice;meta.unlocked=meta.unlocked.filter(x=>x!==old);meta.unlocked.push(newId);meta.decks.forEach(d=>{d.cards=d.cards.map(x=>x===old?newId:x)});meta.packWeek=weekKey();saveMeta();closeModal();renderCollection();showModal(`<p class="eyebrow">NEW DESIGN</p><h2>${CARDS[newId].name} joins your realm</h2><p>${CARDS[newId].text}</p><div class="modal-actions"><button class="button primary" data-go-deck>Review deck</button></div>`);$('[data-go-deck]').onclick=()=>{closeModal();showScreen('deck')}});
+  $$('[data-sacrifice]').forEach(b=>b.onclick=()=>{const old=b.dataset.sacrifice;meta.unlocked=meta.unlocked.filter(x=>x!==old);meta.unlocked.push(newId);meta.decks.forEach(d=>{d.cards=d.cards.map(x=>x===old?newId:x)});meta.packWeek=weekKey();saveMeta();closeModal();renderCollection();showModal(`<p class="eyebrow">NEW DESIGN</p><h2>${CARDS[newId].name} joins your realm</h2>${CARDS[newId].text?`<p>${CARDS[newId].text}</p>`:''}<div class="modal-actions"><button class="button primary" data-go-deck>Review deck</button></div>`);$('[data-go-deck]').onclick=()=>{closeModal();showScreen('deck')}});
 }
 
 // A banner is split into two piles at the start of a battle. Nothing moves between them: a card
@@ -923,7 +923,7 @@ function cardTipHtml(id,granted=false){
   return `<div class="tip-head"><b>${esc(c.name)}</b><span>${c.token?'token':c.type}</span></div>
     ${c.power!==undefined?`<div class="tip-power">⚔ ${c.power} power</div>`:''}
     ${Object.keys(cost).length?`<div class="tip-cost">${costsHtml(cost)}</div>`:`<div class="tip-cost free">${granted?'Granted — costs nothing to deploy':'Free to play'}</div>`}
-    <p>${esc(c.text)}</p>`;
+    ${c.text?`<p>${esc(c.text)}</p>`:''}`;
 }
 document.addEventListener('mouseover',ev=>{
   const tip=$('#cardTip');if(!tip||!document.body.classList.contains('in-battle'))return;

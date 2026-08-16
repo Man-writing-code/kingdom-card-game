@@ -72,6 +72,14 @@ for(const id of ['farmer','lumberjack','miner'])assert.equal(Object.keys(CARDS[i
 // Workers and resource buildings harvest on the same beat, so they say it the same way.
 for(const id of ['farmer','lumberjack','miner','farm','logging','mining'])
   assert.match(CARDS[id].text,/^Harvest 1 (food|wood|metal) after each clash\.$/,id+' uses the shared harvest wording');
+// Rules text earns its place: a card that only fights says nothing, since the power badge
+// already says it. Anything with a special or a yield must explain itself.
+for(const [id,c] of Object.entries(CARDS)){
+  const carriesRules=Boolean(c.special||c.produce);
+  if(carriesRules)assert(c.text,id+' has an effect and must describe it');
+  else assert.equal(c.text,'',id+' only fights, so it should carry no flavour text');
+}
+assert.equal(CARDS.soldier.text,'');assert.equal(CARDS.champion.text,'');assert.equal(CARDS.royalguard.text,'');
 
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');
