@@ -93,7 +93,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const SAVE_VERSION=5;
 // The collection is a fixed roster of designs; decks are drawn from it and may repeat a design.
-const COLLECTION_SIZE=20, DECK_SIZE=20, MAX_COPIES=4, HAND_LIMIT=10;
+const COLLECTION_SIZE=20, DECK_SIZE=20, MAX_COPIES=4, HAND_LIMIT=10, MAX_KEEP_HEALTH=20;
 const startOfDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const weekKey=()=>{const d=startOfDay(new Date()),jan=new Date(d.getFullYear(),0,1),days=Math.round((d-jan)/86400000);return `${d.getFullYear()}-${Math.ceil((days+jan.getDay()+1)/7)}`};
 const weekIndex=()=>Number(weekKey().split('-')[1]);
@@ -345,7 +345,7 @@ function chooseSacrifice(newId){
 // always returns to the pile its type belongs to.
 function createSide(deck){
   const cards=deck.slice();
-  return {health:10,fortification:0,resources:{food:1,metal:1,material:1,gold:0},
+  return {health:MAX_KEEP_HEALTH,fortification:0,resources:{food:1,metal:1,material:1,gold:0},
     structures:shuffle(cards.filter(id=>CARDS[id].type==='building')),
     units:shuffle(cards.filter(id=>CARDS[id].type==='unit')),
     discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}
@@ -582,7 +582,7 @@ function aiActionScore(hc,lane,difficulty){
     // Fortification is banked ahead of the blow rather than spent healing after it, so it is
     // worth raising early; a thin keep still wants it most.
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
-    if(c.special==='cathedral')score+=side.health+(side.fortification||0)<=10?6:3;
+    if(c.special==='cathedral')score+=side.health+(side.fortification||0)<=MAX_KEEP_HEALTH?6:3;
   }
   if(game.aiProfile==='strikesteel'){
     // No tricks in the banner at all: mine metal, put the biggest body available in the way,
@@ -908,7 +908,7 @@ function dealDamage(side,amount,lane){
   const dmg=adjustedDamage(side,amount,lane);
   const target=side===game.player?'player':'ai';
   // Fortification is spent stone: it takes the blow before the keep does, and unlike health it
-  // is not capped at ten, so a well-walled ruler can stand above their starting integrity.
+  // is not capped at the keep's maximum, so a well-walled ruler can stand above starting integrity.
   const held=Math.min(side.fortification||0,dmg);
   if(held){side.fortification-=held;fx.push({t:'fort',who:target,lane,amount:held})}
   side.health-=dmg-held;
@@ -1021,7 +1021,7 @@ function renderResources(el,resources){
   el.innerHTML=resourceEmblemHtml(resources);
 }
 function renderHealth(el,value,owner,fortification=0){
-  const health=Math.max(0,value),maximum=10,fort=Math.max(0,fortification);
+  const health=Math.min(MAX_KEEP_HEALTH,Math.max(0,value)),maximum=MAX_KEEP_HEALTH,fort=Math.max(0,fortification);
   el.setAttribute('aria-label',`${owner} keep integrity: ${health} of ${maximum}${fort?`, behind ${fort} fortification`:''}`);
   // Fortification pips sit ahead of the keep's own, because that is the order damage meets them.
   const pips=Array.from({length:fort},()=>'<i class="fortified"></i>').join('')

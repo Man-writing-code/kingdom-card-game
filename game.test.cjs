@@ -9,13 +9,15 @@ const tests=`
 renderGame=()=>{};renderLog=()=>{};
 currentRule={id:'none'};
 
-function testSide(){return {health:10,fortification:0,resources:{food:0,metal:0,material:0,gold:0},structures:[],units:[],discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}}
+function testSide(){return {health:MAX_KEEP_HEALTH,fortification:0,resources:{food:0,metal:0,material:0,gold:0},structures:[],units:[],discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}}
 function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return side}
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
 assert.equal(COLLECTIBLE_IDS.length,50,'global collectible pool includes all six tier-two resource routes');
 assert.equal(Object.keys(CARDS).length,51,'collectibles plus Peasant token');
+assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
+assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -65,8 +67,8 @@ game.round++;assert.equal(dealDamage(game.player,4,0),1,'and the walls return wi
 resetGame();const hunter=testSlot('huntsman');game.player.board[0].unit=hunter;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1);
 game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');assert.equal(game.player.resources.material,1,'defeated Huntsman earns nothing');
 
-resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,8);assert.equal(game.player.resources.food,1);
-resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,10);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
+resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,18);assert.equal(game.player.resources.food,1);
+resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,MAX_KEEP_HEALTH);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
 
 resetGame();game.player.board[1].unit=testSlot('boarriders',1);assert.equal(unitPower(game.player,1),3,'Boar Riders alone hold base power');
 game.player.board[0].unit=testSlot('peasant',1);assert.equal(unitPower(game.player,1),4,'one flank adds 1');
@@ -207,14 +209,14 @@ resetGame();game.player.resources={food:0,metal:0,material:0,gold:0};
 assert(canAfford(game.player,handCost(granted)),'a bankrupt realm can still deploy its recruit');
 assert(!canAfford(game.player,handCost(bought)),'but cannot buy one');
 // Fortification is stone in front of the keep: it takes the blow first, and it is not capped
-// at ten, so a walled ruler stands above their starting integrity.
+// at the keep maximum, so a walled ruler stands above their starting integrity.
 resetGame();game.player.fortification=3;
 assert.equal(dealDamage(game.player,2,0),2,'the strike still lands at full weight');
-assert.equal(game.player.health,10,'but the keep is untouched');
+assert.equal(game.player.health,MAX_KEEP_HEALTH,'but the keep is untouched');
 assert.equal(game.player.fortification,1,'the stone wore instead');
 dealDamage(game.player,3,0);
 assert.equal(game.player.fortification,0,'stone is spent before flesh');
-assert.equal(game.player.health,8,'and the remainder carries through to the keep');
+assert.equal(game.player.health,18,'and the remainder carries through to the keep');
 
 // The Mason lays stone every round it holds its lane — a worker whose yield goes on the keep.
 assert.deepEqual(CARDS.mason.cost,{metal:1});assert.equal(CARDS.mason.power,1);
@@ -224,17 +226,17 @@ harvest(game.player,'Your');
 assert.equal(game.player.fortification,1,'a Mason lays stone the round it arrives');
 assert.deepEqual(game.player.resources,{food:0,metal:0,material:0,gold:0},'and nothing reaches the stores');
 harvest(game.player,'Your');assert.equal(game.player.fortification,2,'and again each round it holds');
-// Stone laid is stone that takes the blow, so it stacks past the keep's own ten.
+// Stone laid is stone that takes the blow, so it stacks past the keep's own maximum.
 game.player.fortification=1;assert.equal(dealDamage(game.player,3,0),3);
-assert.equal(game.player.fortification,0);assert.equal(game.player.health,8,'the stone spends first');
+assert.equal(game.player.fortification,0);assert.equal(game.player.health,18,'the stone spends first');
 
 assert.equal(CARDS.gatehouse.name,'Gatehouse','the Gatehouse keeps a name a card face can hold');
 assert.deepEqual(CARDS.gatehouse.cost,{material:1,metal:2},'and is priced to be built, not saved for');
 // A Gatehouse raises fortification rather than repairing, so it is worth building at full health.
 resetGame(1);game.player.board[0].building=testSlot('gatehouse',1);resolveOnBuild(game.player,'Your');
-assert.equal(game.player.health,10,'a full keep is not healed');
+assert.equal(game.player.health,MAX_KEEP_HEALTH,'a full keep is not healed');
 assert.equal(game.player.fortification,2,'it is walled instead');
-assert.equal(game.player.health+game.player.fortification,12,'which carries a ruler above ten');
+assert.equal(game.player.health+game.player.fortification,22,'which carries a ruler above twenty');
 resolveOnBuild(game.player,'Your');assert.equal(game.player.fortification,2,'and it raises its wall once');
 resetGame(1);game.player.health=4;game.player.board[0].building=testSlot('gatehouse',1);resolveOnBuild(game.player,'Your');
 assert.equal(game.player.health,4,'a wounded keep is not repaired either');assert.equal(game.player.fortification,2);
@@ -243,7 +245,7 @@ assert.equal(game.player.health,4,'a wounded keep is not repaired either');asser
 resetGame();game.player.fortification=5;game.player.board[0].building=testSlot('palisade');
 assert.equal(dealDamage(game.player,3,0),1,'the Palisade takes 2 off first');
 assert.equal(game.player.fortification,4,'so only 1 reaches the fortification');
-assert.equal(game.player.health,10);
+assert.equal(game.player.health,MAX_KEEP_HEALTH);
 
 // A Commons pays regardless of the board: it no longer waits for an empty lane.
 resetGame();game.player.board[0].building=testSlot('villagecommons',1);

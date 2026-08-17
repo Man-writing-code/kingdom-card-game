@@ -839,7 +839,7 @@ body[data-screen="game"] .hand-area{
   70%{opacity:1;transform:translate(-50%,-6px) scale(1)}
   100%{opacity:0;transform:translate(-50%,-22px) scale(.95)}
 }
-@media(max-width:900px){.keep-pips{max-width:40px}}
+@media(max-width:900px){.keep-pips{max-width:78px}}
 
 /* A granted card shows a seal where its price would be — it is deployed, not bought. */
 .cost.granted{background:linear-gradient(165deg,#e6c274,#c39a3f);color:#2a2010;font-size:12px}
