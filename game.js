@@ -20,7 +20,7 @@ const CARDS = {
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
-  merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
+  merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'After each clash, converts 1 random food, wood, or metal into 1 gold.',special:'merchant'},
   taxcollector:{name:'Tax Collector',type:'unit',icon:'§',accent:'#9a7334',cost:{gold:1},power:1,text:'Harvest 1 gold after each clash.',special:'taxcollector'},
   cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:1,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
   assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'After each clash, if it survives, returns to your hand.',special:'assassin'},
@@ -493,6 +493,7 @@ function aiCardValue(id){
   if(c.special==='worker')return 3;
   // A Mason banks keep integrity every round it lives, which outlasts any single clash.
   if(c.special==='mason')return 3;
+  if(c.special==='merchant')return 3;
   if(c.special==='taxcollector')return 3;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
@@ -762,7 +763,6 @@ function directStrike(attacker,defender,lane,power,label,ramLabel){
   const unit=attacker.board[lane].unit,card=CARDS[unit.cardId];
   if(resolveRam(attacker,defender,lane,ramLabel))return;
   const dmg=dealDamage(defender,power,lane);
-  if(card.special==='merchant')attacker.resources.gold++;
   if(card.special==='cutpurse'&&dmg>0){
     const stolen=stealRandomResource(attacker,defender);
     if(stolen)log(`Lane ${lane+1}: ${label==='You'?'Your':'The rival’s'} Cutpurse steals 1 ${RESOURCE_NAMES[stolen].toLowerCase()}.`)
@@ -905,6 +905,10 @@ function harvest(side,label){
     if(lane.unit){
       const worker=CARDS[lane.unit.cardId];
       if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
+      if(worker.special==='merchant'){
+        const stocked=BASIC_RESOURCES.filter(resource=>side.resources[resource]>0);
+        if(stocked.length){const resource=stocked[Math.floor(Math.random()*stocked.length)];side.resources[resource]--;side.resources.gold++;log(`${label} Merchant converts 1 ${RESOURCE_NAMES[resource].toLowerCase()} into 1 gold.`)}
+      }
       if(worker.special==='taxcollector'){side.resources.gold++;log(`${label} Tax Collector harvests 1 gold.`)}
       // A Mason lays stone rather than gathering: the yield goes on the keep, not into the stores.
       if(worker.special==='mason'){side.fortification=(side.fortification||0)+1;log(`${label} ${worker.name} raises 1 fortification.`)}

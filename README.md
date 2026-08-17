@@ -56,6 +56,7 @@ Then visit `http://127.0.0.1:4173`.
 - The free Trading Post is a flexible tier-one resource building. After each clash it randomly supplies 1 food, wood, or metal; Long Winter reduces that yield to zero like the other basic-resource buildings.
 - The 1-power Cutpurse costs 1 gold. Whenever an unblocked strike deals damage, it steals 1 random food, wood, or metal that the opposing ruler currently has; it cannot steal gold, and a fully prevented strike steals nothing.
 - The 1-power Tax Collector costs 1 gold and harvests 1 gold after every clash it survives, including the clash in which it is deployed.
+- The Merchant converts 1 randomly chosen food, wood, or metal into 1 gold after every clash it survives. With no basic resource in its owner’s stores, it converts nothing.
 - The weekly decree is chosen deterministically from the calendar week.
 - Winning unlocks one weekly pack. Adding its new design requires sacrificing an old one, so the collection stays at 20 and every deck swaps its copies over automatically.
 

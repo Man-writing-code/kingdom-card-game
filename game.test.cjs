@@ -161,6 +161,14 @@ currentRule={id:'tradefair'};resetGame();game.player.board[0].unit=testSlot('tax
 assert.equal(game.player.resources.gold,1,'the Grand Fair does not increase the Tax Collector beyond its printed yield');
 currentRule={id:'none'};
 
+resetGame(3);game.player.board[0].unit=testSlot('merchant',3);game.player.resources.material=1;harvest(game.player,'Your');
+assert.equal(game.player.resources.material,0,'the Merchant spends an available basic resource');
+assert.equal(game.player.resources.gold,1,'and converts it into gold on its deployment clash');
+resetGame();game.player.board[0].unit=testSlot('merchant');game.player.resources.gold=2;harvest(game.player,'Your');
+assert.equal(game.player.resources.gold,2,'the Merchant does nothing when no basic resource is available');
+resetGame();game.player.board[0].unit=testSlot('merchant');directStrike(game.player,game.ai,0,1,'You','your');
+assert.equal(game.player.resources.gold,0,'the Merchant no longer creates gold from an unblocked hit');
+
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');
 assert.equal(game.player.resources.material,1,'a worker produces the round it is deployed');
