@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,44,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin and Trading Post added)');
-assert.equal(Object.keys(CARDS).length,45,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,45,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector and Trading Post added)');
+assert.equal(Object.keys(CARDS).length,46,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -40,13 +40,13 @@ for(const yard of ['armoury','watchtower']){
   game.player.board[0].unit=testSlot('miner');assert.equal(unitPower(game.player,0),2,yard+' even arms a worker');
 }
 
-// The Granary provisions the whole realm: every friendly unit with food in its printed cost
-// gains 1 power per standing Granary, wherever the unit is deployed.
+// The Granary provisions the whole realm: every friendly unit gains 1 power per standing
+// Granary, whatever it costs and wherever it is deployed.
 assert.deepEqual(CARDS.foodgranary.cost,{food:5},'the Granary costs 5 food');
 resetGame();game.player.board[3].building=testSlot('foodgranary');
 game.player.board[0].unit=testSlot('farmer');assert.equal(unitPower(game.player,0),2,'a food-only worker is provisioned across lanes');
 game.player.board[1].unit=testSlot('knight');assert.equal(unitPower(game.player,1),3,'a mixed-cost unit is provisioned too');
-game.player.board[2].unit=testSlot('archer');assert.equal(unitPower(game.player,2),2,'a unit without a food cost is unchanged');
+game.player.board[2].unit=testSlot('archer');assert.equal(unitPower(game.player,2),3,'a unit without a food cost is provisioned too');
 game.player.board[2].building=testSlot('foodgranary');assert.equal(unitPower(game.player,0),3,'multiple Granaries stack');
 
 // A lane resolves once a round, so the Palisade has no once-per-round limit to track: it simply
@@ -151,6 +151,15 @@ assert.deepEqual(game.player.discard,[],'returning is not a defeat');
 resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('champion');resolveRound();
 assert.equal(game.player.hand.length,0,'an Assassin destroyed in the clash does not return');
 assert.deepEqual(game.player.discard,['assassin']);
+
+assert.deepEqual(CARDS.taxcollector.cost,{gold:1},'the Tax Collector costs 1 gold');
+assert.equal(CARDS.taxcollector.power,1,'the Tax Collector has 1 power');
+resetGame(3);game.player.board[0].unit=testSlot('taxcollector',3);harvest(game.player,'Your');
+assert.equal(game.player.resources.gold,1,'the Tax Collector harvests on its deployment clash');
+harvest(game.player,'Your');assert.equal(game.player.resources.gold,2,'and again after every clash it survives');
+currentRule={id:'tradefair'};resetGame();game.player.board[0].unit=testSlot('taxcollector');harvest(game.player,'Your');
+assert.equal(game.player.resources.gold,1,'the Grand Fair does not increase the Tax Collector beyond its printed yield');
+currentRule={id:'none'};
 
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');

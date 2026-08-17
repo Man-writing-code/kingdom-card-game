@@ -15,12 +15,13 @@ const CARDS = {
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
-  foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:5},text:'All friendly units that cost food have +1 power.',special:'granary'},
+  foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:5},text:'All friendly units have +1 power.',special:'granary'},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
+  taxcollector:{name:'Tax Collector',type:'unit',icon:'§',accent:'#9a7334',cost:{gold:1},power:1,text:'Harvest 1 gold after each clash.',special:'taxcollector'},
   cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:1,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
   assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'After each clash, if it survives, returns to your hand.',special:'assassin'},
   foreignmercenary:{name:'Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
@@ -214,7 +215,7 @@ const CARD_ART={
   foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
-  merchant:'assets/cards/merchant.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
+  merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
@@ -492,6 +493,7 @@ function aiCardValue(id){
   if(c.special==='worker')return 3;
   // A Mason banks keep integrity every round it lives, which outlasts any single clash.
   if(c.special==='mason')return 3;
+  if(c.special==='taxcollector')return 3;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
@@ -715,7 +717,7 @@ function unitPower(side,lane){
   if(card.special==='wallwarden'&&building)p+=2;
   // The Armoury, Watchtower and Gatehouse all arm the lane they stand in, and all by the same 1.
   if(building&&['watchtower','gatehouse','armoury'].includes(CARDS[building.cardId].special))p++;
-  if(card.cost.food)p+=countBuilding(side,'granary');
+  p+=countBuilding(side,'granary');
   const enemySide=side===game.player?game.ai:game.player,enemy=enemySide.board[lane].unit;
   // A Knight is a duellist, not a raider: strong against anything that stands in its lane,
   // ordinary when the lane is open and it rides at the ruler instead.
@@ -903,6 +905,7 @@ function harvest(side,label){
     if(lane.unit){
       const worker=CARDS[lane.unit.cardId];
       if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
+      if(worker.special==='taxcollector'){side.resources.gold++;log(`${label} Tax Collector harvests 1 gold.`)}
       // A Mason lays stone rather than gathering: the yield goes on the keep, not into the stores.
       if(worker.special==='mason'){side.fortification=(side.fortification||0)+1;log(`${label} ${worker.name} raises 1 fortification.`)}
     }
@@ -939,6 +942,8 @@ function productionForecastHtml(slot){
     if(currentRule.id==='winter')return'';
     const label='Harvests 1 random food, wood, or metal after this clash';
     return `<span class="production-cue random" title="${label}" aria-label="${label}"><i>?</i><b>+1</b></span>`;
+  }else if(card.special==='taxcollector'){
+    resource='gold';gain=1;
   }else if(card.special==='mason'){
     // A Mason's yield never reaches the stores, so it needs its own cue rather than a resource one.
     const label='Raises 1 fortification after this clash';
