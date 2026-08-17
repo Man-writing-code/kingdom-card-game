@@ -853,3 +853,109 @@ body[data-screen="game"] .hand-area{
 .room-wait .online-button{margin-top:9px;background:transparent;border:1px solid #b9a06b63;color:#d3b56b}
 .room-wait .online-button:hover{border-color:#d3b56b;color:#eed9a3}
 #onlineStatus{padding:0 16px 12px}
+
+/* ================================================================
+   RESPONSIVE RESILIENCE
+   Wide desktop battles keep the theatre above exactly as designed. On a
+   short or narrow viewport, preserving the cards is more useful than forcing
+   the entire table into one screen: the page may scroll, and the battlefield
+   becomes a readable horizontal strip instead of crushing its lanes.
+   ================================================================ */
+@media(max-height:820px), (max-width:700px){
+  body.in-battle{overflow:auto}
+  .game-screen.active{height:auto;min-height:100dvh;overflow:visible}
+  .battlefield-wrap{
+    flex:0 0 auto;justify-content:flex-start;container-type:inline-size;
+    min-height:0
+  }
+  .slot{height:auto;min-height:72px;aspect-ratio:3/1}
+}
+
+@media(max-width:700px){
+  .game-screen{--inset:0px;--stage:100%;--gutter:13px}
+  .game-header{height:54px;min-height:54px}
+  .icon-button{left:13px;width:36px;height:36px}
+  .game-header .icon-button:last-child{right:13px}
+  .player-bar{min-height:72px;padding:7px 13px;gap:9px}
+  .avatar{width:34px;height:34px;flex-basis:34px}
+  .ruler-id{flex:1 1 auto;overflow:hidden}
+  .ruler-id b,.opponent-bar #aiProfileLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opponent-bar .resources{width:88px;flex-basis:88px}
+
+  .battlefield-wrap{
+    width:100%;max-width:100%;margin:0;padding:9px 8px 11px;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+    scrollbar-width:thin;scrollbar-color:#c9a75b #0c1b13
+  }
+  .battlefield-wrap::-webkit-scrollbar{height:8px}
+  .battlefield-wrap::-webkit-scrollbar-track{background:#0c1b13}
+  .battlefield-wrap::-webkit-scrollbar-thumb{background:#c9a75b;border:2px solid #0c1b13;border-radius:5px}
+  .board,.battlefield-wrap>.battle-label,.clash-line{width:max(100%,480px);min-width:480px}
+  .board{gap:8px}
+  .lane{gap:7px}
+  .slot{height:74px;min-height:74px;aspect-ratio:auto}
+  .battle-label{margin:7px 2px 6px}
+  .clash-line{height:28px;margin:1px 0}
+
+  /* The river still occupies exactly one lane of the wider mobile field. */
+  .river-week .board.three-lanes,
+  .river-week .clash-line,
+  .river-week .battle-label{width:max(calc(75% - 6px),360px);min-width:360px}
+  .river-week .river-lane{
+    left:max(calc(75% + 5px),371px);right:auto;
+    width:max(calc(25% - 13px),109px);top:18px;bottom:18px
+  }
+
+  .hand-area{padding:9px 13px 13px}
+  .hand-heading{margin-bottom:8px;min-height:20px}
+  .hand-heading small{white-space:normal}
+  .hand-dock-row{gap:10px 12px}
+  .commit{min-height:46px;padding:12px 13px;font-size:12px}
+  .commit span{margin-left:8px}
+  .hand{padding-bottom:8px;scroll-snap-type:x proximity}
+  .hand-area .game-card{width:136px;min-width:136px;scroll-snap-align:start}
+
+  .filter-row{width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  .filter-row .chip{flex:0 0 auto}
+  .modal-card{padding:30px 22px}
+  .modal-actions{flex-wrap:wrap}
+  .pack-options{grid-template-columns:1fr}
+  .sacrifice-list{grid-template-columns:1fr}
+}
+
+@media(max-width:480px){
+  body.in-hall .home-screen.active{grid-template-columns:minmax(0,1fr)}
+  body.in-hall .home-screen>*{min-width:0;max-width:100%}
+  body.in-hall .hero-copy,
+  body.in-hall .duel-launcher,
+  body.in-hall .weekly-card{width:100%;min-width:0;max-width:100%}
+  .mode-tabs,.mode-panel,.mode-tab{min-width:0}
+  .mode-tab{overflow:hidden}
+  .mode-tab>span{min-width:0}
+  .mode-tab small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .duel-launcher .multiplayer-setup{grid-template-columns:1fr}
+  .duel-launcher .multiplayer-setup>*{grid-column:1}
+  .duel-launcher .multiplayer-setup .online-button{width:100%}
+  .duel-launcher .room-divider{padding:2px 0}
+  .section-heading{flex-wrap:wrap;gap:14px}
+  .decree-banner{align-items:flex-start;padding:21px 18px;gap:15px}
+  .card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card-grid .game-card,.collection-grid .game-card,
+  .card-grid .game-card.illustrated,.collection-grid .game-card.illustrated{min-width:0;min-height:280px}
+  .card-grid .card-art.painted,.collection-grid .card-art.painted{height:100px}
+  .card-grid .illustrated .costs,.collection-grid .illustrated .costs{top:92px}
+  .card-grid .game-card h3,.collection-grid .game-card h3{font-size:16px}
+  .card-grid .game-card p,.collection-grid .game-card p{font-size:12px;line-height:1.42}
+}
+
+@media(max-width:360px){
+  .hand-dock-row{grid-template-columns:1fr;grid-template-areas:"keep" "commit" "hand"}
+  .dock-keep{width:100%;justify-content:flex-start}
+  .commit{width:100%}
+  .round-badge{letter-spacing:1.5px}
+}
+
+@media(hover:none), (pointer:coarse){
+  .card-tip{display:none!important}
+  .slot .slot-card:hover,.game-card:hover{transform:none}
+}
