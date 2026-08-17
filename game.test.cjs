@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,41,'global collectible pool (Charge designs shelved, Granary and Foreign Mercenary added)');
-assert.equal(Object.keys(CARDS).length,42,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,44,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin and Trading Post added)');
+assert.equal(Object.keys(CARDS).length,45,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -97,6 +97,13 @@ assert.deepEqual(CARDS.farmer.cost,{food:1},'each worker is bought with what it 
 assert.deepEqual(CARDS.lumberjack.cost,{material:1});
 assert.deepEqual(CARDS.miner.cost,{metal:1});
 for(const id of ['farmer','lumberjack','miner'])assert.equal(Object.keys(CARDS[id].produce)[0],Object.keys(CARDS[id].cost)[0],id+' pays in its own coin');
+assert.deepEqual(CARDS.tradingpost.cost,{},'the Trading Post is a free tier-one building');
+resetGame();game.player.board[0].building=testSlot('tradingpost');harvest(game.player,'Your');
+assert.equal(game.player.resources.food+game.player.resources.material+game.player.resources.metal,1,'the Trading Post supplies exactly one basic resource');
+assert.equal(game.player.resources.gold,0,'the Trading Post never supplies gold');
+currentRule={id:'winter'};resetGame();game.player.board[0].building=testSlot('tradingpost');harvest(game.player,'Your');
+assert.equal(game.player.resources.food+game.player.resources.material+game.player.resources.metal,0,'Long Winter reduces its basic-resource yield to zero');
+currentRule={id:'none'};
 // Workers and resource buildings harvest on the same beat, so they say it the same way.
 for(const id of ['farmer','lumberjack','miner','farm','logging','mining'])
   assert.match(CARDS[id].text,/^Harvest 1 (food|wood|metal) after each clash\.$/,id+' uses the shared harvest wording');
@@ -108,14 +115,42 @@ for(const [id,c] of Object.entries(CARDS)){
   else assert.equal(c.text,'',id+' only fights, so it should carry no flavour text');
 }
 assert.equal(CARDS.soldier.text,'');assert.equal(CARDS.champion.text,'');assert.equal(CARDS.royalguard.text,'');
-assert.deepEqual(CARDS.foreignmercenary.cost,{gold:1},'the Foreign Mercenary costs 1 gold');
-assert.equal(CARDS.foreignmercenary.power,3,'the Foreign Mercenary has 3 power');
+assert.deepEqual(CARDS.foreignmercenary.cost,{gold:1},'the Mercenary costs 1 gold');
+assert.equal(CARDS.foreignmercenary.power,3,'the Mercenary has 3 power');
+assert.equal(CARDS.foreignmercenary.name,'Mercenary','the card title does not label the mercenary as foreign');
 assert.equal(CARDS.foreignmercenary.special,'mercenary');
 resetGame();game.player.board[0].unit=testSlot('foreignmercenary',game.round);
 resolveRound();assert(game.player.board[0].unit,'the Mercenary remains after its first clash');
 assert.equal(game.player.board[0].unit.clashes,1);
 game.round++;resolveRound();assert.equal(game.player.board[0].unit,null,'the Mercenary leaves after its second clash');
 assert.deepEqual(game.player.discard,['foreignmercenary'],'the completed contract returns the card to its pile normally');
+
+assert.deepEqual(CARDS.cutpurse.cost,{gold:1},'the Cutpurse costs 1 gold');
+assert.equal(CARDS.cutpurse.power,1,'the Cutpurse has 1 power');
+assert.match(CARDS.cutpurse.text,/food, wood, or metal/,'the card face states that only basic resources can be stolen');
+resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.metal=1;
+directStrike(game.player,game.ai,0,1,'You','your');
+assert.equal(game.player.resources.metal,1,'a successful direct hit transfers one stocked resource');
+assert.equal(game.ai.resources.metal,0);
+resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.food=1;game.ai.board[0].building=testSlot('palisade');
+directStrike(game.player,game.ai,0,1,'You','your');
+assert.equal(game.player.resources.food,0,'a fully prevented hit steals nothing');
+assert.equal(game.ai.resources.food,1);
+resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.gold=1;
+directStrike(game.player,game.ai,0,1,'You','your');
+assert.equal(game.player.resources.gold,0,'the Cutpurse cannot steal gold');
+assert.equal(game.ai.resources.gold,1);
+
+assert.deepEqual(CARDS.assassin.cost,{gold:2},'the Assassin costs 2 gold');
+assert.equal(CARDS.assassin.power,5,'the Assassin has 5 power');
+resetGame();const assassinCopy={uid:'assassin-copy',cardId:'assassin',bonus:false};
+game.player.board[0].unit=testSlot('assassin',game.round,{handCard:assassinCopy});resolveRound();
+assert.equal(game.player.board[0].unit,null,'a surviving Assassin leaves the board after the clash');
+assert.equal(game.player.hand[0],assassinCopy,'the same Assassin copy returns to hand');
+assert.deepEqual(game.player.discard,[],'returning is not a defeat');
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('champion');resolveRound();
+assert.equal(game.player.hand.length,0,'an Assassin destroyed in the clash does not return');
+assert.deepEqual(game.player.discard,['assassin']);
 
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');

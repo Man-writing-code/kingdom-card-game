@@ -2,6 +2,7 @@ const CARDS = {
   logging:{name:'Logging Camp',type:'building',icon:'♧',accent:'#51734d',cost:{},text:'Harvest 1 wood after each clash.',produce:{material:1}},
   mining:{name:'Mining Camp',type:'building',icon:'◆',accent:'#65717a',cost:{},text:'Harvest 1 metal after each clash.',produce:{metal:1}},
   farm:{name:'Farm',type:'building',icon:'♨',accent:'#87964c',cost:{},text:'Harvest 1 food after each clash.',produce:{food:1}},
+  tradingpost:{name:'Trading Post',type:'building',icon:'⇄',accent:'#8a6843',cost:{},text:'Harvest 1 random basic resource after each clash.',special:'tradingpost'},
   goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
   townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
   university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
@@ -20,7 +21,9 @@ const CARDS = {
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'Produces 1 gold if unblocked after combat.',special:'merchant'},
-  foreignmercenary:{name:'Foreign Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
+  cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:1,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
+  assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'After each clash, if it survives, returns to your hand.',special:'assassin'},
+  foreignmercenary:{name:'Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
@@ -46,6 +49,7 @@ const CARDS = {
 // assets/cards/ and normaliseCollection/sanitizeDeck already scrub them from old saves.
 
 const WORKERS=['farmer','lumberjack','miner'];
+const BASIC_RESOURCES=['food','material','metal'];
 const TIER_TWO=['lumbermill','foundry','granary'];
 const ARCHETYPE_CARDS=['villagecommons','peasantmob','manatarms','gatehouse','batteringram'];
 const COLLECTIBLE_IDS=Object.keys(CARDS).filter(id=>!CARDS[id].token);
@@ -205,12 +209,12 @@ const RES_COLORS={food:'#8fb04e',material:'#c2884b',metal:'#92a6ba',gold:'#e9b54
 function resourceIcon(type){return `<svg class="resource-icon" viewBox="0 0 16 16" aria-hidden="true">${RESOURCE_GLYPHS[type]}</svg>`}
 function costsHtml(cost={}){return Object.entries(cost).map(([k,v])=>`<span class="cost ${k}" title="${v} ${RESOURCE_NAMES[k]}">${resourceIcon(k)}<b>${v}</b></span>`).join('')}
 const CARD_ART={
-  logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',goldmine:'assets/cards/gold-mine.webp',
+  logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',tradingpost:'assets/cards/trading-post.webp',goldmine:'assets/cards/gold-mine.webp',
   townhall:'assets/cards/town-hall.webp',university:'assets/cards/university.webp',lumbermill:'assets/cards/sawmill.webp',
   foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
-  merchant:'assets/cards/merchant.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
+  merchant:'assets/cards/merchant.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
@@ -497,8 +501,9 @@ const aiPlaysBest=d=>d==='hard'||d==='hardcore';
 // reclaims its own discards when it runs dry, so a spent card is not gone, only queued. Leaving
 // it out made the AI believe answers it would certainly see again were its last.
 function aiPending(side){return side.structures.concat(side.units,side.discard,side.hand.map(hc=>hc.cardId))}
-const aiProducerCount=(ids,resource)=>ids.filter(id=>CARDS[id].produce?.[resource]).length;
-const aiBoardProducers=(side,resource,except)=>side.board.filter(l=>l.building&&l.building!==except&&CARDS[l.building.cardId].produce?.[resource]).length;
+const canProduceResource=(card,resource)=>Boolean(card.produce?.[resource]||card.special==='tradingpost'&&BASIC_RESOURCES.includes(resource));
+const aiProducerCount=(ids,resource)=>ids.filter(id=>canProduceResource(CARDS[id],resource)).length;
+const aiBoardProducers=(side,resource,except)=>side.board.filter(l=>l.building&&l.building!==except&&canProduceResource(CARDS[l.building.cardId],resource)).length;
 // Spending a resource the banner cannot replace should hurt more than spending a renewable one.
 function aiScarcity(side,resource){
   if(aiBoardProducers(side,resource,null))return 1;
@@ -745,11 +750,21 @@ function combatDefeat(side,lane){
 function rewardClashWinner(side,unit,lane,label){
   if(CARDS[unit?.cardId]?.special==='huntsman'&&side.board[lane].unit===unit){side.resources.material++;log(`Lane ${lane+1}: ${label} Huntsman salvages 1 wood.`)}
 }
+function stealRandomResource(attacker,defender){
+  const stocked=BASIC_RESOURCES.filter(resource=>defender.resources[resource]>0);
+  if(!stocked.length)return null;
+  const resource=stocked[Math.floor(Math.random()*stocked.length)];
+  defender.resources[resource]--;attacker.resources[resource]++;return resource
+}
 function directStrike(attacker,defender,lane,power,label,ramLabel){
   const unit=attacker.board[lane].unit,card=CARDS[unit.cardId];
   if(resolveRam(attacker,defender,lane,ramLabel))return;
   const dmg=dealDamage(defender,power,lane);
   if(card.special==='merchant')attacker.resources.gold++;
+  if(card.special==='cutpurse'&&dmg>0){
+    const stolen=stealRandomResource(attacker,defender);
+    if(stolen)log(`Lane ${lane+1}: ${label==='You'?'Your':'The rival’s'} Cutpurse steals 1 ${RESOURCE_NAMES[stolen].toLowerCase()}.`)
+  }
   if(dmg>0&&CARDS[attacker.board[lane].building?.cardId]?.special==='huntinglodge'){
     attacker.resources.food++;log(`Lane ${lane+1}: ${label==='You'?'Your':'The rival’s'} Hunting Lodge supplies 1 food.`)
   }
@@ -759,7 +774,16 @@ function resolveMercenaryContracts(side,label){
   side.board.forEach((lane,index)=>{
     const unit=lane.unit;if(!unit||CARDS[unit.cardId].special!=='mercenary')return;
     unit.clashes=(unit.clashes||0)+1;
-    if(unit.clashes>=2){log(`${label} Foreign Mercenary leaves lane ${index+1} after its second clash.`);discardUnit(side,index,'departed')}
+    if(unit.clashes>=2){log(`${label} Mercenary leaves lane ${index+1} after its second clash.`);discardUnit(side,index,'departed')}
+  })
+}
+function resolveAssassinReturns(side,label){
+  side.board.forEach((lane,index)=>{
+    const unit=lane.unit;if(!unit||CARDS[unit.cardId].special!=='assassin')return;
+    if(side.hand.length>=HAND_LIMIT){log(`${label} Assassin has no room to return and is discarded.`);discardUnit(side,index);return}
+    side.hand.push(unit.handCard||makeHandCard(unit.cardId));
+    fx.push({t:'returned',who:fxSide(side),lane:index,cardId:unit.cardId});lane.unit=null;
+    log(`${label} Assassin returns to hand after the clash in lane ${index+1}.`)
   })
 }
 function resolveRound(){
@@ -791,6 +815,7 @@ function resolveRound(){
     }else if(pu)directStrike(p,a,lane,pp,'You','your');
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
   }
+  resolveAssassinReturns(p,'Your');resolveAssassinReturns(a,'Rival');
   resolveMercenaryContracts(p,'Your');resolveMercenaryContracts(a,'Rival');
   harvest(p,'Your');harvest(a,'Rival');renderGame(true);playFx();
   if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
@@ -816,9 +841,9 @@ function playFx(){
   for(const e of fx){
     const slotType=e.t==='razed'||e.t==='absorb'?'building':'unit';
     const slot=$(`${boards[e.who]} .slot.${slotType}[data-lane="${e.lane}"]`);
-    if(e.t==='slain'||e.t==='razed'||e.t==='departed'){
+    if(e.t==='slain'||e.t==='razed'||e.t==='departed'||e.t==='returned'){
       if(!slot)continue;const c=CARDS[e.cardId],burn=c.special==='sapper';
-      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':e.t==='departed'?'contract fulfilled':burn?'burns out':'falls'}</small></span>`);
+      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':e.t==='departed'?'contract fulfilled':e.t==='returned'?'returns to hand':burn?'burns out':'falls'}</small></span>`);
     }else if(e.t==='hit'){
       hurt[e.who]+=e.dmg;
       if(slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-dmg">−${e.dmg}</span>`);
@@ -865,7 +890,15 @@ function dealDamage(side,amount,lane){
 function harvest(side,label){
   side.board.forEach((lane,index)=>{
     if(!laneIsActive(index))return;
-    if(lane.building){const c=CARDS[lane.building.cardId];if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);if(currentRule.id==='tradefair'&&r==='gold')gain++;side.resources[r]+=gain});if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++}
+    if(lane.building){
+      const c=CARDS[lane.building.cardId];
+      if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);if(currentRule.id==='tradefair'&&r==='gold')gain++;side.resources[r]+=gain});
+      if(c.special==='tradingpost'){
+        const resource=BASIC_RESOURCES[Math.floor(Math.random()*BASIC_RESOURCES.length)],gain=currentRule.id==='winter'?0:1;
+        if(gain){side.resources[resource]++;log(`${label} Trading Post supplies 1 ${RESOURCE_NAMES[resource].toLowerCase()}.`)}
+      }
+      if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++
+    }
     // A worker pays out at the end of every round it lives through, the round it arrives included.
     if(lane.unit){
       const worker=CARDS[lane.unit.cardId];
@@ -902,6 +935,10 @@ function productionForecastHtml(slot){
     }
   }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>slot.round&&(game.round-slot.round)%2===1)){
     resource='gold';gain=1;
+  }else if(card.special==='tradingpost'){
+    if(currentRule.id==='winter')return'';
+    const label='Harvests 1 random food, wood, or metal after this clash';
+    return `<span class="production-cue random" title="${label}" aria-label="${label}"><i>?</i><b>+1</b></span>`;
   }else if(card.special==='mason'){
     // A Mason's yield never reaches the stores, so it needs its own cue rather than a resource one.
     const label='Raises 1 fortification after this clash';
