@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,46,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector, Trading Post and Cathedral added)');
-assert.equal(Object.keys(CARDS).length,47,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,47,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector, Trading Post, Cathedral and Trebuchet added)');
+assert.equal(Object.keys(CARDS).length,48,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -85,6 +85,15 @@ resetGame();game.player.board[0].unit=testSlot('batteringram',1);game.ai.board[0
 assert.equal(game.ai.board[0].building,null,'an unopposed Ram breaks the building');assert(game.player.board[0].unit?.damaged);
 resetGame();game.player.board[0].unit=testSlot('batteringram',1);game.ai.board[0].building=testSlot('watchtower');game.ai.board[0].unit=testSlot('peasant',1);resolveRound();
 assert(game.ai.board[0].building,'a Ram that wins a clash leaves the building standing');assert.equal(game.ai.board[0].unit,null);assert(!game.player.board[0].unit?.damaged);
+
+assert.deepEqual(CARDS.trebuchet.cost,{material:3,metal:1},'the Trebuchet costs 3 wood and 1 metal');
+assert.equal(CARDS.trebuchet.power,2,'the Trebuchet has 2 power');
+resetGame();game.player.board[0].unit=testSlot('trebuchet');game.ai.board[2].building=testSlot('mining');resolveRound();
+assert.equal(game.ai.board[2].building,null,'a surviving Trebuchet destroys an enemy building after the clash');
+assert(game.player.board[0].unit,'the Trebuchet remains on the battlefield');
+resetGame();game.player.board[0].unit=testSlot('trebuchet');game.ai.board[0].unit=testSlot('royalguard');game.ai.board[1].building=testSlot('mining');resolveRound();
+assert.equal(game.player.board[0].unit,null,'a defeated Trebuchet falls during combat');
+assert(game.ai.board[1].building,'and does not fire after being defeated');
 
 resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(combatDefeat(game.player,0),false);assert.equal(unitPower(game.player,0),1);assert.equal(combatDefeat(game.player,0),true);assert.equal(game.player.board[0].unit,null);
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();assert(game.player.board[0].unit?.damaged);assert.equal(game.ai.board[0].unit,null,'Pavise Guard survives a normal tie');

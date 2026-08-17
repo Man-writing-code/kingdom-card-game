@@ -35,6 +35,7 @@ const CARDS = {
   manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
   gatehouse:{name:'Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:1,metal:2},text:'When revealed, raise 2 fortification. The friendly unit in this lane has +1 power.',special:'gatehouse'},
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
+  trebuchet:{name:'Trebuchet',type:'unit',icon:'⚙',accent:'#665f55',cost:{material:3,metal:1},power:2,text:'After each clash, if it survives, destroys a random enemy building.',special:'trebuchet'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
   boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces direct damage through this lane by 2.',special:'palisade'},
@@ -219,7 +220,7 @@ const CARD_ART={
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
   merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
-  manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',
+  manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',trebuchet:'assets/cards/trebuchet.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
   wallwarden:'assets/cards/wall-warden.webp',royalguard:'assets/cards/royal-guard.webp',armoury:'assets/cards/armoury.webp',
   huntsman:'assets/cards/huntsman.webp',huntinglodge:'assets/cards/hunting-lodge.webp',ballista:'assets/cards/ballista-emplacement.webp',
@@ -488,6 +489,7 @@ function aiVisiblePlayerSlot(lane,type){const slot=game.player.board[lane][type]
 function aiCardValue(id){
   const c=CARDS[id];
   if(['ram','boarriders'].includes(c.special))return 5;
+  if(c.special==='trebuchet')return 4.5;
   if(['sapper','mob','gatehouse','pavise'].includes(c.special)||id==='royalguard')return 3.5;
   // A Knight is a 2 that fights as a 4, and a worker is a 1 that pays every round it lives —
   // both are worth more than the number printed on them.
@@ -550,6 +552,7 @@ function aiActionScore(hc,lane,difficulty){
     else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-enemy.round)):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
     else score+=power*1.25+(game.player.health+(game.player.fortification||0)<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
+    if(c.special==='trebuchet')score+=side===game.ai&&game.player.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
     if(c.special==='pavise')score+=enemy?3:1;
@@ -789,6 +792,15 @@ function resolveMercenaryContracts(side,label){
     if(unit.clashes>=2){log(`${label} Mercenary leaves lane ${index+1} after its second clash.`);discardUnit(side,index,'departed')}
   })
 }
+function resolveTrebuchets(attacker,defender,label){
+  const shots=attacker.board.filter((lane,index)=>laneIsActive(index)&&CARDS[lane.unit?.cardId]?.special==='trebuchet').length;
+  for(let shot=0;shot<shots;shot++){
+    const targets=defender.board.map((lane,index)=>laneIsActive(index)&&lane.building?index:-1).filter(index=>index>=0);
+    if(!targets.length)return;
+    const lane=targets[Math.floor(Math.random()*targets.length)],target=CARDS[defender.board[lane].building.cardId].name;
+    discardBuilding(defender,lane);log(`${label} Trebuchet destroys ${target} in lane ${lane+1}.`)
+  }
+}
 function resolveAssassinReturns(side,label){
   side.board.forEach((lane,index)=>{
     const unit=lane.unit;if(!unit||CARDS[unit.cardId].special!=='assassin')return;
@@ -827,6 +839,7 @@ function resolveRound(){
     }else if(pu)directStrike(p,a,lane,pp,'You','your');
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
   }
+  resolveTrebuchets(p,a,'Your');resolveTrebuchets(a,p,'Rival');
   resolveAssassinReturns(p,'Your');resolveAssassinReturns(a,'Rival');
   resolveMercenaryContracts(p,'Your');resolveMercenaryContracts(a,'Rival');
   harvest(p,'Your');harvest(a,'Rival');renderGame(true);playFx();
