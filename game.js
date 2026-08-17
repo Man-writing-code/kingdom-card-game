@@ -16,6 +16,9 @@ const CARDS = {
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
   granary:{name:'Mill',type:'building',icon:'≋',accent:'#889448',cost:{food:2,material:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
+  bloomery:{name:'Bloomery',type:'building',icon:'♨',accent:'#665c57',cost:{metal:2,material:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
+  carpentersyard:{name:"Carpenter's Yard",type:'building',icon:'⚒',accent:'#8a6139',cost:{material:2,metal:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
+  swinecroft:{name:"Swineherd's Croft",type:'building',icon:'♨',accent:'#8b6a3f',cost:{food:2,metal:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:5},text:'All friendly units have +1 power.',special:'granary'},
   market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
@@ -53,7 +56,7 @@ const CARDS = {
 
 const WORKERS=['farmer','lumberjack','miner'];
 const BASIC_RESOURCES=['food','material','metal'];
-const TIER_TWO=['lumbermill','foundry','granary'];
+const TIER_TWO=['lumbermill','foundry','granary','bloomery','carpentersyard','swinecroft'];
 const ARCHETYPE_CARDS=['villagecommons','peasantmob','manatarms','gatehouse','batteringram'];
 const COLLECTIBLE_IDS=Object.keys(CARDS).filter(id=>!CARDS[id].token);
 const RECRUITABLE_UNITS=COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit');
@@ -73,7 +76,7 @@ const AI_DECKS={
 const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',forestfire:'FOREST FIRE',strikesteel:'STRIKE STEEL',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
-// Guild Charters is retired: it only ever touched the three tier-two engines, so a week could
+// Guild Charters is retired: it only ever touched the tier-two engines, so a week could
 // land on it and change nothing at all for a collection that held none of them. A decree should
 // reshape the week for every banner, not just the ones holding the right three cards.
   {id:'winter',icon:'❄',name:'The Long Winter',text:'Food, Metal, and Wood buildings produce 1 less; surviving workers produce 1 extra.',flavour:'“Storehouses empty. Calloused hands endure.”'},
@@ -215,7 +218,8 @@ function costsHtml(cost={}){return Object.entries(cost).map(([k,v])=>`<span clas
 const CARD_ART={
   logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',tradingpost:'assets/cards/trading-post.webp',goldmine:'assets/cards/gold-mine.webp',
   townhall:'assets/cards/town-hall.webp',university:'assets/cards/university.webp',cathedral:'assets/cards/cathedral.webp',lumbermill:'assets/cards/sawmill.webp',
-  foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
+  foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',bloomery:'assets/cards/bloomery.webp',carpentersyard:'assets/cards/carpenters-yard.webp',swinecroft:'assets/cards/swineherds-croft.webp',
+  foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
   merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',

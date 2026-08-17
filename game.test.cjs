@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,47,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector, Trading Post, Cathedral and Trebuchet added)');
-assert.equal(Object.keys(CARDS).length,48,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,50,'global collectible pool includes all six tier-two resource routes');
+assert.equal(Object.keys(CARDS).length,51,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -276,7 +276,7 @@ assert.equal(game.player.hand.length,HAND_LIMIT,'a full hand turns away Cathedra
 
 // Every tier-two engine is bought with 2 of what it harvests, so an archetype can ramp itself.
 currentRule={id:'none'};
-for(const [id,resource] of [['granary','food'],['lumbermill','material'],['foundry','metal']]){
+for(const [id,resource] of [['granary','food'],['swinecroft','food'],['lumbermill','material'],['carpentersyard','material'],['foundry','metal'],['bloomery','metal']]){
   assert.equal(CARDS[id].cost[resource],2,id+' is paid for in what it makes');
   assert.equal(Object.values(CARDS[id].produce)[0],2,id+' harvests two of it');
   const own={food:0,metal:0,material:0,gold:0};own[resource]=2;
@@ -284,6 +284,10 @@ for(const [id,resource] of [['granary','food'],['lumbermill','material'],['found
   const secondary=Object.keys(CARDS[id].cost).find(r=>r!==resource);own[secondary]=(own[secondary]||0)+1;
   assert(canAfford({resources:own},effectiveCost(id)),'a realm on its own harvest can raise '+id);
 }
+assert.deepEqual(CARDS.bloomery.cost,{metal:2,material:1},'the Bloomery opens the metal-to-wood route');
+assert.deepEqual(CARDS.carpentersyard.cost,{material:2,metal:1},"the Carpenter's Yard opens the wood-to-metal route");
+assert.deepEqual(CARDS.swinecroft.cost,{food:2,metal:1},"the Swineherd's Croft opens the food-to-metal route");
+assert.equal(TIER_TWO.length,6,'both secondary-resource routes are represented where intended');
 // Costs are printed costs: no decree rewrites them, and effectiveCost hands back a copy so a
 // caller cannot scribble on the card definition itself.
 for(const rule of [...META_RULES,{id:'none'}]){
