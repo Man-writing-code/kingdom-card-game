@@ -3,7 +3,8 @@
   const SUPABASE_KEY='sb_publishable_7ULebdQSBz9PXz-W-j6vlA_cB73Y0Sy';
   const statusEl=$('#onlineStatus'),nameEl=$('#onlineName'),codeEl=$('#roomCode');
   const savedName=localStorage.getItem('kingdom-online-name');if(savedName)nameEl.value=savedName;
-  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,resolvingAt:0,initializing:false,poll:null};
+  const REQUEST_TIMEOUT=9000,GUEST_CLAIM_DELAY=6500,RESOLUTION_RETRY_AFTER=14000;
+  const ctx={active:false,seat:null,match:null,channel:null,loadedVersion:-1,resolvingVersion:-1,resolvingAt:0,initializing:false,poll:null,claimTimer:null,leaseProtocol:null};
   let client=null;
 
   const setStatus=(message,error=false)=>{statusEl.textContent=message||'';statusEl.classList.toggle('error',error)};
@@ -17,6 +18,12 @@
   const cleanName=()=>nameEl.value.trim().slice(0,24);
   const cleanCode=()=>codeEl.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
   const rowOf=data=>Array.isArray(data)?data[0]:data;
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  function withTimeout(promise,ms=REQUEST_TIMEOUT){
+    let timer;
+    return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('The multiplayer request timed out.')),ms)})]).finally(()=>clearTimeout(timer));
+  }
+  const missingLeaseRpc=error=>/claim_kingdom_resolution|finish_kingdom_resolution|schema cache|function .* does not exist/i.test(error?.message||'');
   const names=()=>({host:ctx.match?.host_name||'Host',guest:ctx.match?.guest_name||'Guest'});
   const playableDeck=()=>{const deck=activeDeck();if(!deckIsPlayable(deck)){showScreen('deck');$('#deckMessage').textContent=`“${deck.name}” needs exactly ${DECK_SIZE} cards before entering an online duel.`;return null}return deckCards(deck).slice()};
 
@@ -32,7 +39,7 @@
   }
 
   async function watchMatch(row,seat){
-    ctx.active=true;ctx.seat=seat;ctx.match=row;ctx.loadedVersion=-1;ctx.resolvingVersion=-1;
+    ctx.active=true;ctx.seat=seat;ctx.match=row;ctx.loadedVersion=-1;ctx.resolvingVersion=-1;ctx.resolvingAt=0;ctx.leaseProtocol=null;clearTimeout(ctx.claimTimer);ctx.claimTimer=null;
     if(ctx.channel)await client.removeChannel(ctx.channel);
     ctx.channel=client.channel(`kingdom-${row.id}`).on('postgres_changes',{
       event:'UPDATE',schema:'public',table:'kingdom_matches',filter:`id=eq.${row.id}`
@@ -49,21 +56,20 @@
     clearInterval(ctx.poll);
     ctx.poll=setInterval(()=>syncNow(id),4000);
   }
-  // Deliberately runs whether or not the tab is on screen. Only the host may write a
-  // resolution — the row's update policy allows nobody else — so a host sitting in a
-  // background tab holds up both boards, and skipping the check to save a little work
-  // is how a duel ends up waiting for a rival who already committed.
+  // Deliberately runs whether or not the tab is on screen. The database lease lets either
+  // ruler recover a clash, while its version guard prevents two browsers from publishing it.
   async function syncNow(id){
       if(!ctx.active)return;
-      const {data,error}=await client.from('kingdom_matches').select('*').eq('id',id||ctx.match?.id).maybeSingle();
+      let data,error;
+      try{({data,error}=await withTimeout(client.from('kingdom_matches').select('*').eq('id',id||ctx.match?.id).maybeSingle()))}catch(_){return}
       if(error||!data)return;
       // A resolution that never finished looks identical from here whatever killed it — a lost
       // event, a throw mid-clash, a tab asleep at the wrong moment. Rather than diagnose, give
       // it a deadline: still resolving well past when the clash should have ended means try again.
-      const resolving=data.phase==='resolving'&&ctx.seat==='host';
+      const resolving=data.phase==='resolving';
       const unseen=resolving&&ctx.resolvingVersion!==data.version;
-      const overdue=resolving&&ctx.resolvingAt&&Date.now()-ctx.resolvingAt>15000;
-      if(overdue)ctx.resolvingVersion=-1;
+      const overdue=resolving&&ctx.resolvingAt&&Date.now()-ctx.resolvingAt>RESOLUTION_RETRY_AFTER;
+      if(overdue){ctx.resolvingVersion=-1;ctx.resolvingAt=0;clearTimeout(ctx.claimTimer);ctx.claimTimer=null}
       if(data.version>ctx.loadedVersion||unseen||overdue)handleMatch(data);
   }
 
@@ -94,8 +100,47 @@
     $('[data-online-home]').onclick=()=>{closeModal();leave()};
   }
 
+  function clearResolutionAttempt(){
+    clearTimeout(ctx.claimTimer);ctx.claimTimer=null;ctx.resolvingVersion=-1;ctx.resolvingAt=0;
+  }
+
+  function runResolution(row){
+    ctx.resolvingAt=Date.now();
+    try{resolveOnlinePlans(row.revealed_plans.host,row.revealed_plans.guest,ctx.seat,row.round)}
+    catch(error){resolutionFailed(error)}
+  }
+
+  async function attemptResolution(row){
+    ctx.claimTimer=null;
+    if(!ctx.active||ctx.match?.id!==row.id||ctx.match?.phase!=='resolving'||ctx.match?.version!==row.version)return clearResolutionAttempt();
+    // Old deployed schemas still work for hosts while the migration is being applied.
+    if(ctx.leaseProtocol===false){if(ctx.seat==='host')runResolution(row);else clearResolutionAttempt();return}
+    try{
+      const {data,error}=await withTimeout(client.rpc('claim_kingdom_resolution',{p_match:row.id,p_version:row.version}));
+      if(error)throw error;
+      ctx.leaseProtocol=true;
+      if(data===true)return runResolution(row);
+      clearResolutionAttempt();
+    }catch(error){
+      if(missingLeaseRpc(error)){
+        ctx.leaseProtocol=false;
+        if(ctx.seat==='host')runResolution(row);
+        else{clearResolutionAttempt();setStatus('Both rulers committed. Waiting for the host (database migration pending)…')}
+      }else{clearResolutionAttempt();setStatus('Could not claim the clash — retrying. '+formatError(error),true)}
+    }
+  }
+
+  function scheduleResolution(row){
+    if(!row.revealed_plans||ctx.resolvingVersion===row.version||ctx.claimTimer)return;
+    if(ctx.leaseProtocol===false&&ctx.seat!=='host')return;
+    ctx.resolvingVersion=row.version;ctx.resolvingAt=Date.now();
+    // The host normally resolves immediately. The guest waits briefly, then acts as failover.
+    ctx.claimTimer=setTimeout(()=>attemptResolution(row),ctx.seat==='host'?0:GUEST_CLAIM_DELAY);
+  }
+
   async function handleMatch(row){
     if(!ctx.active||row.id!==ctx.match.id)return;ctx.match=row;
+    if(row.phase!=='resolving'&&ctx.resolvingVersion!==-1)clearResolutionAttempt();
     // Only a match still in the lobby wants preparing. Keying this on a missing game_state
     // meant any payload the host read as stateless reset a duel in progress to round one.
     if(ctx.seat==='host'&&row.status==='playing'&&row.phase==='lobby'&&!row.game_state){setStatus(`${row.guest_name} joined. Preparing the battlefield…`);await initializeMatch(row);return}
@@ -106,15 +151,8 @@
       if(row.phase==='finished')showOnlineResult(row);
     }
     if(row.phase==='resolving'){
-      setStatus(ctx.seat==='host'?'Both rulers committed. Revealing the battlefield…':'Both rulers committed. Waiting on the host to reveal…');
-      if(ctx.seat==='host'&&row.revealed_plans&&ctx.resolvingVersion!==row.version){
-        ctx.resolvingVersion=row.version;ctx.resolvingAt=Date.now();
-        // A throw anywhere in the clash would otherwise end the duel here: the version is
-        // already marked handled, so nothing would ever try again. Failing loudly and
-        // clearing the mark lets the watchdog below pick it up.
-        try{resolveOnlinePlans(row.revealed_plans.host,row.revealed_plans.guest)}
-        catch(error){ctx.resolvingVersion=-1;setStatus('The clash failed to resolve — retrying. '+(error?.message||error),true)}
-      }
+      setStatus(ctx.seat==='host'?'Both rulers committed. Revealing the battlefield…':'Both rulers committed. Preparing the clash…');
+      scheduleResolution(row);
     }
   }
 
@@ -138,9 +176,28 @@
     if(/anonymous sign-ins/i.test(message))return 'Enable Anonymous Sign-Ins in Supabase Authentication settings.';return message;
   }
 
+  async function submitPlan(side){
+    let lastError;
+    for(let attempt=0;attempt<3;attempt++){
+      try{
+        const {error}=await withTimeout(client.rpc('submit_kingdom_plan',{p_match:ctx.match.id,p_round:game.round,p_side:side}));
+        if(error)throw error;
+        return;
+      }catch(error){
+        lastError=error;
+        // A timeout can mean the write succeeded but its response was lost. Re-read before
+        // retrying; the upsert itself is idempotent if the match is still accepting plans.
+        let data;try{({data}=await withTimeout(client.from('kingdom_matches').select('*').eq('id',ctx.match.id).maybeSingle()))}catch(_){}
+        if(data&&(data.phase!=='planning'||data.round!==game.round)){handleMatch(data);return}
+        if(attempt<2)await wait(500*(attempt+1));
+      }
+    }
+    throw lastError;
+  }
+
   async function commit(){
     if(!ctx.active||game.locked)return;game.locked=true;selectedUid=null;renderGame();$('#commitButton').textContent='Waiting for rival…';setStatus('Plans committed. Your rival still cannot see them.');
-    try{const side=JSON.parse(JSON.stringify(game.player));const {error}=await client.rpc('submit_kingdom_plan',{p_match:ctx.match.id,p_round:game.round,p_side:side});if(error)throw error}
+    try{const side=JSON.parse(JSON.stringify(game.player));await submitPlan(side)}
     catch(error){
       game.locked=false;renderGame();setStatus(formatError(error),true);
       // Refused because the table is on a different round or still resolving: this board is
@@ -153,29 +210,38 @@
   }
 
   async function resolved(result){
-    if(!ctx.active||ctx.seat!=='host')return;
-    const finished=Boolean(result),winner=result==='draw'?'draw':result==='win'?'host':result==='loss'?'guest':null;
+    if(!ctx.active)return false;
+    const finished=Boolean(result),otherSeat=ctx.seat==='host'?'guest':'host';
+    const winner=result==='draw'?'draw':result==='win'?ctx.seat:result==='loss'?otherSeat:null;
     // The expected version is read once. Reading it again for the guard would let a payload
     // arriving mid-call move the target, writing a version derived from a row we never saw.
     const expected=ctx.match.version,matchId=ctx.match.id;
-    const state=onlineCanonicalState();
-    const values={game_state:state,round:game.round,version:expected+1,revealed_plans:null,phase:finished?'finished':'planning',status:finished?'finished':'playing',winner,updated_at:new Date().toISOString()};
-    const {data,error}=await client.from('kingdom_matches').update(values).eq('id',matchId).eq('version',expected).select('version');
-    if(error){setStatus(error.message,true);return}
-    // No row matched: another writer moved the match on, so this resolution is stale. Saying so
-    // beats diverging in silence, which is how one ruler ends up a round ahead of the other.
+    const state=onlineCanonicalState(),values={game_state:state,round:game.round,version:expected+1,revealed_plans:null,phase:finished?'finished':'planning',status:finished?'finished':'playing',winner,updated_at:new Date().toISOString()};
+    let data,error;
+    if(ctx.leaseProtocol===true){
+      ({data,error}=await withTimeout(client.rpc('finish_kingdom_resolution',{p_match:matchId,p_version:expected,p_state:state,p_round:game.round,p_result:winner})));
+      data=rowOf(data);
+    }else if(ctx.seat==='host'){
+      ({data,error}=await withTimeout(client.from('kingdom_matches').update(values).eq('id',matchId).eq('version',expected).select('*')));
+      data=rowOf(data);
+    }else{return false}
+    if(error){clearResolutionAttempt();setStatus(formatError(error),true);syncNow(matchId);return false}
     // No row matched: the match moved on beneath us. Rather than diverge in silence, take
     // whatever is authoritative now and carry on from there.
-    if(!data||!data.length){
+    if(!data){
       const {data:fresh}=await client.from('kingdom_matches').select('*').eq('id',matchId).maybeSingle();
-      if(fresh){ctx.resolvingVersion=-1;handleMatch(fresh)}
-      return;
+      clearResolutionAttempt();if(fresh)handleMatch(fresh);
+      return false;
     }
-    if(finished)showOnlineResult({...ctx.match,...values});
+    clearResolutionAttempt();await handleMatch(data);return true;
+  }
+
+  function resolutionFailed(error){
+    clearResolutionAttempt();setStatus('The clash failed to resolve — retrying. '+(error?.message||error),true);syncNow();
   }
 
   async function leave(){
-    ctx.active=false;clearInterval(ctx.poll);ctx.poll=null;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;game=null;showScreen('home');setStatus('');setRoomView('setup');
+    ctx.active=false;clearInterval(ctx.poll);clearTimeout(ctx.claimTimer);ctx.poll=null;ctx.claimTimer=null;if(ctx.channel&&client)await client.removeChannel(ctx.channel);ctx.channel=null;ctx.match=null;ctx.loadedVersion=-1;ctx.resolvingVersion=-1;ctx.resolvingAt=0;game=null;showScreen('home');setStatus('');setRoomView('setup');
   }
 
   // A hidden tab has its timers throttled to a crawl, so the poll above may not have run for
@@ -189,10 +255,10 @@
   const originalRestart=$('#restartGame').onclick;$('#restartGame').onclick=()=>ctx.active?setStatus('Leave the room before starting a different battle.',true):originalRestart();
   // An escape hatch for a duel that has gone quiet: re-reads the table and, for a host,
   // re-attempts a resolution it had already marked as handled.
-  function nudge(){if(!ctx.active)return;ctx.resolvingVersion=-1;ctx.loadedVersion=Math.min(ctx.loadedVersion,ctx.match?.version??ctx.loadedVersion);syncNow()}
-  window.kingdomMultiplayer={get active(){return ctx.active},commit,resolved,leave,nudge,
+  function nudge(){if(!ctx.active)return;clearResolutionAttempt();ctx.loadedVersion=Math.min(ctx.loadedVersion,ctx.match?.version??ctx.loadedVersion);syncNow()}
+  window.kingdomMultiplayer={get active(){return ctx.active},commit,resolved,resolutionFailed,leave,nudge,
     get diagnostics(){return {seat:ctx.seat,active:ctx.active,loadedVersion:ctx.loadedVersion,resolvingVersion:ctx.resolvingVersion,
-      resolvingFor:ctx.resolvingAt?Math.round((Date.now()-ctx.resolvingAt)/1000)+'s':null,
+      resolvingFor:ctx.resolvingAt?Math.round((Date.now()-ctx.resolvingAt)/1000)+'s':null,leaseProtocol:ctx.leaseProtocol,claimPending:!!ctx.claimTimer,
       row:ctx.match&&{phase:ctx.match.phase,round:ctx.match.round,version:ctx.match.version,hasPlans:!!ctx.match.revealed_plans},
       local:game&&{round:game.round,locked:game.locked,pending:game.player?.pendingDraws}}}};
 })();

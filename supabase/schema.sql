@@ -19,10 +19,16 @@ create table if not exists public.kingdom_matches (
   version integer not null default 0,
   game_state jsonb,
   revealed_plans jsonb,
+  resolver_id uuid,
+  resolve_started_at timestamptz,
   winner text check (winner is null or winner in ('host','guest','draw')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Safe to run against projects created before resolver leases were introduced.
+alter table public.kingdom_matches add column if not exists resolver_id uuid;
+alter table public.kingdom_matches add column if not exists resolve_started_at timestamptz;
 
 create table if not exists public.kingdom_plans (
   match_id uuid not null references public.kingdom_matches(id) on delete cascade,
@@ -102,15 +108,75 @@ begin
   select side_state into host_plan from public.kingdom_plans where match_id=p_match and seat='host' and round=p_round;
   select side_state into guest_plan from public.kingdom_plans where match_id=p_match and seat='guest' and round=p_round;
   if host_plan is not null and guest_plan is not null then
-    update public.kingdom_matches set phase='resolving',revealed_plans=jsonb_build_object('host',host_plan,'guest',guest_plan),updated_at=now() where id=p_match;
+    update public.kingdom_matches
+      set phase='resolving',revealed_plans=jsonb_build_object('host',host_plan,'guest',guest_plan),
+          resolver_id=null,resolve_started_at=null,updated_at=now()
+      where id=p_match;
     return true;
   end if;
   return false;
 end $$;
 
+-- Resolution is a short renewable-style lease rather than a permanent host privilege.
+-- The host gets the first attempt in the client; if that browser disappears, the guest can
+-- claim the same version after twelve seconds and finish the clash without duplicating it.
+create or replace function public.claim_kingdom_resolution(p_match uuid, p_version integer)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+declare m public.kingdom_matches;
+begin
+  if auth.uid() is null then raise exception 'Sign in is required'; end if;
+  select * into m from public.kingdom_matches where id=p_match for update;
+  if m.id is null or (auth.uid()<>m.host_id and auth.uid()<>m.guest_id) then raise exception 'Match not found'; end if;
+  if m.phase<>'resolving' or m.version<>p_version or m.revealed_plans is null then return false; end if;
+  if m.resolver_id is null or m.resolver_id=auth.uid()
+     or m.resolve_started_at is null or m.resolve_started_at < now() - interval '12 seconds' then
+    update public.kingdom_matches
+      set resolver_id=auth.uid(),resolve_started_at=now(),updated_at=now()
+      where id=p_match;
+    return true;
+  end if;
+  return false;
+end $$;
+
+create or replace function public.finish_kingdom_resolution(
+  p_match uuid,
+  p_version integer,
+  p_state jsonb,
+  p_round integer,
+  p_result text default null
+)
+returns public.kingdom_matches
+language plpgsql security definer set search_path = public
+as $$
+declare m public.kingdom_matches; finished public.kingdom_matches; resolved_winner text;
+begin
+  if auth.uid() is null then raise exception 'Sign in is required'; end if;
+  select * into m from public.kingdom_matches where id=p_match for update;
+  if m.id is null or (auth.uid()<>m.host_id and auth.uid()<>m.guest_id) then raise exception 'Match not found'; end if;
+  if m.phase<>'resolving' or m.version<>p_version then raise exception 'This clash has already moved on'; end if;
+  if m.resolver_id is distinct from auth.uid() then raise exception 'This ruler does not hold the resolution lease'; end if;
+  if p_result is not null and p_result not in ('host','guest','draw') then raise exception 'Invalid clash result'; end if;
+  if jsonb_typeof(p_state)<>'object' then raise exception 'Invalid game state'; end if;
+  if (p_result is null and p_round<>m.round+1) or (p_result is not null and p_round<>m.round) then raise exception 'Invalid resolved round'; end if;
+  resolved_winner := p_result;
+  update public.kingdom_matches
+    set game_state=p_state,round=p_round,version=m.version+1,revealed_plans=null,
+        resolver_id=null,resolve_started_at=null,
+        phase=case when resolved_winner is null then 'planning' else 'finished' end,
+        status=case when resolved_winner is null then 'playing' else 'finished' end,
+        winner=resolved_winner,updated_at=now()
+    where id=p_match
+    returning * into finished;
+  return finished;
+end $$;
+
 grant execute on function public.create_kingdom_match(text,jsonb,text) to authenticated;
 grant execute on function public.join_kingdom_match(text,text,jsonb) to authenticated;
 grant execute on function public.submit_kingdom_plan(uuid,integer,jsonb) to authenticated;
+grant execute on function public.claim_kingdom_resolution(uuid,integer) to authenticated;
+grant execute on function public.finish_kingdom_resolution(uuid,integer,jsonb,integer,text) to authenticated;
 
 do $$ begin
   alter publication supabase_realtime add table public.kingdom_matches;

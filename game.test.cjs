@@ -557,6 +557,13 @@ assert.equal(aiDrawChoice(game.ai),'units','a thin castle reaches for defenders 
 
 assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
 assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');
+
+// A guest taking over an expired resolver lease must see their own side as the player, while
+// the state written back to Supabase remains in canonical host/guest order.
+resetGame();const hostSide=testSide(),guestSide=testSide();hostSide.health=9;guestSide.health=7;
+resolveOnlinePlans(hostSide,guestSide,'guest',4);
+assert.equal(game.player.health,7);assert.equal(game.ai.health,9);assert.equal(game.round,4);assert.equal(game.onlineSeat,'guest');
+const canonical=onlineCanonicalState();assert.equal(canonical.player.health,9);assert.equal(canonical.ai.health,7);assert.equal(canonical.onlineSeat,undefined);
 `;
 
 const context={assert,fs,console:{log:()=>{},warn:()=>{},error:console.error},setTimeout:()=>{},clearTimeout:()=>{},localStorage:{getItem:()=>null,setItem:()=>{}},document:{querySelector:()=>null,querySelectorAll:()=>[]},window:{scrollTo:()=>{}},Date,Math};

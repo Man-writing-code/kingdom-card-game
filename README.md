@@ -66,15 +66,15 @@ Progress, deck choices, discoveries, and weekly pack state are stored locally in
 
 ## Online multiplayer beta
 
-Kingdom supports private two-player rooms backed by Supabase. Players sign in anonymously, create or join with a six-character code, and submit plans to separate row-level-secured records. Plans are revealed only after both rulers commit; the room host resolves the clash and publishes the next round.
+Kingdom supports private two-player rooms backed by Supabase. Players sign in anonymously, create or join with a six-character code, and submit plans to separate row-level-secured records. Plans are revealed only after both rulers commit. The host gets the first chance to resolve the clash; a database lease lets the guest safely take over if the host disconnects or sleeps, and a match-version guard prevents both browsers from publishing the same clash.
 
 To configure a new Supabase project:
 
 1. Enable **Anonymous Sign-Ins** under Authentication settings.
-2. Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor.
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor. The file is idempotent and can also be rerun to upgrade an existing project with the resolver-lease functions.
 3. Set the project URL and publishable browser key at the top of `multiplayer.js`.
 
-The current beta is host-authoritative, so the host must keep the room open. Account-based matchmaking, server-authoritative combat, and long-term match history are intentionally deferred.
+The current beta resolves combat in one player's browser, with automatic guest failover if that browser disappears. Account-based matchmaking, fully server-authoritative combat, and long-term match history are intentionally deferred.
 
 Full-resolution card-art studies are saved under `assets/concepts/`. Optimized browser versions live under `assets/cards/`. Every current card design is illustrated, and played cards retain the same art on the battlefield.
 

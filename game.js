@@ -367,8 +367,9 @@ function onlineCanonicalState(){
   if(game.onlineSeat==='guest')[state.player,state.ai]=[state.ai,state.player];
   delete state.onlineSeat;state.locked=false;return state;
 }
-function resolveOnlinePlans(hostSide,guestSide){
-  game.player=JSON.parse(JSON.stringify(hostSide));game.ai=JSON.parse(JSON.stringify(guestSide));game.onlineSeat='host';
+function resolveOnlinePlans(hostSide,guestSide,resolverSeat='host',round=game.round){
+  const host=JSON.parse(JSON.stringify(hostSide)),guest=JSON.parse(JSON.stringify(guestSide));
+  game.player=resolverSeat==='guest'?guest:host;game.ai=resolverSeat==='guest'?host:guest;game.onlineSeat=resolverSeat;game.round=round;
   game.locked=true;selectedUid=null;commitReplacements(game.player);commitReplacements(game.ai);
   log('Plans revealed. The four lanes clash.');resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');renderGame(true);beginClash();
 }
@@ -378,7 +379,7 @@ const THEATRE_SPEED=(()=>{try{const s=Number(new URLSearchParams(location.search
 function beginClash(){
   const wrap=$('#battlefieldWrap');
   if(wrap){wrap.classList.add('clashing');setTimeout(()=>wrap.classList.remove('clashing'),1150*THEATRE_SPEED)}
-  setTimeout(resolveRound,1100*THEATRE_SPEED);
+  setTimeout(()=>{try{resolveRound()}catch(error){if(window.kingdomMultiplayer?.active)window.kingdomMultiplayer.resolutionFailed(error);else throw error}},1100*THEATRE_SPEED);
 }
 function laneIsActive(lane){return game?.blockedLane!==lane}
 const PILES=['structures','units'];
@@ -843,7 +844,7 @@ function resolveRound(){
   resolveAssassinReturns(p,'Your');resolveAssassinReturns(a,'Rival');
   resolveMercenaryContracts(p,'Your');resolveMercenaryContracts(a,'Rival');
   harvest(p,'Your');harvest(a,'Rival');renderGame(true);playFx();
-  if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result),450);setTimeout(()=>endGame(result),450);return}
+  if(p.health<=0||a.health<=0){const result=a.health<=0&&p.health>0?'win':p.health<=0&&a.health>0?'loss':'draw';if(window.kingdomMultiplayer?.active)return setTimeout(()=>window.kingdomMultiplayer.resolved(result).catch(window.kingdomMultiplayer.resolutionFailed),450);setTimeout(()=>endGame(result),450);return}
   // The aftermath holds long enough for the ghosts and damage numbers to finish telling it;
   // nextRound's re-render wipes any overlay still standing.
   // The host opens the next round locally, but the table only has it once the write lands.
@@ -851,7 +852,7 @@ function resolveRound(){
   // started, which the plan guard refuses outright. Hold the board until it is published.
   if(window.kingdomMultiplayer?.active)return setTimeout(()=>{
     nextRound();game.locked=true;renderGame();
-    Promise.resolve(window.kingdomMultiplayer.resolved(null)).finally(()=>{game.locked=false;renderGame()});
+    Promise.resolve(window.kingdomMultiplayer.resolved(null)).catch(window.kingdomMultiplayer.resolutionFailed);
   },1800*THEATRE_SPEED);
   setTimeout(nextRound,1800*THEATRE_SPEED);
 }
