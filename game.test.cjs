@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,45,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector and Trading Post added)');
-assert.equal(Object.keys(CARDS).length,46,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,46,'global collectible pool (Charge designs shelved, Granary, Mercenary, Cutpurse, Assassin, Tax Collector, Trading Post and Cathedral added)');
+assert.equal(Object.keys(CARDS).length,47,'collectibles plus Peasant token');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
@@ -252,6 +252,18 @@ resetGame();game.player.board[0].building=testSlot('townhall',1);drawTurnBonuses
 assert.equal(game.player.hand.length,1,'a Town Hall recruits');
 assert(game.player.hand[0].free,'and the recruit arrives granted');
 assert(WORKERS.includes(game.player.hand[0].cardId),'and it is a worker');
+
+assert.deepEqual(CARDS.cathedral.cost,{material:4,metal:4},'the Cathedral costs 4 wood and 4 metal');
+resetGame(1);game.player.board[0].building=testSlot('cathedral',1);resolveOnBuild(game.player,'Your');
+assert.equal(game.player.fortification,6,'the Cathedral raises 6 fortification when revealed');
+resolveOnBuild(game.player,'Your');assert.equal(game.player.fortification,6,'the Cathedral fortifies only once');
+drawTurnBonuses(game.player);assert.equal(game.player.hand.length,1,'a Cathedral recruits one unit each round');
+assert.equal(CARDS[game.player.hand[0].cardId].type,'unit');
+assert(!CARDS[game.player.hand[0].cardId].token,'the Cathedral recruits collectible units rather than tokens');
+assert(game.player.hand[0].free,'the Cathedral recruit is free to deploy');
+assert.deepEqual(handCost(game.player.hand[0]),{});
+game.player.hand=Array.from({length:HAND_LIMIT},()=>makeHandCard('soldier'));drawTurnBonuses(game.player);
+assert.equal(game.player.hand.length,HAND_LIMIT,'a full hand turns away Cathedral recruits');
 
 // Every tier-two engine is bought with 2 of what it harvests, so an archetype can ramp itself.
 currentRule={id:'none'};

@@ -6,6 +6,7 @@ const CARDS = {
   goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
   townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
   university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
+  cathedral:{name:'Cathedral',type:'building',icon:'✟',accent:'#67647b',cost:{material:4,metal:4},text:'When revealed, raise 6 fortification. At the start of each round, recruit a random unit. It costs nothing to deploy.',special:'cathedral'},
   soldier:{name:'Soldier',type:'unit',icon:'⚔',accent:'#8b4b38',cost:{food:1,metal:1},power:2,text:''},
   farmer:{name:'Farmer',type:'unit',icon:'♟',accent:'#87964c',cost:{food:1},power:1,text:'Harvest 1 food after each clash.',special:'worker',produce:{food:1}},
   lumberjack:{name:'Lumberjack',type:'unit',icon:'♣',accent:'#51734d',cost:{material:1},power:1,text:'Harvest 1 wood after each clash.',special:'worker',produce:{material:1}},
@@ -54,6 +55,7 @@ const BASIC_RESOURCES=['food','material','metal'];
 const TIER_TWO=['lumbermill','foundry','granary'];
 const ARCHETYPE_CARDS=['villagecommons','peasantmob','manatarms','gatehouse','batteringram'];
 const COLLECTIBLE_IDS=Object.keys(CARDS).filter(id=>!CARDS[id].token);
+const RECRUITABLE_UNITS=COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit');
 const INITIAL_UNLOCKED=['logging','mining','farm','goldmine','townhall','university','soldier','farmer','lumberjack','miner','firesapper','knight','archer',...TIER_TWO,...ARCHETYPE_CARDS];
 const PRE_ARCHER_DEFAULT=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','archer'];
@@ -211,7 +213,7 @@ function resourceIcon(type){return `<svg class="resource-icon" viewBox="0 0 16 1
 function costsHtml(cost={}){return Object.entries(cost).map(([k,v])=>`<span class="cost ${k}" title="${v} ${RESOURCE_NAMES[k]}">${resourceIcon(k)}<b>${v}</b></span>`).join('')}
 const CARD_ART={
   logging:'assets/cards/logging-camp.webp',mining:'assets/cards/mining-camp.webp',farm:'assets/cards/farm.webp',tradingpost:'assets/cards/trading-post.webp',goldmine:'assets/cards/gold-mine.webp',
-  townhall:'assets/cards/town-hall.webp',university:'assets/cards/university.webp',lumbermill:'assets/cards/sawmill.webp',
+  townhall:'assets/cards/town-hall.webp',university:'assets/cards/university.webp',cathedral:'assets/cards/cathedral.webp',lumbermill:'assets/cards/sawmill.webp',
   foundry:'assets/cards/forge.webp',granary:'assets/cards/mill.webp',foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
@@ -404,6 +406,7 @@ function drawFromPile(side,pile){
 function gainBonusCard(side,cardId,free=false){if(side.hand.length<HAND_LIMIT)side.hand.push(makeHandCard(cardId,true,free))}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
 function randomWorker(){return WORKERS[Math.floor(Math.random()*WORKERS.length)]}
+function randomRecruitableUnit(){return RECRUITABLE_UNITS[Math.floor(Math.random()*RECRUITABLE_UNITS.length)]}
 function openingHandSize(){return currentRule.id==='longmuster'?3:5}
 function turnDrawCount(){return currentRule.id==='leancourt'?1:currentRule.id==='longmuster'?3:2}
 // The opening hand is dealt rather than chosen: three structures and two units at the usual five.
@@ -417,6 +420,7 @@ function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'universi
 // Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
 function drawTurnBonuses(side){
   for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker(),true);
+  for(let i=0;i<countBuilding(side,'cathedral');i++)gainBonusCard(side,randomRecruitableUnit(),true);
   for(let i=0;i<countBuilding(side,'commons');i++)gainBonusCard(side,'peasant');
 }
 function makeHandCard(cardId,bonus=false,free=false){return {cardId,uid:`${Date.now()}-${Math.random()}`,bonus,free}}
@@ -495,6 +499,7 @@ function aiCardValue(id){
   if(c.special==='mason')return 3;
   if(c.special==='merchant')return 3;
   if(c.special==='taxcollector')return 3;
+  if(c.special==='cathedral')return 6;
   if(['commons','university','townhall','rabble','palisade','armoury','huntinglodge','ballista'].includes(c.special))return 3;
   if(c.type==='unit')return c.power||0;if(c.produce)return Object.values(c.produce).reduce((a,b)=>a+b,0);return c.special?1.5:1
 }
@@ -521,7 +526,7 @@ function aiReplacementCost(side,old,incoming){
   else if(aiCardValue(incoming)<aiCardValue(old.cardId))penalty+=6;
   // Buildings do not fight, so an equal-value swap only makes sense for a lane-specific effect.
   else if(CARDS[incoming].type==='building'&&aiCardValue(incoming)===aiCardValue(old.cardId)&&!CARDS[incoming].special)penalty+=4;
-  if(['university','townhall'].includes(oldCard.special))penalty+=4;
+  if(['university','townhall','cathedral'].includes(oldCard.special))penalty+=4;
   if(oldCard.produce){
     const pending=aiPending(side);
     for(const [r,n] of Object.entries(oldCard.produce)){
@@ -555,7 +560,7 @@ function aiActionScore(hc,lane,difficulty){
     if(side.board[lane].building)score+=1;
   }else{
     if(c.produce)score+=Object.values(c.produce).reduce((a,b)=>a+b,0)*(aiPlaysBest(difficulty)?2.2:1.5);
-    if(['university','townhall'].includes(c.special))score+=game.round<5?3:1;
+    if(['university','townhall','cathedral'].includes(c.special))score+=game.round<5?3:1;
     if(['watchtower','gatehouse'].includes(c.special)&&side.board[lane].unit)score+=3;
     if(c.special==='palisade'&&!aiVisiblePlayerSlot(lane,'unit'))score+=3;
     if(c.special==='armoury'&&side.board[lane].unit)score+=3;
@@ -569,6 +574,7 @@ function aiActionScore(hc,lane,difficulty){
     // Fortification is banked ahead of the blow rather than spent healing after it, so it is
     // worth raising early; a thin keep still wants it most.
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
+    if(c.special==='cathedral')score+=side.health+(side.fortification||0)<=10?6:3;
   }
   if(game.aiProfile==='strikesteel'){
     // No tricks in the banner at all: mine metal, put the biggest body available in the way,
@@ -692,6 +698,10 @@ function resolveOnBuild(side,label){
     if(building?.round===game.round&&CARDS[building.cardId].special==='gatehouse'&&!building.effectResolved){
       side.fortification=(side.fortification||0)+2;building.effectResolved=true;
       log(`${label} ${CARDS[building.cardId].name} raises 2 fortification over the keep from lane ${index+1}.`)
+    }
+    if(building?.round===game.round&&CARDS[building.cardId].special==='cathedral'&&!building.effectResolved){
+      side.fortification=(side.fortification||0)+6;building.effectResolved=true;
+      log(`${label} Cathedral raises 6 fortification over the keep from lane ${index+1}.`)
     }
     const unit=lane.unit;
     if(unit?.round===game.round&&CARDS[unit.cardId].special==='rabble'&&!unit.effectResolved){
