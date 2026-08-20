@@ -269,6 +269,47 @@ game.ai.board[0].unit=testSlot('soldier',1);resolveRound();
 assert.equal(game.player.board[0].unit,null,'a Sapper still burns itself out');
 assert(game.player.board[1].unit,'and the Guard is not spent on its own side effect');
 
+// A Guard is spent on the first neighbour that needs it. Lanes resolve west to east, so with
+// friends on both sides only the westmost is saved and the other falls.
+resetGame();
+game.player.board[0].unit=testSlot('farmer',1);game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('farmer',1);
+game.ai.board[0].unit=testSlot('royalguard',1);game.ai.board[2].unit=testSlot('royalguard',1);
+resolveRound();
+assert(game.player.board[0].unit,'the western neighbour is saved');
+assert.equal(game.player.board[1].unit,null,'the Guard is spent doing it');
+assert.equal(game.player.board[2].unit,null,'and the eastern one falls unaided');
+
+// Spending the Guard empties its lane before that lane resolves, so an enemy standing there
+// walks through to the keep. The save is not free.
+resetGame();
+game.player.board[0].unit=testSlot('farmer',1);game.player.board[1].unit=testSlot('townguard',1);
+game.ai.board[0].unit=testSlot('royalguard',1);game.ai.board[1].unit=testSlot('royalguard',1);
+resolveRound();
+assert(game.player.board[0].unit,'the neighbour lives');
+assert.equal(game.player.health,MAX_KEEP_HEALTH-4,'but the lane it left open strikes the keep');
+
+// It cannot save itself: a Guard losing its own clash falls like anything else.
+resetGame();game.player.board[1].unit=testSlot('townguard',1);game.ai.board[1].unit=testSlot('royalguard',1);
+resolveRound();
+assert.equal(game.player.board[1].unit,null,'a lone Guard dies to its own clash');
+
+// Two Guards side by side do shelter each other, since a Guard is a friendly unit like any other.
+resetGame();
+game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('townguard',1);
+game.ai.board[1].unit=testSlot('royalguard',1);game.ai.board[2].unit=testSlot('royalguard',1);
+resolveRound();
+assert(game.player.board[1].unit,'the western Guard is saved by the eastern one');
+assert.equal(game.player.board[2].unit,null,'which is spent in its place');
+
+// Flanked by two Guards, only one is spent — the west — and the other still stands.
+resetGame();
+game.player.board[0].unit=testSlot('townguard',1);game.player.board[1].unit=testSlot('farmer',1);game.player.board[2].unit=testSlot('townguard',1);
+game.ai.board[1].unit=testSlot('royalguard',1);
+resolveRound();
+assert(game.player.board[1].unit,'the sheltered unit lives');
+assert.equal(game.player.board[0].unit,null,'the western Guard paid for it');
+assert(game.player.board[2].unit,'and the eastern Guard is untouched');
+
 // A closed lane breaks the line, as it does for every other adjacency in the game.
 resetGame();game.blockedLane=1;game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('miner',1);
 assert.equal(combatDefeat(game.player,2,'Your'),'fell','a Guard in a flooded lane shelters nobody');
