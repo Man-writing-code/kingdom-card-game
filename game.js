@@ -50,6 +50,7 @@ const CARDS = {
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
   ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
   paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'},
+  gaol:{name:'Gaol',type:'building',icon:'▦',accent:'#5f5c54',cost:{metal:4},text:'When revealed, imprisons the opposing unit in this lane. If replaced, a free copy returns to their hand.',special:'gaol'},
   mason:{name:'Mason',type:'unit',icon:'▨',accent:'#7c8792',cost:{metal:1},power:1,text:'Raises 1 fortification after each clash.',special:'mason'}
 };
 // The Lancer and Banner Captain (the Charge mechanic) are shelved for now; their art stays under
@@ -225,6 +226,7 @@ const CARD_ART={
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
   merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   townguard:'assets/cards/town-guard.png',
+  gaol:'assets/cards/gaol.png',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',trebuchet:'assets/cards/trebuchet.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
@@ -710,10 +712,38 @@ function aiPlan(){
     const c=CARDS[choice.hc.cardId],idx=side.hand.findIndex(x=>x.uid===choice.hc.uid),old=side.board[choice.lane][c.type],spent=payCost(side,handCost(choice.hc));side.hand.splice(idx,1);side.board[choice.lane][c.type]={cardId:choice.hc.cardId,round:game.round,spent,handCard:choice.hc,replaced:old||null};actions++;
   }
 }
-function commitReplacements(side){side.board.forEach(lane=>['building','unit'].forEach(type=>{const slot=lane[type];if(slot?.round===game.round&&slot.replaced){if(!slot.replaced.handCard?.bonus)side.discard.push(slot.replaced.cardId);slot.replaced=null}}))}
+// Pulling a Gaol down opens its cells: the prisoner walks free into its owner's hand, as a copy
+// that costs nothing to deploy and vanishes again when it leaves the field.
+function commitReplacements(side){
+  const foe=side===game.player?game.ai:game.player,foeLabel=side===game.player?'Rival':'Your';
+  side.board.forEach(lane=>['building','unit'].forEach(type=>{
+    const slot=lane[type];if(!(slot?.round===game.round&&slot.replaced))return;
+    const old=slot.replaced;
+    if(old.prisoner){
+      gainBonusCard(foe,old.prisoner,true);
+      log(`${foeLabel} ${CARDS[old.prisoner].name} walks free as the Gaol comes down.`);
+    }
+    if(!old.handCard?.bonus)side.discard.push(old.cardId);
+    slot.replaced=null;
+  }))
+}
 function resolveOnBuild(side,label){
   side.board.forEach((lane,index)=>{
     const building=lane.building;
+    if(building?.round===game.round&&CARDS[building.cardId].special==='gaol'&&!building.effectResolved){
+      building.effectResolved=true;
+      const foe=side===game.player?game.ai:game.player,foeLabel=label==='Your'?'Rival':'Your';
+      const captive=foe.board[index].unit;
+      if(captive){
+        // Routed through slayUnit so a Town Guard shields against this too — and is then the one
+        // taken, which is what a guard stepping in front of the bailiffs amounts to.
+        const shieldLane=adjacentGuard(foe,index),taken=shieldLane!==undefined?foe.board[shieldLane].unit:captive;
+        const takenId=taken.cardId;
+        slayUnit(foe,index,foeLabel);
+        building.prisoner=takenId;
+        log(`${label} Gaol takes ${CARDS[takenId].name} in lane ${index+1}.`);
+      }else log(`${label} Gaol stands empty in lane ${index+1}.`);
+    }
     if(building?.round===game.round&&CARDS[building.cardId].special==='gatehouse'&&!building.effectResolved){
       side.fortification=(side.fortification||0)+2;building.effectResolved=true;
       log(`${label} ${CARDS[building.cardId].name} raises 2 fortification over the keep from lane ${index+1}.`)
@@ -949,9 +979,9 @@ function playFx(){
   for(const e of fx){
     const slotType=e.t==='razed'||e.t==='absorb'?'building':'unit';
     const slot=$(`${boards[e.who]} .slot.${slotType}[data-lane="${e.lane}"]`);
-    if(e.t==='slain'||e.t==='razed'||e.t==='departed'||e.t==='returned'){
+    if(e.t==='slain'||e.t==='razed'||e.t==='departed'||e.t==='returned'||e.t==='imprisoned'){
       if(!slot)continue;const c=CARDS[e.cardId],burn=c.special==='sapper';
-      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':e.t==='departed'?'contract fulfilled':e.t==='returned'?'returns to hand':burn?'burns out':'falls'}</small></span>`);
+      slot.insertAdjacentHTML('beforeend',`<span class="fx-slain${burn?' fx-burnout':''}"><i>${c.icon}</i><b>${esc(c.name)}</b><small>${e.t==='razed'?'razed':e.t==='imprisoned'?'taken':e.t==='departed'?'contract fulfilled':e.t==='returned'?'returns to hand':burn?'burns out':'falls'}</small></span>`);
     }else if(e.t==='hit'){
       hurt[e.who]+=e.dmg;
       if(slot)slot.insertAdjacentHTML('beforeend',`<span class="fx-dmg">−${e.dmg}</span>`);

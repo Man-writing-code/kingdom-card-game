@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,51,'global collectible pool includes all six tier-two resource routes');
-assert.equal(Object.keys(CARDS).length,52,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,52,'global collectible pool includes all six tier-two resource routes');
+assert.equal(Object.keys(CARDS).length,53,'collectibles plus Peasant token');
 assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
 assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
@@ -329,6 +329,43 @@ assert(game.player.board[2].unit,'and the eastern Guard is untouched');
 // A closed lane breaks the line, as it does for every other adjacency in the game.
 resetGame();game.blockedLane=1;game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('miner',1);
 assert.equal(combatDefeat(game.player,2,'Your'),'fell','a Guard in a flooded lane shelters nobody');
+
+// The Gaol takes the opposing unit in its lane when revealed, and holds exactly one.
+assert.deepEqual(CARDS.gaol.cost,{metal:4});
+resetGame(2);
+game.player.board[1].building=testSlot('gaol',2);game.ai.board[1].unit=testSlot('royalguard',2);
+resolveOnBuild(game.player,'Your');
+assert.equal(game.ai.board[1].unit,null,'the rival unit is taken off the board');
+assert.equal(game.player.board[1].building.prisoner,'royalguard','and the Gaol remembers who it holds');
+assert.equal(game.ai.hand.length,0,'nothing returns while the Gaol stands');
+// It only ever takes one: a second reveal pass changes nothing.
+game.ai.board[1].unit=testSlot('soldier',2);
+resolveOnBuild(game.player,'Your');
+assert(game.ai.board[1].unit,'a Gaol already holding someone takes no one else');
+assert.equal(game.player.board[1].building.prisoner,'royalguard','and keeps its first prisoner');
+
+// Pulling the Gaol down frees the prisoner into its owner's hand, free to deploy.
+const gaolSlot=game.player.board[1].building;
+game.player.board[1].building={cardId:'watchtower',round:game.round,handCard:{cardId:'watchtower',bonus:false},replaced:gaolSlot};
+commitReplacements(game.player);
+assert.equal(game.ai.hand.length,1,'the prisoner walks free');
+assert.equal(game.ai.hand[0].cardId,'royalguard','as the unit it was');
+assert(game.ai.hand[0].free,'costing nothing to deploy');
+assert(game.ai.hand[0].bonus,'and as a copy, which vanishes rather than joining their discard');
+
+// An empty lane gives it nobody to hold, and replacing it later frees no one.
+resetGame(2);game.player.board[0].building=testSlot('gaol',2);
+resolveOnBuild(game.player,'Your');
+assert.equal(game.player.board[0].building.prisoner,undefined,'an empty lane leaves the cells empty');
+
+// A Town Guard shields against the bailiffs too, and is itself taken in their place.
+resetGame(2);
+game.player.board[1].building=testSlot('gaol',2);
+game.ai.board[1].unit=testSlot('royalguard',2);game.ai.board[2].unit=testSlot('townguard',2);
+resolveOnBuild(game.player,'Your');
+assert(game.ai.board[1].unit,'the sheltered unit stays on the board');
+assert.equal(game.ai.board[2].unit,null,'the Guard is taken instead');
+assert.equal(game.player.board[1].building.prisoner,'townguard','and it is the Guard in the cell');
 
 assert.equal(CARDS.gatehouse.name,'Gatehouse','the Gatehouse keeps a name a card face can hold');
 assert.deepEqual(CARDS.gatehouse.cost,{material:1,metal:2},'and is priced to be built, not saved for');
