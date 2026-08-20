@@ -50,7 +50,7 @@ const CARDS = {
   huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
   ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
   paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'},
-  gaol:{name:'Gaol',type:'building',icon:'▦',accent:'#5f5c54',cost:{metal:4},text:'When revealed, imprisons the opposing unit in this lane. If replaced, a free copy returns to their hand.',special:'gaol'},
+  gaol:{name:'Gaol',type:'building',icon:'▦',accent:'#5f5c54',cost:{metal:4},text:'When revealed, imprisons the opposing unit in this lane. When it falls, a free copy returns to their hand.',special:'gaol'},
   mason:{name:'Mason',type:'unit',icon:'▨',accent:'#7c8792',cost:{metal:1},power:1,text:'Raises 1 fortification after each clash.',special:'mason'}
 };
 // The Lancer and Banner Captain (the Charge mechanic) are shelved for now; their art stays under
@@ -715,14 +715,10 @@ function aiPlan(){
 // Pulling a Gaol down opens its cells: the prisoner walks free into its owner's hand, as a copy
 // that costs nothing to deploy and vanishes again when it leaves the field.
 function commitReplacements(side){
-  const foe=side===game.player?game.ai:game.player,foeLabel=side===game.player?'Rival':'Your';
   side.board.forEach(lane=>['building','unit'].forEach(type=>{
     const slot=lane[type];if(!(slot?.round===game.round&&slot.replaced))return;
     const old=slot.replaced;
-    if(old.prisoner){
-      gainBonusCard(foe,old.prisoner,true);
-      log(`${foeLabel} ${CARDS[old.prisoner].name} walks free as the Gaol comes down.`);
-    }
+    releasePrisoner(side,old);
     if(!old.handCard?.bonus)side.discard.push(old.cardId);
     slot.replaced=null;
   }))
@@ -814,7 +810,17 @@ function unitPower(side,lane){
   if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
 }
-function discardBuilding(side,lane){const building=side.board[lane].building;if(building){fx.push({t:'razed',who:fxSide(side),lane,cardId:building.cardId});if(!building.handCard?.bonus)side.discard.push(building.cardId)}side.board[lane].building=null}
+// A Gaol only holds while it stands. However it leaves the field — pulled down to make room, or
+// broken by a Ram, a Trebuchet or its own collapsing Ballista — the cells open and the prisoner
+// walks free. One helper, so no new way of removing a building can quietly swallow a prisoner.
+function releasePrisoner(owner,slot){
+  if(!slot?.prisoner)return;
+  const foe=owner===game.player?game.ai:game.player,label=owner===game.player?'Rival':'Your';
+  const freed=slot.prisoner;slot.prisoner=null;
+  gainBonusCard(foe,freed,true);
+  log(`${label} ${CARDS[freed].name} walks free as the Gaol comes down.`);
+}
+function discardBuilding(side,lane){releasePrisoner(side,side.board[lane].building);const building=side.board[lane].building;if(building){fx.push({t:'razed',who:fxSide(side),lane,cardId:building.cardId});if(!building.handCard?.bonus)side.discard.push(building.cardId)}side.board[lane].building=null}
 function resolveRam(attacker,defender,lane,label){const ram=attacker.board[lane].unit;if(!ram||CARDS[ram.cardId].special!=='ram'||!defender.board[lane].building)return false;const target=CARDS[defender.board[lane].building.cardId].name;discardBuilding(defender,lane);ram.damaged=true;log(`Lane ${lane+1}: ${label} Battering Ram destroys ${target} and is reduced to 1 power.`);return true}
 function resolveBallistas(p,a,pPowers,aPowers){
   const shots=[];

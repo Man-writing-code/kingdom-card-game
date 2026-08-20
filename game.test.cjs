@@ -353,6 +353,19 @@ assert.equal(game.ai.hand[0].cardId,'royalguard','as the unit it was');
 assert(game.ai.hand[0].free,'costing nothing to deploy');
 assert(game.ai.hand[0].bonus,'and as a copy, which vanishes rather than joining their discard');
 
+// Breaking the Gaol open frees the prisoner just the same. Every destruction path - the Ram here,
+// the Trebuchet, a Ballista collapsing under itself - runs through the one removal chokepoint.
+resetGame(2);
+game.player.board[1].building=testSlot('gaol',2);game.ai.board[1].unit=testSlot('royalguard',2);
+resolveOnBuild(game.player,'Your');
+game.ai.board[1].unit=testSlot('batteringram',2);
+assert(resolveRam(game.ai,game.player,1,'Rival'),'the Ram reaches the wall');
+assert.equal(game.player.board[1].building,null,'the Gaol is destroyed');
+assert.equal(game.ai.hand.length,1,'and the prisoner walks out of the rubble');
+assert.equal(game.ai.hand[0].cardId,'royalguard','as the unit it was');
+assert(game.ai.hand[0].free&&game.ai.hand[0].bonus,'free to deploy, and a copy that vanishes after');
+assert(game.player.discard.includes('gaol'),'while the Gaol itself is discarded as any building would be');
+
 // An empty lane gives it nobody to hold, and replacing it later frees no one.
 resetGame(2);game.player.board[0].building=testSlot('gaol',2);
 resolveOnBuild(game.player,'Your');
