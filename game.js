@@ -32,7 +32,7 @@ const CARDS = {
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
-  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'Destroyed in place of an adjacent friendly unit. Guards do not shield each other.',special:'guard'},
+  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'Destroyed in place of one adjacent friendly unit. Guards do not shield each other.',special:'guard'},
   peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
