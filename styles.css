@@ -821,6 +821,22 @@ body[data-screen="game"] .hand-area{
    the card, so it must declare its own ink colour instead of inheriting the room. */
 .deck-controls b{min-width:20px;text-align:center;color:var(--ink);font-weight:800}
 
+/* A unit standing beside a Town Guard wears its shelter: a soft dome over the card, so you can
+   see at a glance which lane the Guard will die for. Purely a readout — the rule lives in
+   spendGuards, which settles the same question before a blow lands. */
+.slot-shield{
+  position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:3px;
+  background:radial-gradient(120% 90% at 50% 100%,#9fd8f52e 0%,#9fd8f514 45%,transparent 72%);
+  box-shadow:inset 0 0 0 1px #a8d8ef4a,inset 0 -14px 22px -12px #9fd8f56b;
+  animation:shieldBreathe 3.4s ease-in-out infinite
+}
+.slot-shield:after{
+  content:"";position:absolute;left:50%;bottom:5px;width:13px;height:15px;transform:translateX(-50%);
+  background:#bfe4f7d9;clip-path:polygon(50% 0,100% 22%,100% 62%,50% 100%,0 62%,0 22%);
+  box-shadow:0 0 7px #9fd8f57a
+}
+@keyframes shieldBreathe{0%,100%{opacity:.72}50%{opacity:1}}
+
 /* A Mason's cue is stone, not harvest — it borrows the fortification slate rather than a
    resource colour, and carries a glyph instead of a resource icon. */
 .production-cue.fortify{--cue:#a8bccd}

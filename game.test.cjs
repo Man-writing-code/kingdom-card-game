@@ -293,13 +293,29 @@ resetGame();game.player.board[1].unit=testSlot('townguard',1);game.ai.board[1].u
 resolveRound();
 assert.equal(game.player.board[1].unit,null,'a lone Guard dies to its own clash');
 
-// Two Guards side by side do shelter each other, since a Guard is a friendly unit like any other.
+// A Guard offers shelter and never seeks it, so two side by side shield neither each other nor
+// themselves — they simply trade, and both fall.
 resetGame();
 game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('townguard',1);
 game.ai.board[1].unit=testSlot('royalguard',1);game.ai.board[2].unit=testSlot('royalguard',1);
 resolveRound();
-assert(game.player.board[1].unit,'the western Guard is saved by the eastern one');
-assert.equal(game.player.board[2].unit,null,'which is spent in its place');
+assert.equal(game.player.board[1].unit,null,'neither Guard shelters the other');
+assert.equal(game.player.board[2].unit,null,'so both trade and fall');
+assert.equal(game.player.health,MAX_KEEP_HEALTH,'and neither lane is left open, since both were contested');
+
+// The Guard dies for its neighbour before its own clash, whichever side of it that neighbour is
+// on. Lane order no longer decides whether the shelter arrives in time.
+for(const [guardLane,friendLane] of [[1,0],[1,2]]){
+  resetGame();
+  game.player.board[guardLane].unit=testSlot('townguard',1);
+  game.player.board[friendLane].unit=testSlot('farmer',1);
+  game.ai.board[guardLane].unit=testSlot('royalguard',1);
+  game.ai.board[friendLane].unit=testSlot('royalguard',1);
+  resolveRound();
+  assert(game.player.board[friendLane].unit,'the neighbour in lane '+(friendLane+1)+' is sheltered either side of the Guard');
+  assert.equal(game.player.board[guardLane].unit,null,'the Guard is spent');
+  assert.equal(game.player.health,MAX_KEEP_HEALTH-4,'and the lane it left strikes the keep');
+}
 
 // Flanked by two Guards, only one is spent — the west — and the other still stands.
 resetGame();

@@ -32,7 +32,7 @@ const CARDS = {
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
-  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'When a friendly unit in an adjacent lane would be destroyed, this is destroyed instead and that unit survives.',special:'guard'},
+  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'Destroyed in place of an adjacent friendly unit. Guards do not shield each other.',special:'guard'},
   peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
@@ -745,9 +745,19 @@ function adjacentAllies(side,lane){return [lane-1,lane+1].filter(i=>i>=0&&i<4&&l
 // Routing every enemy kill through here means the sacrifice covers a lost clash, a Sapper's
 // burst and a Ballista's bolt alike — and never covers a unit leaving of its own accord, which
 // is why a Sapper burning out and a Mercenary walking away still call discardUnit directly.
-function adjacentGuard(side,lane){return [lane-1,lane+1].find(i=>i>=0&&i<4&&laneIsActive(i)&&CARDS[side.board[i]?.unit?.cardId]?.special==='guard')}
+const isGuard=(side,lane)=>CARDS[side.board[lane]?.unit?.cardId]?.special==='guard';
+// Which Town Guard, if any, stands ready to die for this lane. A Guard offers shelter and never
+// seeks it, so two standing side by side shield neither each other nor themselves — they simply
+// trade. `taken` lets the resolver stop one Guard being promised to two neighbours.
+function adjacentGuard(side,lane,taken){
+  if(isGuard(side,lane))return undefined;
+  return [lane-1,lane+1].find(i=>i>=0&&i<4&&laneIsActive(i)&&isGuard(side,i)&&!taken?.has(i));
+}
 function slayUnit(side,lane,label){
-  const guard=adjacentGuard(side,lane),saved=side.board[lane].unit;
+  const saved=side.board[lane].unit;
+  // A Guard already spent for this lane in the pre-pass; the debt is paid, so the blow is simply void.
+  if(saved?.shielded){saved.shielded=false;return false}
+  const guard=adjacentGuard(side,lane);
   if(guard!==undefined&&saved){
     discardUnit(side,guard);
     log(`Lane ${guard+1}: ${label} Town Guard falls in place of ${CARDS[saved.cardId].name}.`);
@@ -841,10 +851,49 @@ function resolveAssassinReturns(side,label){
     log(`${label} Assassin returns to hand after the clash in lane ${index+1}.`)
   })
 }
+// Who falls this round, worked out before anything moves. Mirrors the clash rules below; a
+// Pavise that still has its reprieve is not counted, since it needs no Guard.
+function predictLosses(p,a,pPowers,aPowers){
+  const doomed={player:[false,false,false,false],ai:[false,false,false,false]};
+  const dies=(side,lane)=>{const u=side.board[lane].unit;return !(CARDS[u.cardId].special==='pavise'&&!u.damaged)};
+  for(let lane=0;lane<4;lane++){
+    if(!laneIsActive(lane))continue;
+    const pu=p.board[lane].unit,au=a.board[lane].unit;if(!pu||!au)continue;
+    const pSap=CARDS[pu.cardId].special==='sapper',aSap=CARDS[au.cardId].special==='sapper';
+    if(pSap||aSap){
+      // A Sapper burning itself out is not a kill; the unit it takes with it is.
+      if(pSap&&!aSap)doomed.ai[lane]=true;
+      if(aSap&&!pSap)doomed.player[lane]=true;
+      continue;
+    }
+    const pp=pPowers[lane],ap=aPowers[lane];
+    if(pp>ap){if(dies(a,lane))doomed.ai[lane]=true}
+    else if(ap>pp){if(dies(p,lane))doomed.player[lane]=true}
+    else{if(dies(p,lane))doomed.player[lane]=true;if(dies(a,lane))doomed.ai[lane]=true}
+  }
+  return doomed;
+}
+// Guards are spent before a blow lands anywhere. Resolving it here rather than lane by lane means
+// a Guard's own clash can no longer rob a neighbour of the shelter it was promised — it dies for
+// them first and its lane stands empty for the clash, which is the price of the save.
+function spendGuards(side,doomed,label){
+  const taken=new Set();
+  for(let lane=0;lane<4;lane++){
+    if(!doomed[lane]||!laneIsActive(lane))continue;
+    const saved=side.board[lane].unit;if(!saved)continue;
+    const guard=adjacentGuard(side,lane,taken);if(guard===undefined)continue;
+    taken.add(guard);saved.shielded=true;
+    const name=CARDS[saved.cardId].name;
+    discardUnit(side,guard);
+    log(`Lane ${guard+1}: ${label} Town Guard falls in place of ${name}.`);
+  }
+}
 function resolveRound(){
   const p=game.player,a=game.ai;
   const pPowers=[0,1,2,3].map(lane=>unitPower(p,lane)),aPowers=[0,1,2,3].map(lane=>unitPower(a,lane));
   resolveBallistas(p,a,pPowers,aPowers);
+  const doomed=predictLosses(p,a,pPowers,aPowers);
+  spendGuards(p,doomed.player,'Your');spendGuards(a,doomed.ai,'Rival');
   for(let lane=0;lane<4;lane++){
     if(!laneIsActive(lane))continue;
     const pu=p.board[lane].unit,au=a.board[lane].unit,pp=pPowers[lane],ap=aPowers[lane];
@@ -1014,8 +1063,8 @@ function productionForecastHtml(slot){
   const name=RESOURCE_NAMES[resource].toLowerCase(),label=`Produces ${gain} ${name} after this clash`;
   return `<span class="production-cue ${resource}" title="${label}" aria-label="${label}">${resourceIcon(resource)}<b>+${gain}</b></span>`;
 }
-function slotCardHtml(slot,hidden=false,power=null,forecast=''){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" data-card="${slot.cardId}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power"><i>⚔</i><b>${power}</b></span>`:''}</div>`}
-function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round,null,productionForecastHtml(lane.building))}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),productionForecastHtml(lane.unit))}</div></div>`:'').join('')}
+function slotCardHtml(slot,hidden=false,power=null,forecast='',shielded=false){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''}" data-card="${slot.cardId}" style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${forecast?`<span class="forecast-stack">${forecast}</span>`:''}${shielded?'<span class="slot-shield" title="Sheltered by an adjacent Town Guard, which will be destroyed in its place" aria-label="Sheltered by an adjacent Town Guard"></span>':''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power"><i>⚔</i><b>${power}</b></span>`:''}</div>`}
+function boardHtml(side,isAi,reveal=false){return side.board.map((lane,i)=>laneIsActive(i)?`<div class="lane"><div class="slot building ${lane.building?'occupied':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,isAi&&!reveal&&lane.building?.round===game.round,null,productionForecastHtml(lane.building))}</div><div class="slot unit ${lane.unit?'occupied':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,isAi&&!reveal&&lane.unit?.round===game.round,unitPower(side,i),productionForecastHtml(lane.unit),lane.unit&&adjacentGuard(side,i)!==undefined)}</div></div>`:'').join('')}
 // The realm sigil: three resources at the points of a triangle, gold at its heart.
 // The spokes are the rule made visible — gold flows out to stand in for any of the three.
 // The same mark, without counts, is the game's logo in the top bar and the favicon.
