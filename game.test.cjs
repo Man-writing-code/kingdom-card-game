@@ -14,8 +14,8 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,50,'global collectible pool includes all six tier-two resource routes');
-assert.equal(Object.keys(CARDS).length,51,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,51,'global collectible pool includes all six tier-two resource routes');
+assert.equal(Object.keys(CARDS).length,52,'collectibles plus Peasant token');
 assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
 assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
@@ -97,7 +97,7 @@ resetGame();game.player.board[0].unit=testSlot('trebuchet');game.ai.board[0].uni
 assert.equal(game.player.board[0].unit,null,'a defeated Trebuchet falls during combat');
 assert(game.ai.board[1].building,'and does not fire after being defeated');
 
-resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(combatDefeat(game.player,0),false);assert.equal(unitPower(game.player,0),1);assert.equal(combatDefeat(game.player,0),true);assert.equal(game.player.board[0].unit,null);
+resetGame();game.player.board[0].unit=testSlot('paviseguard');assert.equal(combatDefeat(game.player,0),'pavise');assert.equal(unitPower(game.player,0),1);assert.equal(combatDefeat(game.player,0),'fell');assert.equal(game.player.board[0].unit,null);
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();assert(game.player.board[0].unit?.damaged);assert.equal(game.ai.board[0].unit,null,'Pavise Guard survives a normal tie');
 resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].unit=testSlot('firesapper');resolveRound();assert.equal(game.player.board[0].unit,null,'Fire Sapper bypasses Pavise resilience');
 
@@ -229,6 +229,49 @@ harvest(game.player,'Your');assert.equal(game.player.fortification,2,'and again 
 // Stone laid is stone that takes the blow, so it stacks past the keep's own maximum.
 game.player.fortification=1;assert.equal(dealDamage(game.player,3,0),3);
 assert.equal(game.player.fortification,0);assert.equal(game.player.health,18,'the stone spends first');
+
+// The Town Guard is a shield that is spent: when a neighbour would be destroyed, it dies in
+// their place and they stand. It gives no power, so a sheltered unit is unchanged until it needs it.
+assert.deepEqual(CARDS.townguard.cost,{food:1,metal:1});assert.equal(CARDS.townguard.power,2);
+resetGame();game.player.board[0].unit=testSlot('miner',1);game.player.board[1].unit=testSlot('townguard',1);
+assert.equal(unitPower(game.player,0),1,'a sheltered unit gets no buff from the Guard');
+assert.equal(combatDefeat(game.player,0,'Your'),'guarded','the Guard takes the blow');
+assert(game.player.board[0].unit,'and the unit it sheltered stands');
+assert.equal(game.player.board[1].unit,null,'while the Guard is spent');
+assert.equal(combatDefeat(game.player,0,'Your'),'fell','with the Guard gone the next blow lands');
+
+// It shelters either side, but only the lanes next to it.
+resetGame();game.player.board[1].unit=testSlot('townguard',1);
+game.player.board[0].unit=testSlot('farmer',1);game.player.board[2].unit=testSlot('farmer',1);game.player.board[3].unit=testSlot('farmer',1);
+assert.equal(combatDefeat(game.player,3,'Your'),'fell','two lanes away is beyond its reach');
+assert.equal(combatDefeat(game.player,2,'Your'),'guarded','but either neighbour is not');
+
+// A Pavise saves itself first, so a Guard is not spent on a unit that would have lived.
+resetGame();game.player.board[0].unit=testSlot('paviseguard',1);game.player.board[1].unit=testSlot('townguard',1);
+assert.equal(combatDefeat(game.player,0,'Your'),'pavise','the Pavise endures under its own rule');
+assert(game.player.board[1].unit,'and the Guard is still standing');
+assert.equal(combatDefeat(game.player,0,'Your'),'guarded','only spent once the Pavise is out of lives');
+
+// It covers a Sapper's burst and a Ballista's bolt, since those are the enemy killing too.
+resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[1].unit=testSlot('townguard',1);
+game.ai.board[0].unit=testSlot('firesapper',1);resolveRound();
+assert(game.player.board[0].unit,'the Guard eats the Fire Sapper for its neighbour');
+assert.equal(game.player.board[1].unit,null,'and is spent doing it');
+resetGame();game.player.board[0].unit=testSlot('royalguard',1);game.player.board[1].unit=testSlot('townguard',1);
+game.ai.board[0].building=testSlot('ballista');
+resolveBallistas(game.ai,game.player,[0,0,0,0],[4,0,0,0]);
+assert(game.player.board[0].unit,'and turns aside a Ballista bolt');
+assert.equal(game.player.board[1].unit,null);
+
+// A unit leaving of its own accord is not a kill, so no Guard is spent on it.
+resetGame();game.player.board[0].unit=testSlot('firesapper',1);game.player.board[1].unit=testSlot('townguard',1);
+game.ai.board[0].unit=testSlot('soldier',1);resolveRound();
+assert.equal(game.player.board[0].unit,null,'a Sapper still burns itself out');
+assert(game.player.board[1].unit,'and the Guard is not spent on its own side effect');
+
+// A closed lane breaks the line, as it does for every other adjacency in the game.
+resetGame();game.blockedLane=1;game.player.board[1].unit=testSlot('townguard',1);game.player.board[2].unit=testSlot('miner',1);
+assert.equal(combatDefeat(game.player,2,'Your'),'fell','a Guard in a flooded lane shelters nobody');
 
 assert.equal(CARDS.gatehouse.name,'Gatehouse','the Gatehouse keeps a name a card face can hold');
 assert.deepEqual(CARDS.gatehouse.cost,{material:1,metal:2},'and is priced to be built, not saved for');

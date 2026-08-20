@@ -32,6 +32,7 @@ const CARDS = {
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
   champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
   militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
+  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'When a friendly unit in an adjacent lane would be destroyed, this is destroyed instead and that unit survives.',special:'guard'},
   peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
@@ -223,6 +224,8 @@ const CARD_ART={
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
   merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
+  // Placeholder: the Town Guard borrows the Militia's portrait until town-guard.webp lands.
+  townguard:'assets/cards/militia.webp',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',trebuchet:'assets/cards/trebuchet.webp',
   rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
@@ -504,6 +507,8 @@ function aiCardValue(id){
   if(c.special==='worker')return 3;
   // A Mason banks keep integrity every round it lives, which outlasts any single clash.
   if(c.special==='mason')return 3;
+  // A Town Guard is worth the lanes it holds up rather than the body it is.
+  if(c.special==='guard')return 3.5;
   if(c.special==='merchant')return 3;
   if(c.special==='taxcollector')return 3;
   if(c.special==='cathedral')return 6;
@@ -563,6 +568,13 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='pavise')score+=enemy?3:1;
     // A Mason only lays stone from a lane it holds, so it wants quiet ground like any worker.
     if(c.special==='mason')score+=enemy?-3:3;
+    // A Guard is only worth its slot beside something worth saving, and worth most beside
+    // what would otherwise be lost for good — a dug-in Pikeman, or a worker still harvesting.
+    if(c.special==='guard'){
+      const worth=[lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&side.board[i].unit)
+        .map(i=>{const n=CARDS[side.board[i].unit.cardId];return ['entrench','worker','mason'].includes(n.special)?3:1.5});
+      score+=worth.reduce((a,b)=>a+b,0)-(worth.length?0:3);
+    }
     // Mob units want a neighbour on each side, so value the lane by how many flanks are already held.
     if(MOB_SPECIALS.includes(c.special))score+=adjacentAllies(side,lane)*2.5;
     if(side.board[lane].building)score+=1;
@@ -729,6 +741,21 @@ const MOB_SPECIALS=['mob','boarriders'];
 // and still inside what a Ballista or a Fire Sapper can take off the board.
 const ENTRENCH_CAP=3;
 function adjacentAllies(side,lane){return [lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&side.board[i].unit).length}
+// The one place an enemy takes a unit off the board. A Town Guard beside the lane throws
+// itself in the way and is spent doing it, which is what makes it a shield rather than a buff.
+// Routing every enemy kill through here means the sacrifice covers a lost clash, a Sapper's
+// burst and a Ballista's bolt alike — and never covers a unit leaving of its own accord, which
+// is why a Sapper burning out and a Mercenary walking away still call discardUnit directly.
+function adjacentGuard(side,lane){return [lane-1,lane+1].find(i=>i>=0&&i<4&&laneIsActive(i)&&CARDS[side.board[i]?.unit?.cardId]?.special==='guard')}
+function slayUnit(side,lane,label){
+  const guard=adjacentGuard(side,lane),saved=side.board[lane].unit;
+  if(guard!==undefined&&saved){
+    discardUnit(side,guard);
+    log(`Lane ${guard+1}: ${label} Town Guard falls in place of ${CARDS[saved.cardId].name}.`);
+    return false;
+  }
+  discardUnit(side,lane);return true;
+}
 function unitPower(side,lane){
   const u=side.board[lane].unit;if(!u)return 0;const card=CARDS[u.cardId];let p=['ram','pavise'].includes(card.special)&&u.damaged?1:card.power||0;
   if(MOB_SPECIALS.includes(card.special))p+=adjacentAllies(side,lane);
@@ -760,13 +787,13 @@ function resolveBallistas(p,a,pPowers,aPowers){
   for(const shot of shots){
     const target=shot.target.board[shot.lane].unit,ballista=shot.owner.board[shot.lane].building;
     if(ballista&&CARDS[ballista.cardId].special==='ballista')discardBuilding(shot.owner,shot.lane);
-    if(target){const name=CARDS[target.cardId].name;discardUnit(shot.target,shot.lane);log(`Lane ${shot.lane+1}: ${shot.label} Ballista Emplacement destroys ${name} and collapses.`)}
+    if(target){const name=CARDS[target.cardId].name;const took=slayUnit(shot.target,shot.lane,shot.label==='Your'?'Rival':'Your');log(`Lane ${shot.lane+1}: ${shot.label} Ballista Emplacement ${took?`destroys ${name}`:'is turned aside'} and collapses.`)}
   }
 }
-function combatDefeat(side,lane){
+function combatDefeat(side,lane,label='Your'){
   const unit=side.board[lane].unit;
-  if(unit&&CARDS[unit.cardId].special==='pavise'&&!unit.damaged){unit.damaged=true;return false}
-  discardUnit(side,lane);return true
+  if(unit&&CARDS[unit.cardId].special==='pavise'&&!unit.damaged){unit.damaged=true;return 'pavise'}
+  return slayUnit(side,lane,label)?'fell':'guarded';
 }
 function rewardClashWinner(side,unit,lane,label){
   if(CARDS[unit?.cardId]?.special==='huntsman'&&side.board[lane].unit===unit){side.resources.material++;log(`Lane ${lane+1}: ${label} Huntsman salvages 1 wood.`)}
@@ -826,7 +853,7 @@ function resolveRound(){
     if(pSapper||aSapper){
       const pTakes=pSapper&&au&&!aSapper,aTakes=aSapper&&pu&&!pSapper;
       if(pSapper)discardUnit(p,lane);if(aSapper)discardUnit(a,lane);
-      if(pTakes)discardUnit(a,lane);if(aTakes)discardUnit(p,lane);
+      if(pTakes)slayUnit(a,lane,'Rival');if(aTakes)slayUnit(p,lane,'Your');
       const note=pSapper&&aSapper?'both Fire Sappers burn out'
         :pSapper?(pTakes?`your Fire Sapper destroys ${CARDS[au.cardId].name}`:'your Fire Sapper burns out with no one to take with it')
         :(aTakes?`the rival Fire Sapper destroys ${CARDS[pu.cardId].name}`:'the rival Fire Sapper burns out with no one to take with it');
@@ -834,12 +861,15 @@ function resolveRound(){
     }
     if(pu&&au){
       // A Ram only breaks the wall when the lane is clear of defenders, so winning a clash does not also fell the building.
-      if(pp>ap){const fell=combatDefeat(a,lane);log(`Lane ${lane+1}: ${CARDS[pu.cardId].name} wins ${pp}–${ap}${fell?'.':', but the rival Pavise Guard endures at 1 power.'}`);rewardClashWinner(p,pu,lane,'Your')}
-      else if(ap>pp){const fell=combatDefeat(p,lane);log(`Lane ${lane+1}: rival ${CARDS[au.cardId].name} wins ${ap}–${pp}${fell?'.':', but your Pavise Guard endures at 1 power.'}`);rewardClashWinner(a,au,lane,'Rival')}
+      // A Guard's sacrifice writes its own line, so only a Pavise needs explaining here.
+      const held=out=>out==='pavise'?', but the Pavise Guard endures at 1 power.':'.';
+      if(pp>ap){const out=combatDefeat(a,lane,'Rival');log(`Lane ${lane+1}: ${CARDS[pu.cardId].name} wins ${pp}–${ap}${held(out)}`);rewardClashWinner(p,pu,lane,'Your')}
+      else if(ap>pp){const out=combatDefeat(p,lane,'Your');log(`Lane ${lane+1}: rival ${CARDS[au.cardId].name} wins ${ap}–${pp}${held(out)}`);rewardClashWinner(a,au,lane,'Rival')}
       else{
-        const pFell=combatDefeat(p,lane),aFell=combatDefeat(a,lane);
-        const survivors=[!pFell?'your Pavise Guard':null,!aFell?'the rival Pavise Guard':null].filter(Boolean);
-        log(`Lane ${lane+1}: ${survivors.length?`${survivors.join(' and ')} endure at 1 power after a ${pp}–${ap} tie`:`both units fall at ${pp} power`}.`)
+        const pOut=combatDefeat(p,lane,'Your'),aOut=combatDefeat(a,lane,'Rival');
+        const endured=[pOut==='pavise'?'your Pavise Guard':null,aOut==='pavise'?'the rival Pavise Guard':null].filter(Boolean);
+        log(`Lane ${lane+1}: ${endured.length?`${endured.join(' and ')} endure at 1 power after a ${pp}–${ap} tie`
+          :pOut==='fell'&&aOut==='fell'?`both units fall at ${pp} power`:`the ${pp}–${ap} tie is answered`}.`)
       }
     }else if(pu)directStrike(p,a,lane,pp,'You','your');
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
