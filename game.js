@@ -26,7 +26,7 @@ const CARDS = {
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
   merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'After each clash, converts 1 random food, wood, or metal into 1 gold.',special:'merchant'},
   taxcollector:{name:'Tax Collector',type:'unit',icon:'§',accent:'#9a7334',cost:{gold:1},power:1,text:'Harvest 1 gold after each clash.',special:'taxcollector'},
-  cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:1,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
+  cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:2,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
   assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'After each clash, if it survives, returns to your hand.',special:'assassin'},
   foreignmercenary:{name:'Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
@@ -41,7 +41,7 @@ const CARDS = {
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   trebuchet:{name:'Trebuchet',type:'unit',icon:'⚙',accent:'#665f55',cost:{material:3,metal:1},power:2,text:'After each clash, if it survives, destroys a random enemy building.',special:'trebuchet'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
-  boarriders:{name:'Boar Riders',type:'unit',icon:'♞',accent:'#9b613c',cost:{food:4},power:3,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'boarriders'},
+  levycaptain:{name:'Levy Captain',type:'unit',icon:'⚑',accent:'#8c6a3b',cost:{food:4},power:3,text:'When revealed, musters a Peasant into each empty adjacent friendly unit slot.',special:'levycaptain'},
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces direct damage through this lane by 2.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
   royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
@@ -77,7 +77,7 @@ const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','g
 // The General, Wood Architect and Commons Rush banners are retired for now; their cards remain
 // in the pool, and git history holds the lists if any of them is wanted back.
 const AI_DECKS={
-  uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','peasantmob','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
+  uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','levycaptain','levycaptain','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
   forestfire:['firesapper','firesapper','firesapper','firesapper','logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','university','lumberjack','lumberjack','lumberjack','wallwarden'],
   strikesteel:['royalguard','royalguard','royalguard','royalguard','manatarms','manatarms','manatarms','manatarms','armoury','armoury','mining','mining','mining','mining','miner','miner','miner','miner','foundry','goldmine'],
   metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
@@ -238,7 +238,7 @@ const CARD_ART={
   gaol:'assets/cards/gaol.png',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
   manatarms:'assets/cards/man-at-arms.webp',gatehouse:'assets/cards/reinforced-gatehouse.webp',batteringram:'assets/cards/battering-ram.webp',trebuchet:'assets/cards/trebuchet.webp',
-  rabblerouser:'assets/cards/rabble-rouser.webp',boarriders:'assets/cards/boar-riders.webp',palisade:'assets/cards/palisade.webp',
+  rabblerouser:'assets/cards/rabble-rouser.webp',levycaptain:'assets/cards/levy-captain.webp',palisade:'assets/cards/palisade.webp',
   wallwarden:'assets/cards/wall-warden.webp',royalguard:'assets/cards/royal-guard.webp',armoury:'assets/cards/armoury.webp',
   huntsman:'assets/cards/huntsman.webp',huntinglodge:'assets/cards/hunting-lodge.webp',ballista:'assets/cards/ballista-emplacement.webp',
   paviseguard:'assets/cards/pavise-guard.webp',mason:'assets/cards/mason.webp',
@@ -573,7 +573,7 @@ function openAbilityModal(lane,type){
 function aiVisiblePlayerSlot(lane,type){const slot=game.player.board[lane][type];return slot?.round===game.round?(slot.replaced||null):slot}
 function aiCardValue(id){
   const c=CARDS[id];
-  if(['ram','boarriders'].includes(c.special))return 5;
+  if(['ram','levycaptain'].includes(c.special))return 5;
   if(c.special==='trebuchet')return 4.5;
   if(['sapper','mob','gatehouse','pavise'].includes(c.special)||id==='royalguard')return 3.5;
   // A Knight is a 2 that fights as a 4, and a worker is a 1 that pays every round it lives —
@@ -645,6 +645,7 @@ function aiActionScore(hc,lane,difficulty){
     else score+=power*1.25+(game.player.health+(game.player.fortification||0)<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='trebuchet')score+=side===game.ai&&game.player.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
+    if(c.special==='levycaptain')score+=[lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&!side.board[i].unit).length*2.5;
     if(c.special==='outrider')score+=side.hand.length?2:0;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
@@ -736,6 +737,7 @@ function aiActionScore(hc,lane,difficulty){
   if(game.aiProfile==='uprising'){
     // The uprising wins by mass, so what prints bodies matters more than any single body.
     if(['villagecommons','rabblerouser'].includes(hc.cardId))score+=game.round<6?4:2;
+    if(hc.cardId==='levycaptain')score+=3;
     if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)<2?3:1;
     // Mobs pay for a contiguous line, so a body beside a body is worth more than a body alone.
     if(c.type==='unit')score+=adjacentAllies(side,lane)*1.2;
@@ -872,6 +874,15 @@ function resolveOnBuild(side,label){
       if(side.hand.length<HAND_LIMIT){gainBonusCard(side,'peasant');log(`${label} Rabble-Rouser gathers a Peasant to the cause.`)}
       else log(`${label} Rabble-Rouser finds no room in a full hand.`)
     }
+    if(unit?.round===game.round&&CARDS[unit.cardId].special==='levycaptain'&&!unit.effectResolved){
+      unit.effectResolved=true;let mustered=0;
+      for(const flank of [index-1,index+1]){
+        if(flank<0||flank>=4||!laneIsActive(flank)||side.board[flank].unit)continue;
+        const handCard=makeHandCard('peasant',true,true);
+        side.board[flank].unit={cardId:'peasant',round:game.round,spent:{},handCard};mustered++;
+      }
+      log(`${label} Levy Captain musters ${mustered?`${mustered} Peasant${mustered===1?'':'s'} into the adjacent lanes`:'no Peasants; both adjacent lanes are occupied'}.`)
+    }
   })
 }
 function commitTurn(){
@@ -879,7 +890,7 @@ function commitTurn(){
 }
 // Mob units draw strength from the neighbours flanking them, so a contiguous line beats a spread one.
 // Counting neighbours rather than the whole board keeps these cards working when a decree closes a lane.
-const MOB_SPECIALS=['mob','boarriders'];
+const MOB_SPECIALS=['mob'];
 // How far a Pikeman may dig in. Three rounds of service is a 5-power unit — worth answering,
 // and still inside what a Ballista or a Fire Sapper can take off the board.
 const ENTRENCH_CAP=3;

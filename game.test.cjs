@@ -21,8 +21,10 @@ assert.equal(COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit').length,30,'the 
 assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
 assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
-for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
+for(const id of ['rabblerouser','levycaptain','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 assert(!CARDS.bannercaptain,'the Banner Captain stays shelved');
+assert(!CARDS.boarriders,'the fantastical Boar Riders are removed rather than migrated');
+assert.deepEqual(sanitizeDeck(['boarriders','levycaptain'],['boarriders','levycaptain']),['levycaptain'],'old Boar Riders are cleared from development decks');
 assert.deepEqual(sanitizeDeck(['lancer','soldier','bannercaptain','archer'],['lancer','soldier','archer']),['lancer','soldier','archer'],'the new Lancer is legal while old Banner Captains are scrubbed');
 
 // Food–Wood turns cards into tempo or selection, with an irreversible once-per-round source.
@@ -125,10 +127,13 @@ game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');as
 resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,18);assert.equal(game.player.resources.food,1);
 resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,MAX_KEEP_HEALTH);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
 
-resetGame();game.player.board[1].unit=testSlot('boarriders',1);assert.equal(unitPower(game.player,1),3,'Boar Riders alone hold base power');
-game.player.board[0].unit=testSlot('peasant',1);assert.equal(unitPower(game.player,1),4,'one flank adds 1');
-game.player.board[2].unit=testSlot('peasant',1);assert.equal(unitPower(game.player,1),5,'both flanks add 2');
-game.player.board[3].unit=testSlot('peasant',1);assert.equal(unitPower(game.player,1),5,'only neighbouring lanes count');
+resetGame(1);game.player.board[1].unit=testSlot('levycaptain',1);resolveOnBuild(game.player,'Your');
+assert.equal(unitPower(game.player,1),3,'the Levy Captain is a three-power body');
+assert.equal(game.player.board[0].unit.cardId,'peasant');assert.equal(game.player.board[2].unit.cardId,'peasant','the Captain fills both empty adjacent lanes');
+assert(game.player.board[0].unit.handCard.bonus&&game.player.board[2].unit.handCard.bonus,'mustered Peasants are generated tokens');
+resolveOnBuild(game.player,'Your');assert.equal(game.player.board.filter(lane=>lane.unit?.cardId==='peasant').length,2,'the muster resolves only once');
+resetGame(1);game.player.board[0].unit=testSlot('levycaptain',1);game.player.board[1].unit=testSlot('soldier',1);resolveOnBuild(game.player,'Your');
+assert.equal(game.player.board.filter(lane=>lane.unit?.cardId==='peasant').length,0,'occupied and board-edge lanes cannot be mustered into');
 resetGame();game.player.board[0].unit=testSlot('peasantmob',1);assert.equal(unitPower(game.player,0),2,'an edge lane with no neighbour stays at base');
 game.player.board[1].unit=testSlot('peasantmob',1);assert.equal(unitPower(game.player,0),3);assert.equal(unitPower(game.player,1),3,'adjacent mobs strengthen each other');
 resetGame();game.blockedLane=3;game.player.board[1].unit=testSlot('peasant',1);game.player.board[2].unit=testSlot('peasantmob',1);assert.equal(unitPower(game.player,2),3,'adjacency still pays when a decree closes a lane');
@@ -192,18 +197,18 @@ game.round++;resolveRound();assert.equal(game.player.board[0].unit,null,'the Mer
 assert.deepEqual(game.player.discard,['foreignmercenary'],'the completed contract returns the card to its pile normally');
 
 assert.deepEqual(CARDS.cutpurse.cost,{gold:1},'the Cutpurse costs 1 gold');
-assert.equal(CARDS.cutpurse.power,1,'the Cutpurse has 1 power');
+assert.equal(CARDS.cutpurse.power,2,'the Cutpurse has 2 power');
 assert.match(CARDS.cutpurse.text,/food, wood, or metal/,'the card face states that only basic resources can be stolen');
 resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.metal=1;
-directStrike(game.player,game.ai,0,1,'You','your');
+directStrike(game.player,game.ai,0,2,'You','your');
 assert.equal(game.player.resources.metal,1,'a successful direct hit transfers one stocked resource');
 assert.equal(game.ai.resources.metal,0);
 resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.food=1;game.ai.board[0].building=testSlot('palisade');
-directStrike(game.player,game.ai,0,1,'You','your');
+directStrike(game.player,game.ai,0,2,'You','your');
 assert.equal(game.player.resources.food,0,'a fully prevented hit steals nothing');
 assert.equal(game.ai.resources.food,1);
 resetGame();game.player.board[0].unit=testSlot('cutpurse');game.ai.resources.gold=1;
-directStrike(game.player,game.ai,0,1,'You','your');
+directStrike(game.player,game.ai,0,2,'You','your');
 assert.equal(game.player.resources.gold,0,'the Cutpurse cannot steal gold');
 assert.equal(game.ai.resources.gold,1);
 
@@ -543,7 +548,7 @@ assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
 assert(AI_DECKS.timber.some(id=>CARDS[id].produce?.food),'the banner can pay its own Sawmill food');
 
 assert.deepEqual(AI_DECKS.uprising.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
-  {farm:4,farmer:2,rabblerouser:4,peasantmob:4,villagecommons:2,granary:2,lumberjack:2},'the Village Uprising runs the requested list');
+  {farm:4,farmer:2,rabblerouser:3,peasantmob:3,levycaptain:2,villagecommons:2,granary:2,lumberjack:2},'the Village Uprising runs the requested list');
 assert.deepEqual(AI_DECKS.strikesteel.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {royalguard:4,manatarms:4,armoury:2,mining:4,miner:4,foundry:1,goldmine:1},'Strike Steel runs the requested list');
 // It is a body deck: an open lane is the plan, and a big body is worth more there than a small one.

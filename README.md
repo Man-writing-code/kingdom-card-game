@@ -44,7 +44,7 @@ Then visit `http://127.0.0.1:4173`.
 - The Knight carries 2 power and gains +2 while an opposing unit stands in its lane, so it is a duellist rather than a raider: 4 against anything that blocks it, 2 through an open lane.
 - The 1-building-material Fire Sapper burns itself out at the clash and destroys any opposing unit in its lane.
 - The Archer costs 2 wood and has a flat 2 power, following normal tie rules.
-- Village Commons add a temporary Peasant to your hand at the start of each round, whatever the board looks like. Peasant Mobs and Boar Riders each gain 1 power per friendly unit in an adjacent lane, so a contiguous line beats a scattered one.
+- Village Commons add a temporary Peasant to your hand at the start of each round, whatever the board looks like. Peasant Mobs gain 1 power per friendly unit in an adjacent lane, while the 4-Food Levy Captain immediately musters generated Peasants into both empty adjacent unit slots. Food wins by filling connected lanes rather than concentrating everything into one implausible body.
 - The Mason is a 1-power unit costing 1 metal that raises 1 fortification after each clash — a worker whose yield goes onto the keep rather than into the stores, and the only way to build fortification round on round rather than in a single lump.
 - **Fortification** is stone raised in front of the keep. It takes damage before health does, and unlike health it is not capped at 20 — a Gatehouse raises 2 when revealed, so a walled ruler can stand at an effective 22 or more. A Palisade still blunts a strike before the fortification is asked to hold it.
 - Metal decks gain 3-power Men-at-Arms, fortifying Gatehouses, and 4-power Battering Rams. A Ram only breaks the opposing building when its lane holds no defending unit, damaging itself to 1 power in the process; blocked, it simply fights.
@@ -60,7 +60,7 @@ Then visit `http://127.0.0.1:4173`.
 - Other lane pairings: the Hunting Lodge pays food when its lane connects, Wall Wardens gain 2 power beside any friendly building, Huntsmen salvage wood for winning a clash, and Rabble-Rousers add a Peasant to hand when revealed.
 - Gold automatically substitutes for missing food, metal, or wood.
 - The free Trading Post is a flexible tier-one resource building. After each clash it randomly supplies 1 food, wood, or metal; Long Winter reduces that yield to zero like the other basic-resource buildings.
-- The 1-power Cutpurse costs 1 gold. Whenever an unblocked strike deals damage, it steals 1 random food, wood, or metal that the opposing ruler currently has; it cannot steal gold, and a fully prevented strike steals nothing.
+- The 2-power Cutpurse costs 1 gold. Whenever an unblocked strike deals damage, it steals 1 random food, wood, or metal that the opposing ruler currently has; it cannot steal gold, and a fully prevented strike steals nothing.
 - The 1-power Tax Collector costs 1 gold and harvests 1 gold after every clash it survives, including the clash in which it is deployed.
 - The Merchant converts 1 randomly chosen food, wood, or metal into 1 gold after every clash it survives. With no basic resource in its owner’s stores, it converts nothing.
 - The Cathedral costs 4 wood and 4 metal. When revealed it raises 6 fortification, then at the start of every round it recruits one random collectible unit as a temporary copy that costs nothing to deploy. The normal hand limit still applies.
