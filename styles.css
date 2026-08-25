@@ -886,6 +886,34 @@ body[data-screen="game"] .hand-area{
 .room-wait .online-button:hover{border-color:#d3b56b;color:#eed9a3}
 #onlineStatus{padding:0 16px 12px}
 
+/* Wide, short desktop displays should scale the command chrome before the
+   battlefield. A second monitor often has essentially the same width as the
+   main display but far less height; without this mode, the opponent ledger and
+   hand dock keep their full proportions and the four clash rows take the loss.
+   Taller displays never enter this query, so the main-monitor composition is
+   unchanged. */
+@media (max-height:900px) and (min-width:701px){
+  .game-header{height:44px;min-height:44px}
+  .game-header .icon-button{width:32px;height:32px}
+  .mini-decree{padding:4px 9px}
+
+  .player-bar{min-height:78px;padding-top:4px;padding-bottom:4px}
+  .opponent-bar .resources{width:78px;flex-basis:78px}
+  .avatar{width:34px;height:34px;flex-basis:34px;font-size:15px}
+
+  .hand-area{padding-top:5px;padding-bottom:7px}
+  .hand-heading{margin-bottom:3px}
+  .hand-dock-row{gap:12px}
+  .dock-keep{flex-direction:row;gap:9px;padding:0 13px 0 0}
+  .dock-keep .resources{width:76px}
+  .dock-keep .health strong{font-size:19px}
+  .dock-keep .keep-pips{max-width:68px}
+  .hand-area .game-card{width:clamp(132px,9.3vw,160px);min-width:clamp(132px,9.3vw,160px);padding-bottom:34px}
+  .hand-area .card-art,.hand-area .card-art.painted{height:48px}
+  .hand-area .game-card h3{font-size:12px}
+  .commit{min-width:124px;padding:11px 15px}
+}
+
 /* ================================================================
    RESPONSIVE RESILIENCE
    Wide desktop battles keep the theatre above exactly as designed. On a
@@ -893,7 +921,7 @@ body[data-screen="game"] .hand-area{
    the entire table into one screen: the page may scroll, and the battlefield
    becomes a readable horizontal strip instead of crushing its lanes.
    ================================================================ */
-@media(max-height:820px), (max-width:700px){
+@media(max-height:680px), (max-width:700px){
   body.in-battle{overflow:auto}
   .game-screen.active{height:auto;min-height:100dvh;overflow:visible}
   .battlefield-wrap{
