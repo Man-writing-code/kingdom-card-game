@@ -14,14 +14,69 @@ function pileUp(side,ids){for(const id of ids)side[pileOf(id)].push(id);return s
 function testSlot(cardId,round=0,extra={}){return {cardId,round,handCard:{cardId,bonus:false},...extra}}
 function resetGame(round=2){game={round,player:testSide(),ai:testSide(),logs:[],wallUsed:{}};return game}
 
-assert.equal(COLLECTIBLE_IDS.length,52,'global collectible pool includes all six tier-two resource routes');
-assert.equal(Object.keys(CARDS).length,53,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.length,60,'the expansion brings the collectible pool to sixty designs');
+assert.equal(Object.keys(CARDS).length,61,'collectibles plus Peasant token');
+assert.equal(COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='building').length,30,'the pool has thirty buildings');
+assert.equal(COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit').length,30,'the pool has thirty units');
 assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
 assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','boarriders','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
-for(const id of ['lancer','bannercaptain'])assert(!CARDS[id],id+' stays shelved');
-assert.deepEqual(sanitizeDeck(['lancer','soldier','bannercaptain','archer'],['soldier','archer']),['soldier','archer'],'old saves shed shelved designs');
+assert(!CARDS.bannercaptain,'the Banner Captain stays shelved');
+assert.deepEqual(sanitizeDeck(['lancer','soldier','bannercaptain','archer'],['lancer','soldier','archer']),['lancer','soldier','archer'],'the new Lancer is legal while old Banner Captains are scrubbed');
+
+// Food–Wood turns cards into tempo or selection, with an irreversible once-per-round source.
+assert.deepEqual(CARDS.feastinghall.cost,{food:2,material:1});assert.deepEqual(CARDS.wayfarerslodge.produce,{material:1});
+resetGame(3);game.player.board[1].building=testSlot('feastinghall',2);game.player.board[1].unit=testSlot('outrider',2);
+const feastFuel=makeHandCard('farm'),riderFuel=makeHandCard('soldier');game.player.hand=[feastFuel,riderFuel];
+assert(activateAbility(game.player,1,'building',feastFuel,'Your'),'the Hall accepts a card');
+assert.equal(unitPower(game.player,1),4,'the Hall adds two power');assert.deepEqual(game.player.discard,['farm']);
+assert.equal(game.player.board[1].building.lockedRound,3);assert.equal(game.player.board[1].unit.lockedRound,3,'source and target lock');
+assert(!activateAbility(game.player,1,'building',riderFuel,'Your'),'the Hall cannot activate twice');
+assert(activateAbility(game.player,1,'unit',riderFuel,'Your'),'the Outrider burns separately');
+assert.equal(unitPower(game.player,1),6,'Hall and Outrider bonuses stack');assert.deepEqual(game.player.discard,['farm','soldier']);
+game.round=4;assert.equal(unitPower(game.player,1),2,'temporary power expires after the clash round');
+
+resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);game.player.structures=['logging'];
+const cycleUnit=makeHandCard('soldier');game.player.hand=[cycleUnit];
+assert(activateAbility(game.player,0,'building',cycleUnit,'Your'));assert.deepEqual(game.player.discard,['soldier']);
+assert.equal(game.player.hand.length,1);assert.equal(game.player.hand[0].cardId,'logging','a unit cycles into the exact opposite pile');
+resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);game.player.units=['farmer'];
+const cycleBuilding=makeHandCard('farm');game.player.hand=[cycleBuilding];
+assert(activateAbility(game.player,0,'building',cycleBuilding,'Your'));assert.equal(game.player.hand[0].cardId,'farmer','a building cycles into the exact unit pile');
+resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);game.player.hand=[makeHandCard('soldier')];game.player.units=['farmer'];
+assert.equal(abilityCards(game.player,0,'building').length,0,'the Lodge does not fall back when structures are exhausted');
+resetGame(2);game.player.board[0].building=testSlot('feastinghall',1);game.player.board[0].unit=testSlot('soldier',1);
+const generatedFuel=makeHandCard('peasant',true),contractFuel=makeHandCard('lancer',true,false,true);game.player.hand=[generatedFuel,contractFuel];
+assert(activateAbility(game.player,0,'building',generatedFuel));assert.deepEqual(game.player.discard,[],'generated fuel vanishes instead of entering a pile');
+
+// The Gold back line rewards reserves, then turns them into temporary outside hires.
+assert.deepEqual(CONTRACT_UNITS,['foreignmercenary','assassin','lancer']);assert.equal(CARDS.lancer.power,7);assert.deepEqual(CARDS.lancer.cost,{gold:3});
+resetGame(2);game.player.board[0].building=testSlot('mercenaryguild',1);drawTurnBonuses(game.player);
+assert.equal(game.player.hand.length,1);assert(CONTRACT_UNITS.includes(game.player.hand[0].cardId));assert(game.player.hand[0].contract);assert(game.player.hand[0].bonus);assert(!game.player.hand[0].free);
+resetGame(2);game.player.hand=Array.from({length:HAND_LIMIT},()=>makeHandCard('soldier'));game.player.board[0].building=testSlot('mercenaryguild',1);drawTurnBonuses(game.player);assert.equal(game.player.hand.length,HAND_LIMIT,'a full hand refuses a Contract');
+resetGame(2);game.player.board[0].unit={...testSlot('lancer',2),handCard:makeHandCard('lancer',true,false,true)};resolveLancerContracts(game.player,'Your');assert.equal(game.player.board[0].unit,null);assert.deepEqual(game.player.discard,[],'a Contract Lancer vanishes');
+resetGame(2);game.player.board[0].unit=testSlot('lancer',2);resolveLancerContracts(game.player,'Your');assert.deepEqual(game.player.discard,['lancer'],'a deck Lancer returns to its unit discard');
+resetGame(2);game.player.board[0].unit={...testSlot('assassin',2),handCard:makeHandCard('assassin',true,false,true)};resolveAssassinReturns(game.player,'Your');assert(game.player.hand[0].contract,'a Contract Assassin keeps its status when returning');
+resetGame(2);game.player.hand=Array.from({length:HAND_LIMIT},()=>makeHandCard('soldier'));game.player.board[0].unit={...testSlot('assassin',2),handCard:makeHandCard('assassin',true,false,true)};resolveAssassinReturns(game.player,'Your');assert.equal(game.player.board[0].unit,null);assert.deepEqual(game.player.discard,[],'an overflowing Contract Assassin vanishes');
+resetGame(2);const hiredMercenary={...testSlot('foreignmercenary',1),handCard:makeHandCard('foreignmercenary',true,false,true)};game.player.board[0].unit={...testSlot('soldier',2),replaced:hiredMercenary};commitReplacements(game.player);assert.deepEqual(game.player.discard,[],'a replaced Contract vanishes');
+resetGame(2);game.player.board[0].unit={...testSlot('foreignmercenary',1),clashes:1,handCard:makeHandCard('foreignmercenary',true,false,true)};resolveMercenaryContracts(game.player,'Your');assert.equal(game.player.board[0].unit,null);assert.deepEqual(game.player.discard,[],'a completed Mercenary Contract vanishes');
+resetGame(2);game.player.board[0].unit={...testSlot('foreignmercenary',2),handCard:makeHandCard('foreignmercenary',true,false,true)};game.ai.board[0].unit=testSlot('champion',2);resolveRound();assert.equal(game.player.board[0].unit,null);assert.deepEqual(game.player.discard,[],'a defeated Contract vanishes');
+
+for(let storedGold=0;storedGold<=12;storedGold++){
+  resetGame(2);game.player.resources.gold=storedGold;game.player.board[0].building=testSlot('bank',1);harvest(game.player,'Your');
+  assert.equal(game.player.resources.gold,storedGold+Math.min(6,Math.floor(storedGold/2)),'Bank threshold at '+storedGold+' stored gold');
+}
+resetGame(2);game.player.resources.gold=4;game.player.board[0].building=testSlot('bank',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,8,'Banks share one snapshot and stack');
+resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('market',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'ordinary harvest lands before interest');
+resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('goldmine',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Gold Mine production lands before interest');
+resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('taxcollector',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tax Collector production lands before interest');
+resetGame(2);game.player.resources.gold=1;game.player.resources.material=1;game.player.board[0].unit=testSlot('merchant',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Merchant conversion lands before interest');
+resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('tollhouse',1);game.player.board[1].building=testSlot('bank',1);directStrike(game.player,game.ai,0,2,'You','your');harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tollhouse gold joins the next Bank snapshot');
+resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);harvest(game.player,'Your');assert.equal(game.player.resources.material,1,'the Lodge also produces one wood');
+resetGame(2);game.player.resources.gold=3;game.player.board[0].building=testSlot('treasury',1);assert.equal(turnDrawTotal(game.player),3,'a stocked Treasury adds a selectable draw');game.player.resources.gold=2;assert.equal(turnDrawTotal(game.player),2);
+resetGame(2);game.player.resources.gold=2;game.player.board[0].building=testSlot('bank',1);game.player.board[1].building=testSlot('treasury',1);harvest(game.player,'Your');assert.equal(turnDrawTotal(game.player),3,'Bank income can fund Treasury on the following round');game.player.resources.gold=2;assert.equal(turnDrawTotal(game.player),2,'spending below the threshold removes the Treasury draw');
+resetGame(2);game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('tollhouse',1);directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.player.resources.gold,1,'direct damage pays the Tollhouse');
 
 resetGame(1);game.player.board[0].unit=testSlot('rabblerouser',1);resolveOnBuild(game.player,'Your');
 assert.equal(game.player.hand.length,1);assert.equal(game.player.hand[0].cardId,'peasant');assert.equal(game.player.hand[0].bonus,true);
@@ -717,9 +772,16 @@ assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the c
 // A guest taking over an expired resolver lease must see their own side as the player, while
 // the state written back to Supabase remains in canonical host/guest order.
 resetGame();const hostSide=testSide(),guestSide=testSide();hostSide.health=9;guestSide.health=7;
+guestSide.board[1].building=testSlot('feastinghall',3,{feastPower:2,feastRound:4,lockedRound:4});
+guestSide.board[1].unit=testSlot('outrider',3,{burnPower:2,burnRound:4,lockedRound:4});
+guestSide.hand=[makeHandCard('assassin',true,false,true)];
 resolveOnlinePlans(hostSide,guestSide,'guest',4);
 assert.equal(game.player.health,7);assert.equal(game.ai.health,9);assert.equal(game.round,4);assert.equal(game.onlineSeat,'guest');
 const canonical=onlineCanonicalState();assert.equal(canonical.player.health,9);assert.equal(canonical.ai.health,7);assert.equal(canonical.onlineSeat,undefined);
+assert.equal(canonical.ai.board[1].building.feastPower,2,'canonical multiplayer state keeps building activations');
+assert.equal(canonical.ai.board[1].unit.burnPower,2,'canonical multiplayer state keeps unit activations');
+assert.equal(canonical.ai.board[1].unit.lockedRound,4,'canonical multiplayer state keeps source locks');
+assert.equal(canonical.ai.hand[0].contract,true,'canonical multiplayer state keeps Contract metadata');
 `;
 
 const context={assert,fs,console:{log:()=>{},warn:()=>{},error:console.error},setTimeout:()=>{},clearTimeout:()=>{},localStorage:{getItem:()=>null,setItem:()=>{}},document:{querySelector:()=>null,querySelectorAll:()=>[]},window:{scrollTo:()=>{}},Date,Math};

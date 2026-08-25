@@ -860,6 +860,22 @@ body[data-screen="game"] .hand-area{
 /* A granted card shows a seal where its price would be — it is deployed, not bought. */
 .cost.granted{background:linear-gradient(165deg,#e6c274,#c39a3f);color:#2a2010;font-size:12px}
 
+/* Planning abilities turn a hand card into an order. The control lives on its source so the
+   choice reads as part of the battlefield, then the modal provides the irreversible review. */
+.slot-ability{position:absolute;z-index:9;top:5px;right:5px;border:1px solid #f1cf7b99;border-radius:12px;background:#17291fdd;color:#f3d894;padding:4px 7px;font:bold 8px/1 "DM Sans",sans-serif;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 7px #06100a99}
+.slot-ability:hover{background:#294533;color:#fff0be;border-color:#f1cf7b}
+.slot-ability.used{cursor:default;opacity:.72;background:#3e493f;color:#d2c8af;border-color:#ffffff33}
+.slot.ability-locked{border-color:#d6b86370}
+.ability-card-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0;max-height:410px;overflow:auto;padding:3px}
+.ability-card-list>button{appearance:none;border:2px solid transparent;background:transparent;padding:0;cursor:pointer;text-align:left}
+.ability-card-list>button:hover,.ability-card-list>button.selected{border-color:#c89d45;box-shadow:0 0 0 2px #c89d4538}
+.ability-card-list .game-card{min-height:225px;height:100%;pointer-events:none}
+.ability-review{min-height:20px;margin:8px 0!important;font-weight:700;color:#6e552b!important}
+.contract-seal{position:absolute;right:7px;bottom:6px;padding:3px 6px;border:1px solid #f0cf7c8c;border-radius:9px;background:#251d36d9;color:#f5dea1;font:bold 7px "DM Sans",sans-serif;letter-spacing:.8px}
+.contract-card{box-shadow:0 3px 0 #8c7395,0 0 0 1px #7a6082}
+.slot-contract{position:absolute;z-index:2;top:5px;left:5px;padding:3px 5px;border-radius:8px;background:#251d36d9;color:#f4d995;font:bold 7px "DM Sans",sans-serif;letter-spacing:.7px}
+.tip-contract{margin:5px 0 7px;color:#866196;font:bold 9px "DM Sans",sans-serif;letter-spacing:.7px}
+
 /* The room card: what the online panel becomes while a match is forming. The code is
    the largest thing on it because sharing the code is the host's entire task. */
 .room-wait{display:grid;justify-items:center;gap:7px;padding:18px 16px 16px;text-align:center}
@@ -937,6 +953,12 @@ body[data-screen="game"] .hand-area{
   .modal-actions{flex-wrap:wrap}
   .pack-options{grid-template-columns:1fr}
   .sacrifice-list{grid-template-columns:1fr}
+}
+
+@media(max-width:600px){
+  .ability-card-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:52vh}
+  .ability-card-list .game-card{min-height:210px}
+  .slot-ability{top:4px;right:4px;padding:4px 6px;font-size:7px}
 }
 
 @media(max-width:480px){

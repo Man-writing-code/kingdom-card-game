@@ -48,6 +48,11 @@ Units are a single figure, waist-up or three-quarter, mid-action with the tool o
 that defines them. Buildings are an environment: the structure in its landscape, people
 incidental or absent.
 
+Gold does not make the home kingdom foreign. Banks, Treasuries, Tollhouses and hiring halls
+use the same European architecture as every other local building. Only outside Contract units
+such as the Mercenary, Assassin and Lancer use the established medieval Middle Eastern visual
+identity, shown respectfully through historically inspired armour, textiles and settings.
+
 ## Prompt template
 
 Replace the bracketed part and keep the rest verbatim.
