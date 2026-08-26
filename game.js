@@ -3,7 +3,7 @@ const CARDS = {
   mining:{name:'Mining Camp',type:'building',icon:'◆',accent:'#65717a',cost:{},text:'Harvest 1 metal after each clash.',produce:{metal:1}},
   farm:{name:'Farm',type:'building',icon:'♨',accent:'#87964c',cost:{},text:'Harvest 1 food after each clash.',produce:{food:1}},
   tradingpost:{name:'Trading Post',type:'building',icon:'⇄',accent:'#8a6843',cost:{},text:'Harvest 1 random basic resource after each clash.',special:'tradingpost'},
-  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
+  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after the clash on the turn it is played, then every second clash.',special:'goldmine'},
   townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
   university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
   cathedral:{name:'Cathedral',type:'building',icon:'✟',accent:'#67647b',cost:{material:4,metal:4},text:'When revealed, raise 6 fortification. At the start of each round, recruit a random unit. It costs nothing to deploy.',special:'cathedral'},
@@ -41,7 +41,7 @@ const CARDS = {
   batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
   trebuchet:{name:'Trebuchet',type:'unit',icon:'⚙',accent:'#665f55',cost:{material:3,metal:1},power:2,text:'After each clash, if it survives, destroys a random enemy building.',special:'trebuchet'},
   rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
-  levycaptain:{name:'Levy Captain',type:'unit',icon:'⚑',accent:'#8c6a3b',cost:{food:4},power:3,text:'When revealed, musters a Peasant into each empty adjacent friendly unit slot.',special:'levycaptain'},
+  levycaptain:{name:'Levy Captain',type:'unit',icon:'⚑',accent:'#8c6a3b',cost:{food:4},power:3,text:'When revealed, musters one Peasant into a random empty adjacent friendly unit slot.',special:'levycaptain'},
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces direct damage through this lane by 2.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
   royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
@@ -57,7 +57,7 @@ const CARDS = {
   mercenaryguild:{name:'Mercenary Guild',type:'building',icon:'⚑',accent:'#7c6542',cost:{food:2,gold:1},text:'At the start of each round, offers a random Mercenary, Assassin, or Lancer Contract at its printed cost.',special:'mercenaryguild'},
   treasury:{name:'Treasury',type:'building',icon:'♛',accent:'#89703a',cost:{material:2,gold:1},text:'If you begin a round with at least 3 gold, draw one additional card.',special:'treasury'},
   bank:{name:'Bank',type:'building',icon:'¤',accent:'#80683d',cost:{material:2,gold:2},text:'After harvesting, gain 1 gold per 2 gold stored, up to 6 gold per Bank.',special:'bank'},
-  tollhouse:{name:'Tollhouse',type:'building',icon:'⌂',accent:'#786342',cost:{material:1,gold:1},text:'When the friendly unit in this lane deals direct damage, gain 1 gold.',special:'tollhouse'},
+  tollhouse:{name:'Tollhouse',type:'building',icon:'⌂',accent:'#786342',cost:{gold:1},text:'When the friendly unit in this lane deals direct damage, gain 1 gold.',special:'tollhouse'},
   outrider:{name:'Outrider',type:'unit',icon:'♞',accent:'#55704b',cost:{food:1,material:1},power:2,text:'Once per round during planning, discard a card to gain +2 power for the next clash.',special:'outrider'},
   lancer:{name:'Lancer',type:'unit',icon:'↟',accent:'#765b77',cost:{gold:3},power:7,text:'Leaves the battlefield after its first clash, whatever the outcome.',special:'lancer'}
 };
@@ -645,7 +645,7 @@ function aiActionScore(hc,lane,difficulty){
     else score+=power*1.25+(game.player.health+(game.player.fortification||0)<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='trebuchet')score+=side===game.ai&&game.player.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
-    if(c.special==='levycaptain')score+=[lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&!side.board[i].unit).length*2.5;
+    if(c.special==='levycaptain'&&[lane-1,lane+1].some(i=>i>=0&&i<4&&laneIsActive(i)&&!side.board[i].unit))score+=2.5;
     if(c.special==='outrider')score+=side.hand.length?2:0;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
@@ -875,13 +875,14 @@ function resolveOnBuild(side,label){
       else log(`${label} Rabble-Rouser finds no room in a full hand.`)
     }
     if(unit?.round===game.round&&CARDS[unit.cardId].special==='levycaptain'&&!unit.effectResolved){
-      unit.effectResolved=true;let mustered=0;
-      for(const flank of [index-1,index+1]){
-        if(flank<0||flank>=4||!laneIsActive(flank)||side.board[flank].unit)continue;
+      unit.effectResolved=true;
+      const openFlanks=[index-1,index+1].filter(flank=>flank>=0&&flank<4&&laneIsActive(flank)&&!side.board[flank].unit);
+      if(openFlanks.length){
+        const flank=openFlanks[Math.floor(Math.random()*openFlanks.length)];
         const handCard=makeHandCard('peasant',true,true);
-        side.board[flank].unit={cardId:'peasant',round:game.round,spent:{},handCard};mustered++;
+        side.board[flank].unit={cardId:'peasant',round:game.round,spent:{},handCard};
       }
-      log(`${label} Levy Captain musters ${mustered?`${mustered} Peasant${mustered===1?'':'s'} into the adjacent lanes`:'no Peasants; both adjacent lanes are occupied'}.`)
+      log(`${label} Levy Captain musters ${openFlanks.length?'1 Peasant into an adjacent lane':'no Peasant; both adjacent lanes are unavailable'}.`)
     }
   })
 }
@@ -1182,7 +1183,7 @@ function harvest(side,label){
         const resource=BASIC_RESOURCES[Math.floor(Math.random()*BASIC_RESOURCES.length)],gain=currentRule.id==='winter'?0:1;
         if(gain){side.resources[resource]++;log(`${label} Trading Post supplies 1 ${RESOURCE_NAMES[resource].toLowerCase()}.`)}
       }
-      if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++
+      if(c.special==='goldmine'&&(currentRule.id==='tradefair'||(game.round-lane.building.round)%2===0))side.resources.gold++
     }
     // A worker pays out at the end of every round it lives through, the round it arrives included.
     if(lane.unit){
@@ -1228,7 +1229,7 @@ function productionForecastHtml(slot,side=game?.player){
       if(currentRule.id==='winter'&&resource!=='gold')gain=Math.max(0,gain-1);
       if(currentRule.id==='tradefair'&&resource==='gold')gain++;
     }
-  }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>slot.round&&(game.round-slot.round)%2===1)){
+  }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||(game.round-slot.round)%2===0)){
     resource='gold';gain=1;
   }else if(card.special==='tradingpost'){
     if(currentRule.id==='winter')return'';
