@@ -983,10 +983,41 @@ body[data-screen="game"] .hand-area{
   .sacrifice-list{grid-template-columns:1fr}
 }
 
+@media(max-height:900px) and (min-width:701px){
+  .game-card.presentation-hand{
+    display:grid;grid-template-rows:48px 26px minmax(32px,auto) 34px;
+    height:140px;min-height:140px;padding:0;align-content:start
+  }
+  .presentation-hand .card-art,.presentation-hand .card-art.painted{grid-row:1;height:48px;margin:0;border-radius:0}
+  .presentation-hand .costs,.presentation-hand.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:26px;padding:3px 8px 2px;background:#e9dfca}
+  .presentation-hand .cost{flex:0 0 19px;width:19px;height:19px;font-size:9px}
+  .presentation-hand h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-self:start;min-height:30px;margin:0;padding:3px 8px 0;font-size:12px;line-height:1.15}
+  .presentation-hand p{display:none!important}
+  .presentation-hand .power{left:8px;right:auto;bottom:6px;display:flex;align-items:center;gap:3px;width:auto;height:auto;clip-path:none;background:none;color:var(--rust);filter:none;text-shadow:none;padding:0;font-size:12px}
+  .presentation-hand .power i,.presentation-hand .power b{color:inherit;font:inherit}
+  .presentation-hand .contract-seal{top:4px;right:4px;bottom:auto}
+}
+
 @media(max-width:600px){
   .ability-card-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:52vh}
   .ability-card-list .game-card{min-height:210px}
   .slot-ability{top:4px;right:4px;padding:4px 6px;font-size:7px}
+}
+
+@media(min-width:481px) and (max-width:900px){
+  .game-card.presentation-catalog{
+    display:grid;grid-template-rows:110px 32px minmax(44px,auto) minmax(84px,1fr) 42px;
+    min-width:0;min-height:312px!important;padding:0;align-content:start
+  }
+  .presentation-catalog .card-art,.presentation-catalog .card-art.painted{grid-row:1;height:110px;margin:0;border-radius:0}
+  .presentation-catalog .costs,.presentation-catalog.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:32px;padding:4px 9px 3px;background:#e9dfca}
+  .presentation-catalog .cost{flex:0 0 22px;width:22px;height:22px;font-size:10px}
+  .presentation-catalog h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-self:start;min-height:42px;margin:0;padding:6px 11px 0;font-size:18px;line-height:1.15}
+  .presentation-catalog p{grid-row:4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;max-height:none;margin:0;padding:4px 11px 0;font-size:12px;line-height:1.45}
+  .presentation-catalog .power{left:auto;right:10px;bottom:10px}
+  .presentation-catalog .deck-controls{left:10px;bottom:9px}
+  .presentation-catalog .owned{left:10px;bottom:10px}
+  .presentation-catalog .contract-seal{top:6px;right:6px;bottom:auto}
 }
 
 @media(max-width:480px){
@@ -1024,4 +1055,114 @@ body[data-screen="game"] .hand-area{
 @media(hover:none), (pointer:coarse){
   .card-tip{display:none!important}
   .slot .slot-card:hover,.game-card:hover{transform:none}
+}
+
+/* ================================================================
+   RESPONSIVE CARD COMPONENTS
+   The page chooses a semantic presentation; each card then responds to
+   the space its own container receives. Essential information owns a
+   reserved row or footer instead of competing through absolute offsets.
+   ================================================================ */
+.game-card{container:card-face/inline-size}
+.game-card .power i{font-style:normal}
+.lane-scroll-cue{display:none}
+.detail-primed{outline:2px solid #e1b85e;outline-offset:2px}
+@container card-face (max-width:190px){
+  .game-card .costs{flex-wrap:nowrap;max-width:100%}
+  .game-card .cost{flex-shrink:0}
+  .game-card h3{overflow-wrap:anywhere}
+}
+
+.card-detail-layout{display:grid;grid-template-columns:minmax(190px,230px) minmax(0,1fr);gap:28px;align-items:start}
+.game-card.presentation-modal{display:grid;grid-template-rows:120px 32px minmax(44px,auto) minmax(82px,1fr) 42px;min-height:320px;padding:0;align-content:start}
+.presentation-modal .card-art,.presentation-modal .card-art.painted{grid-row:1;height:120px;margin:0;border-radius:0}
+.presentation-modal .costs,.presentation-modal.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:32px;padding:4px 10px 3px;background:#e9dfca}
+.presentation-modal h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-self:start;min-height:42px;margin:0;padding:6px 12px 0;font-size:19px;line-height:1.15}
+.presentation-modal p{grid-row:4;display:block;max-height:none;margin:0;padding:5px 12px 0;font-size:12px;line-height:1.5;overflow:auto}
+.presentation-modal .power{right:10px;bottom:10px}
+.presentation-modal .contract-seal{top:6px;right:6px;bottom:auto}
+.card-detail-layout .presentation-modal{width:100%;min-height:320px}
+.card-detail-copy h2{margin-bottom:12px}
+.card-detail-copy .eyebrow{margin-bottom:5px}
+.detail-status{display:block;width:max-content;max-width:100%;margin:5px 0;padding:4px 8px;border:1px solid #9a7b3e66;border-radius:12px;background:#eadcbf;color:#67502b;font:bold 9px "DM Sans";letter-spacing:.7px}
+.detail-power{font-weight:800;color:var(--rust)!important}
+.detail-costs{display:flex;align-items:center;gap:5px;min-height:30px;margin:10px 0}
+.detail-costs>span:not(.cost){font-size:var(--t-small);color:var(--muted)}
+.detail-rules{font:italic var(--t-small)/1.65 Georgia,serif!important;color:#5f5749!important}
+
+@media(max-width:700px){
+  .battlefield-wrap{
+    scroll-snap-type:x proximity;scroll-padding-inline:8px;
+    box-shadow:inset 17px 0 16px -18px #e0bd6eaa,inset -17px 0 16px -18px #e0bd6eaa,0 18px 48px #0008
+  }
+  .board{grid-template-columns:repeat(4,120px)}
+  .board,.battlefield-wrap>.battle-label,.clash-line{width:max(100%,504px);min-width:504px}
+  .board .lane{scroll-snap-align:start;scroll-margin-inline:8px}
+  .lane-scroll-cue{display:flex;align-items:center;justify-content:center;gap:7px;margin:1px 0 5px;color:#cdbd98;font:bold 10px "DM Sans";letter-spacing:.9px;text-transform:uppercase}
+  .lane-scroll-cue span{color:#dfba68;font-size:15px}
+  .river-week .board.three-lanes{grid-template-columns:repeat(3,120px)}
+  .river-week .board.three-lanes,.river-week .clash-line,.river-week .battle-label{width:max(100%,376px);min-width:376px}
+  .river-week .river-lane{left:384px;right:auto;width:120px}
+
+  /* Battlefield occupancy map: status/production top-left, ability top-right,
+     power bottom-left, and the name in the remaining lower strip. */
+  .slot-card.presentation-battlefield .forecast-stack,.slot-card.presentation-battlefield .slot-contract{top:4px;left:4px}
+  .slot-card.presentation-battlefield .slot-card-copy{left:38px;right:5px;bottom:5px;min-width:0}
+  .slot-card.presentation-battlefield .slot-card-copy b{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slot-card.presentation-battlefield .slot-card-copy small{display:none}
+  .slot-card.presentation-battlefield .slot-power{left:4px;right:auto;top:auto;bottom:4px;width:29px;height:33px}
+  .slot-card.presentation-battlefield .slot-power i{font-size:9px}
+  .slot-card.presentation-battlefield .slot-power b{font-size:13px}
+  .slot-card.presentation-battlefield .slot-shield:after{top:5px;bottom:auto}
+
+  /* Hand cards are always compact commands. Costs have their own rail and
+     the footer is reserved for power/status, so long names cannot collide. */
+  .game-card.presentation-hand{
+    --compact-art:66px;display:grid;grid-template-rows:var(--compact-art) 28px minmax(36px,auto) 36px;
+    width:136px;min-width:136px;min-height:176px;padding:0;align-content:start
+  }
+  .presentation-hand .card-art,.presentation-hand .card-art.painted{grid-row:1;height:var(--compact-art);margin:0;border-radius:0}
+  .presentation-hand .costs,.presentation-hand.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:28px;padding:3px 8px 2px;background:#e9dfca}
+  .presentation-hand .cost{flex:0 0 20px;width:20px;height:20px;font-size:10px}
+  .presentation-hand h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-self:start;min-height:34px;margin:0;padding:4px 8px 0;font-size:var(--t-small);line-height:1.15}
+  .presentation-hand p{display:none!important}
+  .presentation-hand .power{left:8px;right:auto;bottom:7px;display:flex;align-items:center;gap:3px;width:auto;height:auto;clip-path:none;background:none;color:var(--rust);filter:none;text-shadow:none;padding:0;font-size:var(--t-small)}
+  .presentation-hand .power i,.presentation-hand .power b{color:inherit;font:inherit}
+  .presentation-hand .contract-seal{top:5px;right:5px;bottom:auto}
+}
+
+@media(max-width:600px){
+  .card-detail-layout{grid-template-columns:1fr;gap:18px}
+  .card-detail-layout .presentation-modal{width:min(230px,100%);justify-self:center}
+  .card-detail-copy{text-align:left}
+
+  .game-card.presentation-ability{
+    display:grid;grid-template-rows:88px 28px minmax(38px,auto) 36px;
+    min-height:190px!important;padding:0;align-content:start
+  }
+  .presentation-ability .card-art,.presentation-ability .card-art.painted{grid-row:1;height:88px;margin:0;border-radius:0}
+  .presentation-ability .costs,.presentation-ability.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:28px;padding:3px 7px;background:#e9dfca}
+  .presentation-ability .cost{flex:0 0 20px;width:20px;height:20px}
+  .presentation-ability h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:36px;margin:0;padding:4px 8px 0;font-size:14px;line-height:1.15}
+  .presentation-ability p{display:none!important}
+  .presentation-ability .power{bottom:8px;right:8px}
+}
+
+@media(max-width:480px){
+  .game-card.presentation-catalog{
+    display:grid;grid-template-rows:100px 30px minmax(42px,auto) 42px;
+    min-width:0;min-height:228px!important;padding:0;align-content:start
+  }
+  .presentation-catalog .card-art,.presentation-catalog .card-art.painted{grid-row:1;height:100px;margin:0;border-radius:0}
+  .presentation-catalog .costs,.presentation-catalog.illustrated .costs{grid-row:2;position:static;display:flex;align-items:center;justify-content:flex-end;gap:4px;min-height:30px;padding:4px 7px 3px;background:#e9dfca}
+  .presentation-catalog .cost{flex:0 0 21px;width:21px;height:21px;font-size:10px}
+  .presentation-catalog h3{grid-row:3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;align-self:start;min-height:40px;margin:0;padding:5px 8px 0;font-size:16px;line-height:1.15}
+  .presentation-catalog p{display:none!important}
+  .presentation-catalog .power{left:auto;right:8px;bottom:9px}
+  .presentation-catalog .contract-seal{top:5px;right:5px;bottom:auto}
+}
+
+@media(max-width:360px){
+  .card-grid,.collection-grid{grid-template-columns:1fr}
+  .game-card.presentation-catalog{min-height:240px!important}
 }

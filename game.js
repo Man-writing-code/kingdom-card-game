@@ -2,16 +2,16 @@ const CARDS = {
   logging:{name:'Logging Camp',type:'building',icon:'♧',accent:'#51734d',cost:{},text:'Harvest 1 wood after each clash.',produce:{material:1}},
   mining:{name:'Mining Camp',type:'building',icon:'◆',accent:'#65717a',cost:{},text:'Harvest 1 metal after each clash.',produce:{metal:1}},
   farm:{name:'Farm',type:'building',icon:'♨',accent:'#87964c',cost:{},text:'Harvest 1 food after each clash.',produce:{food:1}},
-  tradingpost:{name:'Trading Post',type:'building',icon:'⇄',accent:'#8a6843',cost:{},text:'Harvest 1 random basic resource after each clash.',special:'tradingpost'},
-  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Produce 1 gold after every second clash.',special:'goldmine'},
-  townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'Recruit a random worker at the start of each new round. It costs nothing to deploy.',special:'townhall'},
-  university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each new hand.',special:'university'},
-  cathedral:{name:'Cathedral',type:'building',icon:'✟',accent:'#67647b',cost:{material:4,metal:4},text:'When revealed, raise 6 fortification. At the start of each round, recruit a random unit. It costs nothing to deploy.',special:'cathedral'},
+  tradingpost:{name:'Trading Post',type:'building',icon:'⇄',accent:'#8a6843',cost:{},text:'Harvest 1 random food, wood, or metal after each clash.',special:'tradingpost'},
+  goldmine:{name:'Gold Mine',type:'building',icon:'●',accent:'#b4852f',cost:{},text:'Harvest 1 gold after every second clash.',special:'goldmine'},
+  townhall:{name:'Town Hall',type:'building',icon:'♜',accent:'#955a3b',cost:{material:3},text:'At the start of each round, recruits a random worker, free to deploy.',special:'townhall'},
+  university:{name:'University',type:'building',icon:'✦',accent:'#5a5481',cost:{material:3},text:'Draw one additional card each round.',special:'university'},
+  cathedral:{name:'Cathedral',type:'building',icon:'✟',accent:'#67647b',cost:{material:4,metal:4},text:'When revealed, raises 6 fortification. At the start of each round, recruits a random unit, free to deploy.',special:'cathedral'},
   soldier:{name:'Soldier',type:'unit',icon:'⚔',accent:'#8b4b38',cost:{food:1,metal:1},power:2,text:''},
   farmer:{name:'Farmer',type:'unit',icon:'♟',accent:'#87964c',cost:{food:1},power:1,text:'Harvest 1 food after each clash.',special:'worker',produce:{food:1}},
   lumberjack:{name:'Lumberjack',type:'unit',icon:'♣',accent:'#51734d',cost:{material:1},power:1,text:'Harvest 1 wood after each clash.',special:'worker',produce:{material:1}},
   miner:{name:'Miner',type:'unit',icon:'♦',accent:'#65717a',cost:{metal:1},power:1,text:'Harvest 1 metal after each clash.',special:'worker',produce:{metal:1}},
-  firesapper:{name:'Fire Sapper',type:'unit',icon:'♨',accent:'#a84d32',cost:{material:1},power:0,text:'At the clash, burns itself out and destroys the opposing unit in its lane.',special:'sapper'},
+  firesapper:{name:'Fire Sapper',type:'unit',icon:'♨',accent:'#a84d32',cost:{material:1},power:0,text:'At the clash, burns out and destroys the opposing unit in its lane.',special:'sapper'},
   knight:{name:'Knight',type:'unit',icon:'♞',accent:'#475b73',cost:{food:1,metal:2},power:2,text:'Gains +2 power when facing an opposing unit.',special:'knight'},
   lumbermill:{name:'Sawmill',type:'building',icon:'♧',accent:'#406a46',cost:{material:2,food:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   foundry:{name:'Forge',type:'building',icon:'♢',accent:'#59636a',cost:{metal:2,food:1},text:'Harvest 2 metal after each clash.',produce:{metal:2}},
@@ -20,52 +20,53 @@ const CARDS = {
   carpentersyard:{name:"Carpenter's Yard",type:'building',icon:'⚒',accent:'#8a6139',cost:{material:2,metal:1},text:'Harvest 2 wood after each clash.',produce:{material:2}},
   swinecroft:{name:"Swineherd's Croft",type:'building',icon:'♨',accent:'#8b6a3f',cost:{food:2,metal:1},text:'Harvest 2 food after each clash.',produce:{food:2}},
   foodgranary:{name:'Granary',type:'building',icon:'▲',accent:'#a17d38',cost:{food:5},text:'All friendly units have +1 power.',special:'granary'},
-  market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Produce 1 gold after each clash.',produce:{gold:1}},
+  market:{name:'Market',type:'building',icon:'¤',accent:'#9a7739',cost:{material:2,gold:1},text:'Harvest 1 gold after each clash.',produce:{gold:1}},
   watchtower:{name:'Watchtower',type:'building',icon:'♖',accent:'#596856',cost:{material:2},text:'The friendly unit in this lane has +1 power.',special:'watchtower'},
   archer:{name:'Archer',type:'unit',icon:'➶',accent:'#6a7750',cost:{material:2},power:2,text:''},
+  crossbowman:{name:'Crossbowman',type:'unit',icon:'➶',accent:'#646d5c',cost:{material:1,metal:1},power:2,text:''},
   pikeman:{name:'Pikeman',type:'unit',icon:'↟',accent:'#596676',cost:{food:1,metal:2},power:2,text:'Gains +1 power for each round it has held its lane, up to +3.',special:'entrench'},
-  merchant:{name:'Merchant',type:'unit',icon:'$',accent:'#a37835',cost:{food:1,gold:1},power:1,text:'After each clash, converts 1 random food, wood, or metal into 1 gold.',special:'merchant'},
   taxcollector:{name:'Tax Collector',type:'unit',icon:'§',accent:'#9a7334',cost:{gold:1},power:1,text:'Harvest 1 gold after each clash.',special:'taxcollector'},
   cutpurse:{name:'Cutpurse',type:'unit',icon:'¤',accent:'#75603f',cost:{gold:1},power:2,text:'After dealing direct damage, steals 1 random food, wood, or metal from the opposing ruler.',special:'cutpurse'},
-  assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'After each clash, if it survives, returns to your hand.',special:'assassin'},
+  assassin:{name:'Assassin',type:'unit',icon:'†',accent:'#4b526b',cost:{gold:2},power:5,text:'Pierce: after winning a unit clash, deals the power difference to the opposing keep. Returns to your hand if it survives.',special:'assassin'},
   foreignmercenary:{name:'Mercenary',type:'unit',icon:'⚔',accent:'#70618a',cost:{gold:1},power:3,text:'Leaves the battlefield after its second clash.',special:'mercenary'},
   ranger:{name:'Ranger',type:'unit',icon:'⌁',accent:'#3e714d',cost:{food:2,material:1},power:3,text:''},
-  champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:2,metal:2,gold:1},power:5,text:''},
-  militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:''},
-  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'Destroyed in place of one adjacent friendly unit. Guards do not shield each other.',special:'guard'},
-  peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'A generated 1-power unit. Peasants vanish when they leave the battlefield.',special:'peasant',token:true},
+  champion:{name:'Champion',type:'unit',icon:'♛',accent:'#944d39',cost:{food:1,material:1,metal:1},power:4,text:'Cleave 3: after all clashes, destroys opposing units of 3 or less power in the adjacent lanes.',special:'cleave'},
+  militia:{name:'Militia',type:'unit',icon:'⚑',accent:'#75664d',cost:{food:1,material:1},power:2,text:'Volunteer: when discarded during planning, add a temporary Farmer or Lumberjack to your hand at random.',special:'volunteer'},
+  townguard:{name:'Town Guard',type:'unit',icon:'◇',accent:'#8a5f4a',cost:{food:1,metal:1},power:2,text:'Falls in place of one adjacent friendly unit. Guards never shield each other.',special:'guard'},
+  peasant:{name:'Peasant',type:'unit',icon:'♟',accent:'#9a8147',cost:{food:1},power:1,text:'Vanishes when it leaves the battlefield.',special:'peasant',token:true},
   villagecommons:{name:'Village Commons',type:'building',icon:'⌂',accent:'#8b9548',cost:{food:2},text:'At the start of each round, adds a Peasant to your hand.',special:'commons'},
   peasantmob:{name:'Peasant Mob',type:'unit',icon:'⚑',accent:'#9b733d',cost:{food:2},power:2,text:'Gains +1 power for each friendly unit in an adjacent lane.',special:'mob'},
   manatarms:{name:'Man-at-Arms',type:'unit',icon:'⚔',accent:'#596779',cost:{metal:2},power:3,text:''},
-  gatehouse:{name:'Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:1,metal:2},text:'When revealed, raise 2 fortification. The friendly unit in this lane has +1 power.',special:'gatehouse'},
-  batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'After surviving against a building, destroys it instead of striking the ruler, then becomes a 1-power Damaged Ram.',special:'ram'},
+  gatehouse:{name:'Gatehouse',type:'building',icon:'♜',accent:'#566573',cost:{material:1,metal:2},text:'When revealed, raises 2 fortification. The friendly unit in this lane has +1 power.',special:'gatehouse'},
+  batteringram:{name:'Battering Ram',type:'unit',icon:'➠',accent:'#59636a',cost:{material:1,metal:3},power:4,text:'Instead of striking the ruler, destroys the building in its lane, then becomes a 1-power Damaged Ram.',special:'ram'},
   trebuchet:{name:'Trebuchet',type:'unit',icon:'⚙',accent:'#665f55',cost:{material:3,metal:1},power:2,text:'After each clash, if it survives, destroys a random enemy building.',special:'trebuchet'},
-  rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, generates a Peasant in your hand.',special:'rabble'},
-  levycaptain:{name:'Levy Captain',type:'unit',icon:'⚑',accent:'#8c6a3b',cost:{food:4},power:3,text:'When revealed, musters a Peasant into each empty adjacent friendly unit slot.',special:'levycaptain'},
+  rabblerouser:{name:'Rabble-Rouser',type:'unit',icon:'⚑',accent:'#a86f3b',cost:{food:2},power:2,text:'When revealed, adds a Peasant to your hand.',special:'rabble'},
+  levycaptain:{name:'Levy Captain',type:'unit',icon:'⚑',accent:'#8c6a3b',cost:{food:4},power:3,text:'When revealed, musters a Peasant into each empty adjacent unit slot.',special:'levycaptain'},
   palisade:{name:'Palisade',type:'building',icon:'╫',accent:'#6f7844',cost:{material:2},text:'Reduces direct damage through this lane by 2.',special:'palisade'},
   wallwarden:{name:'Wall Warden',type:'unit',icon:'♜',accent:'#68734c',cost:{material:2},power:1,text:'Gains +2 power while sharing a lane with a friendly building.',special:'wallwarden'},
   royalguard:{name:'Royal Guard',type:'unit',icon:'♛',accent:'#4e637b',cost:{metal:3},power:4,text:''},
   armoury:{name:'Armoury',type:'building',icon:'⚒',accent:'#566779',cost:{metal:2},text:'The friendly unit in this lane has +1 power.',special:'armoury'},
   huntsman:{name:'Huntsman',type:'unit',icon:'➶',accent:'#557448',cost:{food:1,material:1},power:2,text:'After winning a unit clash and surviving, gain 1 wood.',special:'huntsman'},
-  huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When this lane’s unit deals direct damage, gain 1 food.',special:'huntinglodge'},
-  ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before combat, destroys itself and an opposing unit with at least 4 current power.',special:'ballista'},
-  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall during normal unit combat, it survives permanently damaged at 1 power.',special:'pavise'},
-  gaol:{name:'Gaol',type:'building',icon:'▦',accent:'#5f5c54',cost:{metal:4},text:'When revealed, imprisons the opposing unit in this lane. When it falls, a free copy returns to their hand.',special:'gaol'},
+  huntinglodge:{name:'Hunting Lodge',type:'building',icon:'⌂',accent:'#657348',cost:{food:1,material:2},text:'When the friendly unit in this lane deals direct damage, gain 1 food.',special:'huntinglodge'},
+  ballista:{name:'Ballista Emplacement',type:'building',icon:'➠',accent:'#566a67',cost:{material:2,metal:2},text:'Before the clash, destroys itself and an opposing unit of 4 or more current power.',special:'ballista'},
+  paviseguard:{name:'Pavise Guard',type:'unit',icon:'◈',accent:'#566b72',cost:{material:1,metal:2},power:2,text:'The first time it would fall in unit combat, it survives at 1 power instead.',special:'pavise'},
+  gaol:{name:'Gaol',type:'building',icon:'▦',accent:'#5f5c54',cost:{metal:4},text:'When revealed, imprisons the opposing unit in this lane. When the Gaol falls, a free copy returns to its owner’s hand.',special:'gaol'},
   mason:{name:'Mason',type:'unit',icon:'▨',accent:'#7c8792',cost:{metal:1},power:1,text:'Raises 1 fortification after each clash.',special:'mason'},
   feastinghall:{name:'Feasting Hall',type:'building',icon:'♨',accent:'#8b633d',cost:{food:2,material:1},text:'Once per round during planning, discard a card to give the friendly unit in this lane +2 power for the next clash.',special:'feastinghall'},
   wayfarerslodge:{name:"Wayfarer’s Lodge",type:'building',icon:'⌂',accent:'#65744e',cost:{food:1,material:2},text:'Harvest 1 wood after each clash. Once per round, discard a unit to draw a building, or a building to draw a unit.',special:'wayfarerslodge',produce:{material:1}},
   mercenaryguild:{name:'Mercenary Guild',type:'building',icon:'⚑',accent:'#7c6542',cost:{food:2,gold:1},text:'At the start of each round, offers a random Mercenary, Assassin, or Lancer Contract at its printed cost.',special:'mercenaryguild'},
   treasury:{name:'Treasury',type:'building',icon:'♛',accent:'#89703a',cost:{material:2,gold:1},text:'If you begin a round with at least 3 gold, draw one additional card.',special:'treasury'},
-  bank:{name:'Bank',type:'building',icon:'¤',accent:'#80683d',cost:{material:2,gold:2},text:'After harvesting, gain 1 gold per 2 gold stored, up to 6 gold per Bank.',special:'bank'},
+  bank:{name:'Bank',type:'building',icon:'¤',accent:'#80683d',cost:{material:2,gold:2},text:'After harvesting, gain 1 gold for every 2 gold you hold, up to 6 per Bank.',special:'bank'},
   tollhouse:{name:'Tollhouse',type:'building',icon:'⌂',accent:'#786342',cost:{material:1,gold:1},text:'When the friendly unit in this lane deals direct damage, gain 1 gold.',special:'tollhouse'},
   outrider:{name:'Outrider',type:'unit',icon:'♞',accent:'#55704b',cost:{food:1,material:1},power:2,text:'Once per round during planning, discard a card to gain +2 power for the next clash.',special:'outrider'},
-  lancer:{name:'Lancer',type:'unit',icon:'↟',accent:'#765b77',cost:{gold:3},power:7,text:'Leaves the battlefield after its first clash, whatever the outcome.',special:'lancer'}
+  lancer:{name:'Lancer',type:'unit',icon:'↟',accent:'#765b77',cost:{gold:3},power:7,text:'Pierce: after winning a unit clash, deals the power difference to the opposing keep. Leaves the battlefield after its first clash, win or lose.',special:'lancer'}
 };
 // The old Charge-version Lancer and Banner Captain remain shelved; this Lancer is a new Gold
 // contract design. Normalisation still scrubs the absent Banner Captain from old saves.
 
 const WORKERS=['farmer','lumberjack','miner'];
 const CONTRACT_UNITS=['foreignmercenary','assassin','lancer'];
+const PIERCE_UNITS=['assassin','lancer'];
 const BASIC_RESOURCES=['food','material','metal'];
 const TIER_TWO=['lumbermill','foundry','granary','bloomery','carpentersyard','swinecroft'];
 const ARCHETYPE_CARDS=['villagecommons','peasantmob','manatarms','gatehouse','batteringram'];
@@ -74,24 +75,34 @@ const RECRUITABLE_UNITS=COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit');
 const INITIAL_UNLOCKED=['logging','mining','farm','goldmine','townhall','university','soldier','farmer','lumberjack','miner','firesapper','knight','archer',...TIER_TWO,...ARCHETYPE_CARDS];
 const PRE_ARCHER_DEFAULT=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const DEFAULT_DECK=['logging','mining','mining','farm','lumbermill','foundry','granary','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','archer'];
-// The General, Wood Architect and Commons Rush banners are retired for now; their cards remain
-// in the pool, and git history holds the lists if any of them is wanted back.
-const AI_DECKS={
-  uprising:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','levycaptain','levycaptain','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack'],
-  forestfire:['firesapper','firesapper','firesapper','firesapper','logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','university','lumberjack','lumberjack','lumberjack','wallwarden'],
-  strikesteel:['royalguard','royalguard','royalguard','royalguard','manatarms','manatarms','manatarms','manatarms','armoury','armoury','mining','mining','mining','mining','miner','miner','miner','miner','foundry','goldmine'],
-  metal:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard'],
-  timber:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper'],
-  siege:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']
-};
-const AI_PROFILE_NAMES={uprising:'VILLAGE UPRISING',forestfire:'FOREST FIRE',strikesteel:'STRIKE STEEL',metal:'IRON CROWN',timber:'TIMBER SCHOLARS',siege:'SIEGE TRAIN'};
+// One registry owns the opponent-facing name, banner and strategic identity. The compatibility
+// maps below keep the battle and regression surfaces stable while Challenge Run can later order
+// the same opponents without another copy of their data.
+const AI_OPPONENTS=[
+  {id:'uprising',name:'VILLAGE UPRISING',strategies:['swarm'],deck:['farm','farm','farm','farm','farmer','farmer','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','levycaptain','levycaptain','villagecommons','villagecommons','granary','granary','lumberjack','lumberjack']},
+  {id:'forestfire',name:'FOREST FIRE',strategies:['wood-control'],deck:['firesapper','firesapper','firesapper','firesapper','logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','university','lumberjack','lumberjack','lumberjack','wallwarden']},
+  {id:'strikesteel',name:'STRIKE STEEL',strategies:['metal-pressure'],deck:['royalguard','royalguard','royalguard','royalguard','manatarms','manatarms','manatarms','manatarms','armoury','armoury','mining','mining','mining','mining','miner','miner','miner','miner','foundry','goldmine']},
+  {id:'metal',name:'IRON CROWN',strategies:['metal-pressure'],deck:['mining','mining','mining','mining','foundry','foundry','farm','farm','logging','logging','manatarms','manatarms','royalguard','royalguard','armoury','armoury','gatehouse','batteringram','ballista','paviseguard']},
+  {id:'timber',name:'TIMBER SCHOLARS',strategies:['wood-tempo'],deck:['logging','logging','logging','logging','lumbermill','lumbermill','lumbermill','farm','farm','university','university','lumberjack','archer','archer','archer','archer','firesapper','firesapper','firesapper','firesapper']},
+  {id:'siege',name:'SIEGE TRAIN',strategies:['siege'],deck:['mining','mining','mining','mining','logging','logging','foundry','batteringram','batteringram','batteringram','batteringram','manatarms','manatarms','manatarms','manatarms','paviseguard','paviseguard','firesapper','firesapper','firesapper']},
+  {id:'woodlandpatrol',name:'WOODLAND PATROL',strategies:['food-wood','cycling'],deck:['farm','farm','farm','logging','logging','logging','huntinglodge','huntinglodge','feastinghall','wayfarerslodge','huntsman','huntsman','huntsman','huntsman','outrider','outrider','outrider','ranger','ranger','ranger']},
+  {id:'granarymuster',name:'GRANARY MUSTER',strategies:['swarm'],deck:['farm','farm','farm','farm','mining','mining','swinecroft','swinecroft','villagecommons','foodgranary','rabblerouser','rabblerouser','rabblerouser','peasantmob','peasantmob','peasantmob','levycaptain','levycaptain','townguard','townguard']},
+  {id:'longspear',name:'THE LONG SPEAR',strategies:['pike-line'],deck:['farm','farm','farm','mining','mining','mining','foundry','foundry','armoury','armoury','pikeman','pikeman','pikeman','pikeman','townguard','townguard','townguard','knight','knight','mason']},
+  {id:'stonebastion',name:'STONE BASTION',strategies:['fortress'],deck:['farm','farm','mining','mining','mining','logging','logging','gatehouse','gaol','cathedral','ballista','mason','mason','mason','townguard','townguard','royalguard','royalguard','paviseguard','paviseguard']},
+  {id:'siegeengineers',name:'SIEGE ENGINEERS',strategies:['siege'],deck:['logging','logging','logging','mining','mining','mining','bloomery','carpentersyard','gatehouse','ballista','trebuchet','trebuchet','batteringram','batteringram','firesapper','firesapper','paviseguard','paviseguard','manatarms','manatarms']},
+  {id:'scholarsash',name:'SCHOLARS OF ASH',strategies:['wood-control','cycling'],deck:['logging','logging','logging','logging','farm','farm','university','university','lumbermill','wayfarerslodge','firesapper','firesapper','firesapper','firesapper','wallwarden','wallwarden','outrider','outrider','archer','archer']},
+  {id:'tollroad',name:'TOLLROAD COMPANY',strategies:['gold-tempo'],deck:['logging','logging','logging','farm','farm','goldmine','goldmine','tollhouse','tollhouse','market','cutpurse','cutpurse','cutpurse','taxcollector','taxcollector','foreignmercenary','foreignmercenary','assassin','assassin','lancer']},
+  {id:'gildedcourt',name:'THE GILDED COURT',strategies:['gold-engine'],deck:['logging','logging','logging','farm','farm','goldmine','goldmine','market','mercenaryguild','treasury','bank','cutpurse','cutpurse','taxcollector','taxcollector','assassin','assassin','foreignmercenary','foreignmercenary','lancer']}
+];
+const AI_DECKS=Object.fromEntries(AI_OPPONENTS.map(opponent=>[opponent.id,opponent.deck]));
+const AI_PROFILE_NAMES=Object.fromEntries(AI_OPPONENTS.map(opponent=>[opponent.id,opponent.name]));
+const AI_PROFILE_STRATEGIES=Object.fromEntries(AI_OPPONENTS.map(opponent=>[opponent.id,opponent.strategies]));
 const PRE_TIER_TWO_DECK=['logging','logging','mining','mining','mining','farm','farm','goldmine','goldmine','townhall','townhall','university','soldier','soldier','farmer','lumberjack','miner','firesapper','knight','knight'];
 const META_RULES=[
 // Guild Charters is retired: it only ever touched the tier-two engines, so a week could
 // land on it and change nothing at all for a collection that held none of them. A decree should
 // reshape the week for every banner, not just the ones holding the right three cards.
   {id:'winter',icon:'❄',name:'The Long Winter',text:'Food, Metal, and Wood buildings produce 1 less; surviving workers produce 1 extra.',flavour:'“Storehouses empty. Calloused hands endure.”'},
-  {id:'tradefair',icon:'¤',name:'The Grand Fair',text:'Markets produce +1 Gold, Gold Mines pay every round, and Merchants gain +1 power.',flavour:'“Every road leads to the royal market.”'},
   {id:'leancourt',icon:'Ⅰ',name:'The Lean Court',text:'Each ruler draws only 1 base card at the start of a new round.',flavour:'“Every summons must earn its place at court.”'},
   {id:'longmuster',icon:'Ⅲ',name:'The Long Muster',text:'Each ruler begins with 3 cards, then draws 3 base cards at the start of each new round.',flavour:'“The host assembles slowly, then all at once.”'},
   {id:'river',icon:'≈',name:'The River Runs High',text:'The easternmost lane is flooded for both rulers, leaving only 3 active lanes.',flavour:'“The river takes no side, only ground.”'}
@@ -119,7 +130,7 @@ const calendarRule=()=>META_RULES[weekIndex()%META_RULES.length];
 // so the panel can be closed without losing the override you set.
 const storedDevMode=localStorage.getItem('kingdom-dev-mode');
 let devMode=DEV_BUILD&&(storedDevMode===null?true:storedDevMode==='1');
-let currentRule=calendarRule(),game=null,selectedUid=null,deckFilter='all',meta=null,countdownTimer=null;
+let currentRule=calendarRule(),game=null,selectedUid=null,deckFilter='all',meta=null,countdownTimer=null,detailTapKey=null,modalReturnFocus=null;
 const readStore=()=>{try{return JSON.parse(localStorage.getItem('kingdom-meta')||'{}')||{}}catch(e){return {}}};
 const saveMeta=()=>{try{localStorage.setItem('kingdom-meta',JSON.stringify(meta))}catch(e){}};
 function sanitizeDeck(deck,unlocked){const counts={},out=[];for(const id of deck||[]){if(!CARDS[id]||!unlocked.includes(id))continue;if(out.length>=DECK_SIZE)break;counts[id]=(counts[id]||0)+1;if(counts[id]>MAX_COPIES)continue;out.push(id)}return out}
@@ -204,6 +215,7 @@ loadMeta();
 if(meta)devDeck=readDevDeck();
 
 function showScreen(name){
+  detailTapKey=null;
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id===`${name}Screen`));
   $$('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   document.body.dataset.screen=name;
@@ -233,7 +245,7 @@ const CARD_ART={
   foodgranary:'assets/cards/granary.webp',market:'assets/cards/market.webp',watchtower:'assets/cards/watchtower.webp',
   soldier:'assets/cards/soldier.webp',farmer:'assets/cards/farmer.webp',lumberjack:'assets/cards/lumberjack.webp',miner:'assets/cards/miner.webp',
   firesapper:'assets/cards/fire-sapper.webp',knight:'assets/cards/knight.webp',archer:'assets/cards/archer.webp',pikeman:'assets/cards/pikeman.webp',
-  merchant:'assets/cards/merchant.webp',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
+  crossbowman:'assets/cards/crossbowman.png',taxcollector:'assets/cards/tax-collector.webp',cutpurse:'assets/cards/cutpurse.webp',assassin:'assets/cards/assassin.webp',foreignmercenary:'assets/cards/foreign-mercenary.webp',ranger:'assets/cards/ranger.webp',champion:'assets/cards/champion.webp',militia:'assets/cards/militia.webp',
   townguard:'assets/cards/town-guard.png',
   gaol:'assets/cards/gaol.png',
   peasant:'assets/cards/peasant.webp',villagecommons:'assets/cards/village-commons.webp',peasantmob:'assets/cards/peasant-mob.webp',
@@ -247,8 +259,33 @@ const CARD_ART={
   outrider:'assets/cards/outrider.webp',lancer:'assets/cards/lancer.webp'
 };
 function cardHtml(id,opts={}){
-  const c=CARDS[id],art=CARD_ART[id];
-  return `<article class="game-card card-${c.type} ${art?'illustrated':''} ${opts.contract?'contract-card':''} ${opts.className||''}" data-card="${id}" ${opts.uid?`data-uid="${opts.uid}"`:''} ${opts.free?'data-free="1"':''} ${opts.contract?'data-contract="1"':''} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span>${opts.contract?'<span class="contract-seal">CONTRACT</span>':''}</div><div class="costs">${opts.free?'<span class="cost granted" title="Granted — costs nothing to deploy">✦</span>':costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3>${c.text?`<p>${c.text}</p>`:''}${c.power!==undefined?`<span class="power">⚔ ${c.power}</span>`:''}${opts.extra||''}</article>`;
+  const c=CARDS[id],art=CARD_ART[id],presentation=opts.presentation||'catalog';
+  const interactive=opts.interactive?` role="${opts.interactiveRole||'button'}" tabindex="0" aria-label="${esc(c.name)}. ${opts.interactiveLabel||'Tap once to focus and again for full details.'}"`:'';
+  return `<article class="game-card card-${c.type} presentation-${presentation} ${art?'illustrated':''} ${opts.contract?'contract-card':''} ${opts.className||''}" data-card="${id}" data-presentation="${presentation}" ${opts.uid?`data-uid="${opts.uid}"`:''} ${opts.free?'data-free="1"':''} ${opts.contract?'data-contract="1"':''}${interactive} style="--accent:${c.accent};${art?`--card-art:url('${art}')`:''}"><div class="card-art ${art?'painted':''}"><span class="card-type">${c.token?'token':c.type}</span><span class="card-glyph">${c.icon}</span>${opts.contract?'<span class="contract-seal">CONTRACT</span>':''}</div><div class="costs">${opts.free?'<span class="cost granted" title="Granted — costs nothing to deploy">✦</span>':costsHtml(effectiveCost(id))}</div><h3>${c.name}</h3>${c.text?`<p>${c.text}</p>`:''}${c.power!==undefined?`<span class="power"><i>⚔</i><b>${c.power}</b></span>`:''}${opts.extra||''}</article>`;
+}
+const compactCardDetails=()=>window.matchMedia?.('(max-width:700px), (pointer:coarse)').matches;
+function cardDetailMeta(element={}){return {free:element.dataset?.free==='1',contract:element.dataset?.contract==='1'}}
+function openCardDetails(id,metadata={}){
+  const card=CARDS[id];if(!card)return;
+  detailTapKey=null;
+  showModal(`<div class="card-detail-layout">${cardHtml(id,{presentation:'modal',free:metadata.free,contract:metadata.contract})}<div class="card-detail-copy"><p class="eyebrow">${card.token?'TOKEN':card.type.toUpperCase()}</p><h2>${esc(card.name)}</h2>${metadata.contract?'<span class="detail-status">CONTRACT · vanishes when it leaves play</span>':''}${metadata.free?'<span class="detail-status">GRANTED · costs nothing to deploy</span>':''}${card.power!==undefined?`<p class="detail-power">⚔ ${card.power} power</p>`:''}<div class="detail-costs">${metadata.free?'<span>Granted free</span>':Object.keys(effectiveCost(id)).length?costsHtml(effectiveCost(id)):'<span>Free to play</span>'}</div><p class="detail-rules">${esc(card.text||'No additional rules.')}</p>${metadata.onBack?`<div class="modal-actions"><button type="button" class="button ghost" data-card-detail-back>${esc(metadata.backLabel||'Back')}</button></div>`:''}</div></div>`);
+  if(metadata.onBack)$('[data-card-detail-back]').onclick=metadata.onBack;
+}
+function primeCompactCard(element,key,metadata={}){
+  if(!compactCardDetails())return false;
+  if(detailTapKey===key){openCardDetails(element.dataset.card,metadata);return true}
+  detailTapKey=key;$$('.detail-primed').forEach(card=>card.classList.remove('detail-primed'));element.classList.add('detail-primed');return true
+}
+function bindCompactCardDetails(container,context){
+  if(!container)return;
+  container.querySelectorAll('.game-card').forEach((card,index)=>{
+    card.onclick=event=>{if(event.target.closest('.deck-controls'))return;primeCompactCard(card,`${context}:${card.dataset.uid||card.dataset.card}:${index}`,cardDetailMeta(card))};
+    card.onkeydown=event=>{
+      // Child controls (notably deck +/- buttons) own their keyboard events.
+      if(event.target!==card||!['Enter',' '].includes(event.key))return;
+      event.preventDefault();card.click()
+    };
+  })
 }
 // No decree currently rewrites a printed cost, but every purchase reads through here, so this
 // is where one would.
@@ -301,10 +338,15 @@ function renderDeckOptions(){
   const del=$('#deleteDeck');if(del)del.disabled=meta.decks.length<2;
   const add=$('#newDeck');if(add)add.disabled=meta.decks.length>=12;
 }
+function renderAiOpponentOptions(){
+  const select=$('#aiDeckSelect');if(!select)return;
+  const chosen=select.value;
+  select.innerHTML=AI_OPPONENTS.map(opponent=>`<option value="${opponent.id}"${opponent.id===chosen?' selected':''}>${opponent.name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('');
+}
 function renderDeckBuilder(){
   const active=activeDeck(),cards=deckCards(active);
   const ids=availableDesigns().filter(id=>deckFilter==='all'||CARDS[id].type===deckFilter);
-  $('#deckCards').innerHTML=ids.map(id=>cardHtml(id,{className:cards.includes(id)?'in-deck':'',extra:`<div class="deck-controls"><button data-minus="${id}">−</button><b>${cards.filter(x=>x===id).length}</b><button data-plus="${id}">+</button></div>`})).join('');
+  $('#deckCards').innerHTML=ids.map(id=>cardHtml(id,{presentation:'catalog',interactive:true,interactiveRole:'group',className:cards.includes(id)?'in-deck':'',extra:`<div class="deck-controls"><button data-minus="${id}" aria-label="Remove ${esc(CARDS[id].name)}">−</button><b>${cards.filter(x=>x===id).length}</b><button data-plus="${id}" aria-label="Add ${esc(CARDS[id].name)}">+</button></div>`})).join('');
   $('#deckCount').textContent=cards.length;
   $('#deckLimitLabel').textContent=`/ ${DECK_SIZE} CARDS`;
   $('#deckRuleText').textContent=devMode?`Every card is unlocked for testing. Choose exactly ${DECK_SIZE}, with no more than four copies of any design.`:`Choose exactly ${DECK_SIZE} cards. No more than four copies of any card.`;
@@ -313,6 +355,7 @@ function renderDeckBuilder(){
   $('#deckUnique').textContent=`${new Set(cards).size} unique · ${cards.length}/${DECK_SIZE} cards${devMode?' · DEV':''}`;
   const nameInput=$('#deckNameInput');if(nameInput&&document.activeElement!==nameInput)nameInput.value=active.name;
   $('#saveDeck').disabled=cards.length!==DECK_SIZE;
+  bindCompactCardDetails($('#deckCards'),'deck');
   renderDeckOptions();
 }
 function adjustDeck(id,amount){
@@ -333,9 +376,10 @@ function renderCollection(){
     :`Every design in Kingdom: ${owned.length} in your collection, ${undiscovered} still undiscovered.`;
   const ids=collectionView==='owned'?owned:COLLECTIBLE_IDS;
   $('#collectionCards').innerHTML=ids.map(id=>{const has=devMode||meta.unlocked.includes(id);
-    return cardHtml(id,{className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>`})}).join('');
+    return cardHtml(id,{presentation:'catalog',interactive:true,className:has?'':'locked',extra:`<span class="owned">${has?'IN COLLECTION':'UNDISCOVERED'}</span>`})}).join('');
   $$('[data-collection]').forEach(b=>b.classList.toggle('active',b.dataset.collection===collectionView));
   $$('.collection-grid .locked').forEach(el=>{el.style.filter='grayscale(1)';el.style.opacity='.48'});
+  bindCompactCardDetails($('#collectionCards'),'collection');
   renderDevCollectionNote();
 }
 function renderDevCollectionNote(){
@@ -348,7 +392,7 @@ function openPack(){
   const locked=COLLECTIBLE_IDS.filter(id=>!meta.unlocked.includes(id));
   if(!locked.length)return showModal('<h2>Archive complete</h2><p>You have discovered every card design in the current set.</p>');
   const offers=shuffle(locked).slice(0,3);
-  showModal(`<p class="eyebrow">WEEKLY SPOILS</p><h2>Choose a discovery</h2><p>Choose one card design. You’ll then sacrifice an existing design to make room in your collection.</p><div class="pack-options">${offers.map(id=>cardHtml(id)).join('')}</div>`);
+  showModal(`<p class="eyebrow">WEEKLY SPOILS</p><h2>Choose a discovery</h2><p>Choose one card design. You’ll then sacrifice an existing design to make room in your collection.</p><div class="pack-options">${offers.map(id=>cardHtml(id,{presentation:'modal'})).join('')}</div>`);
   $$('.pack-options .game-card').forEach(el=>el.onclick=()=>chooseSacrifice(el.dataset.card));
 }
 function chooseSacrifice(newId){
@@ -434,6 +478,7 @@ function drawExactPile(side,pile){
 function gainBonusCard(side,cardId,free=false,contract=false){if(side.hand.length<HAND_LIMIT){side.hand.push(makeHandCard(cardId,true,free,contract));return true}return false}
 function countBuilding(side,special){return side.board.filter(l=>l.building&&CARDS[l.building.cardId].special===special).length}
 function randomWorker(){return WORKERS[Math.floor(Math.random()*WORKERS.length)]}
+function randomVolunteer(){const volunteers=['farmer','lumberjack'];return volunteers[Math.floor(Math.random()*volunteers.length)]}
 function randomRecruitableUnit(){return RECRUITABLE_UNITS[Math.floor(Math.random()*RECRUITABLE_UNITS.length)]}
 function randomContract(){return CONTRACT_UNITS[Math.floor(Math.random()*CONTRACT_UNITS.length)]}
 function openingHandSize(){return currentRule.id==='longmuster'?3:5}
@@ -549,19 +594,26 @@ function activateAbility(side,lane,type,hc,label='Your'){
     const pile=otherPile(pileOf(hc.cardId)),drawn=drawExactPile(side,pile);
     log(`${label} Wayfarer’s Lodge discards ${CARDS[hc.cardId].name} and draws ${drawn?CARDS[drawn].name:`nothing`} from the ${PILE_LABELS[pile]} pile.`);
   }
+  if(CARDS[hc.cardId].special==='volunteer'){
+    const recruit=randomVolunteer(),gained=gainBonusCard(side,recruit);
+    log(gained?`${label} Militia volunteers a temporary ${CARDS[recruit].name} to the cause.`:`${label} Militia finds no room for another volunteer.`)
+  }
   return true
 }
-function openAbilityModal(lane,type){
+function openAbilityModal(lane,type,chosenUid=null){
   if(game.locked||game.player.pendingDraws)return;
   const source=abilitySource(game.player,lane,type),cards=abilityCards(game.player,lane,type);if(!source)return;
   const card=CARDS[source.cardId],special=card.special;
   const help=special==='wayfarerslodge'?'Choose a card. You will draw immediately from the opposite pile.'
     :`Choose a card to discard. ${special==='feastinghall'?'This lane’s unit':'The Outrider'} gains +2 power for the next clash.`;
   if(!cards.length){showModal(`<p class="eyebrow">${esc(card.name)}</p><h2>No valid card to discard</h2><p>${special==='wayfarerslodge'?'The opposite pile must contain a card.':'You need a card in hand and a friendly unit in this lane.'}</p>`);return}
-  showModal(`<p class="eyebrow">ACTIVATE · ONCE THIS ROUND</p><h2>${esc(card.name)}</h2><p>${help} This cannot be undone this round.</p><div class="ability-card-list">${cards.map(hc=>`<button type="button" data-burn-uid="${hc.uid}">${cardHtml(hc.cardId,{contract:hc.contract,free:hc.free})}</button>`).join('')}</div><p id="abilityReview" class="ability-review">Select the card you want to discard.</p><div class="modal-actions"><button class="button ghost" data-cancel-ability>Cancel</button><button class="button primary" data-confirm-ability disabled>Confirm discard</button></div>`);
-  let chosen=null;
+  let chosen=cards.find(hc=>hc.uid===chosenUid)||null;
+  showModal(`<p class="eyebrow">ACTIVATE · ONCE THIS ROUND</p><h2>${esc(card.name)}</h2><p>${help} This cannot be undone this round.</p><div class="ability-card-list">${cards.map(hc=>`<button type="button" data-burn-uid="${hc.uid}" class="${chosen?.uid===hc.uid?'selected':''}">${cardHtml(hc.cardId,{presentation:'ability',contract:hc.contract,free:hc.free})}</button>`).join('')}</div><p id="abilityReview" class="ability-review">${chosen?`${CARDS[chosen.cardId].name} will be discarded.`:'Select the card you want to discard.'}</p><div class="modal-actions"><button class="button ghost" data-cancel-ability>Cancel</button><button class="button primary" data-confirm-ability ${chosen?'':'disabled'}>Confirm discard</button></div>`);
   $$('[data-burn-uid]').forEach(button=>button.onclick=()=>{
-    chosen=cards.find(hc=>hc.uid===button.dataset.burnUid)||null;
+    const next=cards.find(hc=>hc.uid===button.dataset.burnUid)||null;
+    // Returning from details restores the pending choice instead of abandoning the ability.
+    if(compactCardDetails()&&chosen?.uid===next?.uid)return openCardDetails(next.cardId,{free:next.free,contract:next.contract,backLabel:'Back to ability',onBack:()=>openAbilityModal(lane,type,next.uid)});
+    chosen=next;
     $$('[data-burn-uid]').forEach(other=>other.classList.toggle('selected',other===button));
     $('[data-confirm-ability]').disabled=!chosen;
     $('#abilityReview').textContent=chosen?`${CARDS[chosen.cardId].name} will be discarded.`:'Select the card you want to discard.';
@@ -570,10 +622,12 @@ function openAbilityModal(lane,type){
   $('[data-confirm-ability]').onclick=()=>{if(chosen&&activateAbility(game.player,lane,type,chosen,'Your')){selectedUid=null;closeModal();renderGame()}}
 }
 
-function aiVisiblePlayerSlot(lane,type){const slot=game.player.board[lane][type];return slot?.round===game.round?(slot.replaced||null):slot}
+function aiVisibleFoeSlot(foe,lane,type){const slot=foe.board[lane][type];return slot?.round===game.round?(slot.replaced||null):slot}
+function aiVisiblePlayerSlot(lane,type){return aiVisibleFoeSlot(game.player,lane,type)}
 function aiCardValue(id){
   const c=CARDS[id];
   if(['ram','levycaptain'].includes(c.special))return 5;
+  if(c.special==='cleave')return 5;
   if(c.special==='trebuchet')return 4.5;
   if(['sapper','mob','gatehouse','pavise'].includes(c.special)||id==='royalguard')return 3.5;
   // A Knight is a 2 that fights as a 4, and a worker is a 1 that pays every round it lives —
@@ -586,7 +640,6 @@ function aiCardValue(id){
   if(c.special==='mason')return 3;
   // A Town Guard is worth the lanes it holds up rather than the body it is.
   if(c.special==='guard')return 3.5;
-  if(c.special==='merchant')return 3;
   if(c.special==='taxcollector')return 3;
   if(c.special==='cathedral')return 6;
   if(c.special==='lancer')return 6;
@@ -599,6 +652,7 @@ function aiCardValue(id){
 }
 // Hard and Hardcore both take the best-scoring line rather than a random pick off the top of the list.
 const aiPlaysBest=d=>d==='hard'||d==='hardcore';
+const aiHasStrategy=(profile,strategy)=>(AI_PROFILE_STRATEGIES[profile]||[]).includes(strategy);
 // Every card the banner has not committed to the board. The discard belongs here: a pile
 // reclaims its own discards when it runs dry, so a spent card is not gone, only queued. Leaving
 // it out made the AI believe answers it would certainly see again were its last.
@@ -631,21 +685,26 @@ function aiReplacementCost(side,old,incoming){
   }
   return penalty;
 }
-function aiActionScore(hc,lane,difficulty){
-  const side=game.ai,c=CARDS[hc.cardId],cost=handCost(hc),old=side.board[lane][c.type];
+function worthwhileGuardNeighbours(side,lane){
+  return [lane-1,lane+1].filter(index=>index>=0&&index<4&&laneIsActive(index)&&side.board[index].unit)
+    .reduce((value,index)=>value+(['entrench','worker','mason'].includes(CARDS[side.board[index].unit.cardId].special)?2:1),0);
+}
+function aiActionScore(hc,lane,difficulty,side=game.ai,foe=game.player,profile=game.aiProfile){
+  const c=CARDS[hc.cardId],cost=handCost(hc),old=side.board[lane][c.type],foeSlot=type=>aiVisibleFoeSlot(foe,lane,type);
   let score=aiCardValue(hc.cardId)*2-Object.entries(cost).reduce((a,[r,n])=>a+n*aiScarcity(side,r),0)*.3;
   if(old)score-=aiReplacementCost(side,old,hc.cardId);
   if(c.type==='unit'){
-    const enemy=aiVisiblePlayerSlot(lane,'unit'),enemyBuilding=aiVisiblePlayerSlot(lane,'building');
+    const enemy=foeSlot('unit'),enemyBuilding=foeSlot('building');
     // A Knight reads as a 2 on the card and fights as a 4, so weigh it against what it will
     // actually meet in the lane rather than against its printed number.
     const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
     else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-enemy.round)):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
-    else score+=power*1.25+(game.player.health+(game.player.fortification||0)<=power?8:0);
+    else score+=power*1.25+(foe.health+(foe.fortification||0)<=power?8:0);
     if(c.special==='ram'&&enemyBuilding)score+=6;
-    if(c.special==='trebuchet')score+=side===game.ai&&game.player.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
+    if(c.special==='trebuchet')score+=foe.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
     if(c.special==='levycaptain')score+=[lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&!side.board[i].unit).length*2.5;
+    if(c.special==='cleave')score+=[lane-1,lane+1].filter(i=>i>=0&&i<4&&laneIsActive(i)&&foe.board[i].unit&&unitPower(foe,i)<=3).length*4;
     if(c.special==='outrider')score+=side.hand.length?2:0;
     if(c.special==='wallwarden'&&side.board[lane].building)score+=4;
     if(c.special==='huntsman'&&enemy&&(c.power||0)>=(CARDS[enemy.cardId].power||0))score+=2;
@@ -666,17 +725,17 @@ function aiActionScore(hc,lane,difficulty){
     if(c.produce)score+=Object.values(c.produce).reduce((a,b)=>a+b,0)*(aiPlaysBest(difficulty)?2.2:1.5);
     if(['university','townhall','cathedral'].includes(c.special))score+=game.round<5?3:1;
     if(['watchtower','gatehouse'].includes(c.special)&&side.board[lane].unit)score+=3;
-    if(c.special==='palisade'&&!aiVisiblePlayerSlot(lane,'unit'))score+=3;
+    if(c.special==='palisade'&&!foeSlot('unit'))score+=3;
     if(c.special==='armoury'&&side.board[lane].unit)score+=3;
-    if(c.special==='huntinglodge'&&side.board[lane].unit&&!aiVisiblePlayerSlot(lane,'unit'))score+=4;
-    if(c.special==='tollhouse'&&side.board[lane].unit&&!aiVisiblePlayerSlot(lane,'unit'))score+=4;
+    if(c.special==='huntinglodge'&&side.board[lane].unit&&!foeSlot('unit'))score+=4;
+    if(c.special==='tollhouse'&&side.board[lane].unit&&!foeSlot('unit'))score+=4;
     if(c.special==='feastinghall')score+=side.board[lane].unit&&side.hand.length?4:-1;
     if(c.special==='wayfarerslodge')score+=side.hand.length?4:2;
     if(c.special==='treasury')score+=side.resources.gold>=3?5:1;
     if(c.special==='bank')score+=Math.min(6,Math.floor(side.resources.gold/2))*1.4-1;
     if(c.special==='mercenaryguild')score+=side.resources.gold>=1?5:2;
     if(c.special==='ballista'){
-      const enemy=aiVisiblePlayerSlot(lane,'unit');score+=enemy&&(CARDS[enemy.cardId].power||0)>=4?8:-2;
+      const enemy=foeSlot('unit');score+=enemy&&(CARDS[enemy.cardId].power||0)>=4?8:-2;
     }
     // A Commons pays a Peasant a round whatever the board looks like, so it is worth most
     // while there are rounds left for it to pay out over.
@@ -686,17 +745,17 @@ function aiActionScore(hc,lane,difficulty){
     if(c.special==='gatehouse')score+=side.health<=7?4:2;
     if(c.special==='cathedral')score+=side.health+(side.fortification||0)<=MAX_KEEP_HEALTH?6:3;
   }
-  if(game.aiProfile==='strikesteel'){
+  if(profile==='strikesteel'){
     // No tricks in the banner at all: mine metal, put the biggest body available in the way,
     // and keep swinging. Camps come first because everything else is priced in metal.
     if(hc.cardId==='mining')score+=game.round<5?4:2;
-    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-2:3;
+    if(c.special==='worker')score+=foeSlot('unit')?-2:3;
     // An Armoury is only worth its slot beside a body, and the deck has bodies to spare.
     if(c.special==='armoury')score+=side.board[lane].unit?3:-3;
     // A lane the rival has left open is a lane that hits the keep, and that is the whole plan.
-    if(c.type==='unit'&&!aiVisiblePlayerSlot(lane,'unit'))score+=(c.power||0)>=3?4:1;
+    if(c.type==='unit'&&!foeSlot('unit'))score+=(c.power||0)>=3?4:1;
   }
-  if(game.aiProfile==='forestfire'){
+  if(profile==='forestfire'){
     // The banner buys a back row before it buys a fight: two Universities to keep the hand
     // full and Sawmills to pay for it. Everything after that is answers, drawn faster than
     // the rival can present threats — which is why the setup is worth being slow for.
@@ -711,7 +770,7 @@ function aiActionScore(hc,lane,difficulty){
     // Three Universities turn the banner over quickly, so a Sapper is a renewable answer
     // rather than a treasure. Spending one on a guess costs less than the strike it would
     // have stopped — provided more are still to come, which is the condition to check.
-    const facing=aiVisiblePlayerSlot(lane,'unit');
+    const facing=foeSlot('unit');
     if(c.special==='sapper'){
       const spare=aiPending(side).filter(id=>CARDS[id].special==='sapper').length;
       score+=facing?3:(spare>=2?5:-3);
@@ -734,7 +793,7 @@ function aiActionScore(hc,lane,difficulty){
     if(settled&&c.type==='unit'&&c.special!=='sapper'&&!facing&&side.hand.length<HAND_LIMIT-1)score-=3;
     if(c.special==='worker'&&!facing)score+=2;
   }
-  if(game.aiProfile==='uprising'){
+  if(profile==='uprising'){
     // The uprising wins by mass, so what prints bodies matters more than any single body.
     if(['villagecommons','rabblerouser'].includes(hc.cardId))score+=game.round<6?4:2;
     if(hc.cardId==='levycaptain')score+=3;
@@ -743,41 +802,105 @@ function aiActionScore(hc,lane,difficulty){
     if(c.type==='unit')score+=adjacentAllies(side,lane)*1.2;
     if(MOB_SPECIALS.includes(c.special))score+=2;
   }
-  if(game.aiProfile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard'].includes(hc.cardId))score+=2;
-  if(game.aiProfile==='timber'){
+  if(profile==='metal'&&['mining','foundry','manatarms','knight','gatehouse','batteringram','royalguard','armoury','ballista','paviseguard'].includes(hc.cardId))score+=2;
+  if(profile==='timber'){
     // Sawmills carry the only food cost in the banner, so a Farm has to land before they can.
     // Protecting that Farm afterwards is left to the generic last-producer rule above.
     if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?1:6;
     if(['logging','lumbermill'].includes(hc.cardId))score+=game.round<6?4:2;
     if(c.special==='university')score+=game.round<6?5:2;
     // Archers are the whole clock: worth most pointed at an open lane.
-    if(hc.cardId==='archer')score+=aiVisiblePlayerSlot(lane,'unit')?1:3;
+    if(hc.cardId==='archer')score+=foeSlot('unit')?1:3;
     // A Lumberjack only pays out if it lives, so it wants a quiet lane and an early round.
-    if(c.special==='worker')score+=aiVisiblePlayerSlot(lane,'unit')?-3:(game.round<5?4:1);
+    if(c.special==='worker')score+=foeSlot('unit')?-3:(game.round<5?4:1);
     if(c.special==='sapper'){
-      const enemy=aiVisiblePlayerSlot(lane,'unit');
+      const enemy=foeSlot('unit');
       // A Sapper waits in hand for something worth trading up into. The exception is a thin castle,
       // where an unseen attacker has to be answered before it lands rather than after.
       if(enemy)score+=aiCardValue(enemy.cardId)>=3?4:0;
       else score+=side.health<=5?7:-4;
     }
   }
-  if(game.aiProfile==='siege'){
+  if(aiHasStrategy(profile,'siege')){
     // The train runs on metal: camps before all else while the Rams are still in the pile.
     if(hc.cardId==='mining')score+=game.round<5?4:2;
     if(['manatarms','paviseguard'].includes(hc.cardId))score+=2;
     // A Ram is a siege engine, not a soldier: it wants a lane where a building stands
     // unguarded, and settles for fighting only when nothing better is on offer.
     if(c.special==='ram'){
-      const wall=aiVisiblePlayerSlot(lane,'building'),guard=aiVisiblePlayerSlot(lane,'unit');
+      const wall=foeSlot('building'),guard=foeSlot('unit');
       score+=wall?(guard?1:6):0;
     }
     // A Sapper here is a siege tool too — burning the guard off a walled lane tonight
     // is what lets a Ram through it tomorrow.
-    if(c.special==='sapper'&&aiVisiblePlayerSlot(lane,'unit')&&aiVisiblePlayerSlot(lane,'building'))score+=5;
+    if(c.special==='sapper'&&foeSlot('unit')&&foeSlot('building'))score+=5;
+  }
+  if(profile==='woodlandpatrol'){
+    if(hc.cardId==='logging')score+=game.round<5?4.1:1.1;
+    if(hc.cardId==='farm')score+=game.round<5?4:1;
+    if(c.special==='huntinglodge')score+=side.board[lane].unit&&!foeSlot('unit')?4:-1;
+    if(c.special==='wayfarerslodge')score+=side.hand.length>=3?3:1;
+    if(c.special==='feastinghall')score+=side.board[lane].unit&&side.hand.length>=2?3:-2;
+    if(c.special==='huntsman')score+=foeSlot('unit')?3:1;
+    if(c.special==='outrider')score+=side.hand.length>=2?3:0;
+    if(hc.cardId==='ranger'&&!foeSlot('unit'))score+=3;
+  }
+  if(profile==='granarymuster'){
+    if(['villagecommons','rabblerouser'].includes(hc.cardId))score+=game.round<6?5:2;
+    if(hc.cardId==='levycaptain')score+=4;
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)<2?4:1;
+    if(hc.cardId==='foodgranary')score+=side.board.filter(boardLane=>boardLane.unit).length*2-2;
+    if(c.type==='unit')score+=adjacentAllies(side,lane)*1.5;
+    if(MOB_SPECIALS.includes(c.special))score+=3;
+  }
+  if(profile==='longspear'){
+    if(hc.cardId==='mining')score+=game.round<5?4.2:1.2;
+    if(hc.cardId==='farm')score+=game.round<5?4:1;
+    if(c.special==='entrench')score+=old?-5:5;
+    if(c.special==='guard')score+=worthwhileGuardNeighbours(side,lane)*2;
+    if(c.special==='armoury'&&side.board[lane].unit&&CARDS[side.board[lane].unit.cardId].special==='entrench')score+=5;
+    if(c.special==='knight'&&foeSlot('unit'))score+=3;
+  }
+  if(profile==='stonebastion'){
+    if(hc.cardId==='mining')score+=game.round<5?3.2:1.2;
+    if(hc.cardId==='logging')score+=game.round<5?3.1:1.1;
+    if(hc.cardId==='farm')score+=game.round<5?3:1;
+    if(c.special==='mason')score+=foeSlot('unit')?-2:4;
+    if(c.special==='guard')score+=worthwhileGuardNeighbours(side,lane)*2;
+    if(c.special==='gatehouse')score+=side.health+(side.fortification||0)<MAX_KEEP_HEALTH+4?4:1;
+    if(c.special==='cathedral')score+=side.health+(side.fortification||0)<=MAX_KEEP_HEALTH?5:1;
+    if(c.special==='gaol')score+=foeSlot('unit')?8:-3;
+  }
+  if(profile==='scholarsash'){
+    const halls=countBuilding(side,'university'),facing=foeSlot('unit');
+    if(hc.cardId==='logging')score+=aiBoardProducers(side,'material',null)?1:5;
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?0:5;
+    if(c.special==='university')score+=halls<2?6:0;
+    if(c.special==='wayfarerslodge')score+=side.hand.length>=3?5:2;
+    if(c.special==='wallwarden')score+=side.board[lane].building?5:-3;
+    if(c.special==='sapper')score+=facing?5:(aiPending(side).filter(id=>CARDS[id].special==='sapper').length>=2?2:-5);
+    if(c.special==='outrider')score+=side.hand.length>=3?3:0;
+  }
+  if(profile==='tollroad'){
+    if(hc.cardId==='goldmine')score+=game.round<5?7:3;
+    if(hc.cardId==='logging')score+=aiBoardProducers(side,'material',null)?1:4;
+    if(c.special==='tollhouse')score+=side.board[lane].unit&&!foeSlot('unit')?5:-1;
+    if(c.special==='cutpurse')score+=foeSlot('unit')?-1:5;
+    if(c.special==='taxcollector')score+=foeSlot('unit')?-2:3;
+    if(c.special==='assassin'&&foeSlot('unit'))score+=4;
+    if(['mercenary','lancer'].includes(c.special)&&!foeSlot('unit'))score+=3;
+  }
+  if(profile==='gildedcourt'){
+    if(hc.cardId==='goldmine')score+=game.round<5?7:3;
+    if(hc.cardId==='logging')score+=aiBoardProducers(side,'material',null)?1.1:4.1;
+    if(hc.cardId==='farm')score+=aiBoardProducers(side,'food',null)?1:4;
+    if(c.special==='taxcollector')score+=foeSlot('unit')?-2:3;
+    if(c.special==='mercenaryguild')score+=side.resources.gold>=2?6:1;
+    if(c.special==='treasury')score+=side.resources.gold>=3?6:1;
+    if(c.special==='bank')score+=side.resources.gold>=2?6:-2;
+    if(hc.contract||CONTRACT_UNITS.includes(hc.cardId))score+=side.resources.gold>=(cost.gold||0)?4:0;
   }
   if(currentRule.id==='winter'){if(c.special==='worker')score+=3;if(c.produce&&c.type==='building'&&!c.produce.gold)score-=2}
-  if(currentRule.id==='tradefair'&&['goldmine','market','merchant'].includes(hc.cardId))score+=3;
   if(currentRule.id==='leancourt'&&c.special==='university')score+=2;
   const goldSpend=(cost.gold||0)+BASIC_RESOURCES.reduce((sum,resource)=>sum+Math.max(0,(cost[resource]||0)-side.resources[resource]),0),goldAfter=side.resources.gold-goldSpend;
   if(!hc.contract&&countBuilding(side,'treasury')&&side.resources.gold>=3&&goldAfter<3)score-=3;
@@ -786,15 +909,15 @@ function aiActionScore(hc,lane,difficulty){
   // Hardcore takes no jitter at all, so its ranking is purely the evaluation.
   return score+Math.random()*(difficulty==='hardcore'?0:aiPlaysBest(difficulty)?0.35:4.5);
 }
-function aiPlan(){
+function aiPlan(side=game.ai,foe=game.player,profile=game.aiProfile,difficulty=game.aiDifficulty||'normal'){
   // Four lanes times a building and a unit slot is every placement the rules allow in one round, and
   // a slot filled this round is skipped below, so Hardcore's ceiling is simply the whole board.
-  const side=game.ai,difficulty=game.aiDifficulty||'normal',limit=difficulty==='hardcore'?8:difficulty==='hard'?4:2;let actions=0;
+  const limit=difficulty==='hardcore'?8:difficulty==='hard'?4:2;let actions=0;
   while(actions<limit){
     const options=[];
     for(const hc of side.hand){
       const c=CARDS[hc.cardId];if(!canAfford(side,handCost(hc)))continue;
-      for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&!aiPlaysBest(difficulty))continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty)})}
+      for(let lane=0;lane<4;lane++){if(!laneIsActive(lane))continue;const old=side.board[lane][c.type];if(old?.round===game.round)continue;if(old&&aiCardValue(hc.cardId)<=aiCardValue(old.cardId)&&!aiPlaysBest(difficulty))continue;options.push({hc,lane,score:aiActionScore(hc,lane,difficulty,side,foe,profile)})}
     }
     if(!options.length)break;
     // Options are built lane by lane and sort is stable, so equal scores kept their insertion
@@ -812,8 +935,7 @@ function aiBurnCandidate(side,lane,type){
     return (deadB-aiCardValue(b.cardId))-(deadA-aiCardValue(a.cardId))
   })[0]||null
 }
-function aiUseAbilities(){
-  const side=game.ai,foe=game.player;
+function aiUseAbilities(side=game.ai,foe=game.player,profile=game.aiProfile){
   for(let lane=0;lane<4;lane++){
     if(!laneIsActive(lane))continue;
     const lodge=abilitySource(side,lane,'building');
@@ -825,7 +947,7 @@ function aiUseAbilities(){
       const source=abilitySource(side,lane,type),special=source&&CARDS[source.cardId].special;
       if(!['feastinghall','outrider'].includes(special))continue;
       const unit=side.board[lane].unit,burn=aiBurnCandidate(side,lane,type);if(!unit||!burn)continue;
-      const visible=aiVisiblePlayerSlot(lane,'unit'),enemyPower=visible?(CARDS[visible.cardId].power||0):0,current=unitPower(side,lane);
+      const visible=aiVisibleFoeSlot(foe,lane,'unit'),enemyPower=visible?(CARDS[visible.cardId].power||0):0,current=unitPower(side,lane);
       const swingsClash=visible&&current<=enemyPower&&current+2>enemyPower;
       const createsLethal=!visible&&foe.health+(foe.fortification||0)>current&&foe.health+(foe.fortification||0)<=current+2;
       if(swingsClash||createsLethal)activateAbility(side,lane,type,burn,'Rival');
@@ -938,7 +1060,6 @@ function unitPower(side,lane){
   // rounds elapsed since it deployed are exactly its service, with no extra bookkeeping.
   // Capped, so a lane left alone becomes a problem to answer rather than an unanswerable one.
   if(card.special==='entrench')p+=Math.min(ENTRENCH_CAP,Math.max(0,game.round-u.round));
-  if(currentRule.id==='tradefair'&&card.special==='merchant')p++;
   return p;
 }
 // A Gaol only holds while it stands. However it leaves the field — pulled down to make room, or
@@ -996,6 +1117,18 @@ function directStrike(attacker,defender,lane,power,label,ramLabel){
   }
   log(`Lane ${lane+1}: ${label.toLowerCase()} ${label==='You'?'strike':'strikes'} for ${dmg} damage.`)
 }
+function resolvePierce(attacker,defender,lane,attackerPower,defenderPower,unit,label){
+  if(!unit||!PIERCE_UNITS.includes(unit.cardId)||attackerPower<=defenderPower)return 0;
+  const overflow=attackerPower-defenderPower,dmg=dealDamage(defender,overflow,lane);
+  if(dmg>0&&CARDS[attacker.board[lane].building?.cardId]?.special==='huntinglodge'){
+    attacker.resources.food++;log(`Lane ${lane+1}: ${label==='Your'?'Your':'The rival’s'} Hunting Lodge supplies 1 food.`)
+  }
+  if(dmg>0&&CARDS[attacker.board[lane].building?.cardId]?.special==='tollhouse'){
+    attacker.resources.gold++;log(`Lane ${lane+1}: ${label==='Your'?'Your':'The rival’s'} Tollhouse collects 1 gold.`)
+  }
+  log(`Lane ${lane+1}: ${label} ${CARDS[unit.cardId].name} pierces through for ${dmg} damage.`);
+  return dmg
+}
 function resolveMercenaryContracts(side,label){
   side.board.forEach((lane,index)=>{
     const unit=lane.unit;if(!unit||CARDS[unit.cardId].special!=='mercenary')return;
@@ -1026,6 +1159,18 @@ function resolveAssassinReturns(side,label){
     fx.push({t:'returned',who:fxSide(side),lane:index,cardId:unit.cardId});lane.unit=null;
     log(`${label} Assassin returns to hand after the clash in lane ${index+1}.`)
   })
+}
+function resolveCleaves(attacker,defender,label){
+  for(let lane=0;lane<4;lane++){
+    if(!laneIsActive(lane)||CARDS[attacker.board[lane].unit?.cardId]?.special!=='cleave')continue;
+    for(const targetLane of [lane-1,lane+1]){
+      if(targetLane<0||targetLane>=4||!laneIsActive(targetLane))continue;
+      const target=defender.board[targetLane].unit;if(!target||unitPower(defender,targetLane)>3)continue;
+      const name=CARDS[target.cardId].name,out=combatDefeat(defender,targetLane,label==='Your'?'Rival':'Your');
+      const result=out==='fell'?`destroys ${name}`:out==='pavise'?`strikes ${name}, but the Pavise Guard endures at 1 power`:`strikes ${name}, but a Town Guard intervenes`;
+      log(`Lane ${lane+1}: ${label} Champion cleaves into lane ${targetLane+1} and ${result}.`)
+    }
+  }
 }
 // Who falls this round, worked out before anything moves. Mirrors the clash rules below; a
 // Pavise that still has its reprieve is not counted, since it needs no Guard.
@@ -1087,8 +1232,8 @@ function resolveRound(){
       // A Ram only breaks the wall when the lane is clear of defenders, so winning a clash does not also fell the building.
       // A Guard's sacrifice writes its own line, so only a Pavise needs explaining here.
       const held=out=>out==='pavise'?', but the Pavise Guard endures at 1 power.':'.';
-      if(pp>ap){const out=combatDefeat(a,lane,'Rival');log(`Lane ${lane+1}: ${CARDS[pu.cardId].name} wins ${pp}–${ap}${held(out)}`);rewardClashWinner(p,pu,lane,'Your')}
-      else if(ap>pp){const out=combatDefeat(p,lane,'Your');log(`Lane ${lane+1}: rival ${CARDS[au.cardId].name} wins ${ap}–${pp}${held(out)}`);rewardClashWinner(a,au,lane,'Rival')}
+      if(pp>ap){const out=combatDefeat(a,lane,'Rival');log(`Lane ${lane+1}: ${CARDS[pu.cardId].name} wins ${pp}–${ap}${held(out)}`);resolvePierce(p,a,lane,pp,ap,pu,'Your');rewardClashWinner(p,pu,lane,'Your')}
+      else if(ap>pp){const out=combatDefeat(p,lane,'Your');log(`Lane ${lane+1}: rival ${CARDS[au.cardId].name} wins ${ap}–${pp}${held(out)}`);resolvePierce(a,p,lane,ap,pp,au,'Rival');rewardClashWinner(a,au,lane,'Rival')}
       else{
         const pOut=combatDefeat(p,lane,'Your'),aOut=combatDefeat(a,lane,'Rival');
         const endured=[pOut==='pavise'?'your Pavise Guard':null,aOut==='pavise'?'the rival Pavise Guard':null].filter(Boolean);
@@ -1098,6 +1243,9 @@ function resolveRound(){
     }else if(pu)directStrike(p,a,lane,pp,'You','your');
     else if(au)directStrike(a,p,lane,ap,'The rival','the rival');
   }
+  // Cleave waits until every lane has fought, so removing a side-lane defender cannot open that
+  // lane for direct damage in the same round.
+  resolveCleaves(p,a,'Your');resolveCleaves(a,p,'Rival');
   resolveTrebuchets(p,a,'Your');resolveTrebuchets(a,p,'Rival');
   resolveAssassinReturns(p,'Your');resolveAssassinReturns(a,'Rival');
   resolveLancerContracts(p,'Your');resolveLancerContracts(a,'Rival');
@@ -1177,21 +1325,17 @@ function harvest(side,label){
     if(!laneIsActive(index))return;
     if(lane.building){
       const c=CARDS[lane.building.cardId];
-      if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);if(currentRule.id==='tradefair'&&r==='gold')gain++;side.resources[r]+=gain});
+      if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);side.resources[r]+=gain});
       if(c.special==='tradingpost'){
         const resource=BASIC_RESOURCES[Math.floor(Math.random()*BASIC_RESOURCES.length)],gain=currentRule.id==='winter'?0:1;
         if(gain){side.resources[resource]++;log(`${label} Trading Post supplies 1 ${RESOURCE_NAMES[resource].toLowerCase()}.`)}
       }
-      if(c.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>lane.building.round&&(game.round-lane.building.round)%2===1))side.resources.gold++
+      if(c.special==='goldmine'&&game.round>lane.building.round&&(game.round-lane.building.round)%2===1)side.resources.gold++
     }
     // A worker pays out at the end of every round it lives through, the round it arrives included.
     if(lane.unit){
       const worker=CARDS[lane.unit.cardId];
       if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
-      if(worker.special==='merchant'){
-        const stocked=BASIC_RESOURCES.filter(resource=>side.resources[resource]>0);
-        if(stocked.length){const resource=stocked[Math.floor(Math.random()*stocked.length)];side.resources[resource]--;side.resources.gold++;log(`${label} Merchant converts 1 ${RESOURCE_NAMES[resource].toLowerCase()} into 1 gold.`)}
-      }
       if(worker.special==='taxcollector'){side.resources.gold++;log(`${label} Tax Collector harvests 1 gold.`)}
       // A Mason lays stone rather than gathering: the yield goes on the keep, not into the stores.
       if(worker.special==='mason'){side.fortification=(side.fortification||0)+1;log(`${label} ${worker.name} raises 1 fortification.`)}
@@ -1226,9 +1370,8 @@ function productionForecastHtml(slot,side=game?.player){
       if(currentRule.id==='winter')gain++;
     }else{
       if(currentRule.id==='winter'&&resource!=='gold')gain=Math.max(0,gain-1);
-      if(currentRule.id==='tradefair'&&resource==='gold')gain++;
     }
-  }else if(card.special==='goldmine'&&(currentRule.id==='tradefair'||game.round>slot.round&&(game.round-slot.round)%2===1)){
+  }else if(card.special==='goldmine'&&game.round>slot.round&&(game.round-slot.round)%2===1){
     resource='gold';gain=1;
   }else if(card.special==='tradingpost'){
     if(currentRule.id==='winter')return'';
@@ -1248,7 +1391,7 @@ function productionForecastHtml(slot,side=game?.player){
   const name=RESOURCE_NAMES[resource].toLowerCase(),label=`Produces ${gain} ${name} after this clash`;
   return `<span class="production-cue ${resource}" title="${label}" aria-label="${label}">${resourceIcon(resource)}<b>+${gain}</b></span>`;
 }
-function slotCardHtml(slot,hidden=false,power=null,forecast='',shielded=false){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card ${art?'board-painted':''} ${damaged?'damaged':''} ${slot.handCard?.contract?'contract-slot':''}" data-card="${slot.cardId}" ${slot.handCard?.contract?'data-contract="1"':''} style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${slot.handCard?.contract?'<span class="slot-contract">CONTRACT</span>':''}${forecast?`<span class="forecast-stack">${forecast}</span>`:''}${shielded?'<span class="slot-shield" title="Sheltered by an adjacent Town Guard, which will be destroyed in its place" aria-label="Sheltered by an adjacent Town Guard"></span>':''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power"><i>⚔</i><b>${power}</b></span>`:''}</div>`}
+function slotCardHtml(slot,hidden=false,power=null,forecast='',shielded=false){if(!slot)return'';const c=CARDS[slot.cardId];if(hidden)return'<div class="slot-card hidden">?</div>';const art=CARD_ART[slot.cardId],damaged=['ram','pavise'].includes(c.special)&&slot.damaged;const name=damaged?(c.special==='ram'?'Damaged Ram':'Damaged Pavise Guard'):c.name;return `<div class="slot-card presentation-battlefield ${art?'board-painted':''} ${damaged?'damaged':''} ${slot.handCard?.contract?'contract-slot':''}" data-card="${slot.cardId}" data-presentation="battlefield" ${slot.handCard?.free?'data-free="1"':''} ${slot.handCard?.contract?'data-contract="1"':''} role="button" tabindex="0" aria-label="${esc(name)}. Tap for full details." style="--accent:${c.accent};${art?`--board-art:url('${art}')`:''}"><span class="slot-icon">${c.icon}</span>${slot.handCard?.contract?'<span class="slot-contract">CONTRACT</span>':''}${forecast?`<span class="forecast-stack">${forecast}</span>`:''}${shielded?'<span class="slot-shield" title="Sheltered by an adjacent Town Guard, which will be destroyed in its place" aria-label="Sheltered by an adjacent Town Guard"></span>':''}<div class="slot-card-copy"><b>${name}</b><small>${c.type}</small></div>${power!==null?`<span class="slot-power"><i>⚔</i><b>${power}</b></span>`:''}</div>`}
 function abilityControlHtml(side,lane,index,type,isAi){
   if(isAi||game.locked)return'';
   const source=abilitySource(side,index,type);if(!source)return'';
@@ -1260,7 +1403,7 @@ function boardHtml(side,isAi,reveal=false){
   return side.board.map((lane,i)=>{
     if(!laneIsActive(i))return'';
     const hideBuilding=isAi&&!reveal&&lane.building?.round===game.round,hideUnit=isAi&&!reveal&&lane.unit?.round===game.round;
-    return `<div class="lane"><div class="slot building ${lane.building?'occupied':''} ${lane.building?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,hideBuilding,null,productionForecastHtml(lane.building,side))}${abilityControlHtml(side,lane,i,'building',isAi)}</div><div class="slot unit ${lane.unit?'occupied':''} ${lane.unit?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,hideUnit,unitPower(side,i),productionForecastHtml(lane.unit,side),lane.unit&&adjacentGuard(side,i)!==undefined)}${abilityControlHtml(side,lane,i,'unit',isAi)}</div></div>`
+    return `<div class="lane" data-lane-column="${i}"><div class="slot building ${lane.building?'occupied':''} ${lane.building?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,hideBuilding,null,productionForecastHtml(lane.building,side))}${abilityControlHtml(side,lane,i,'building',isAi)}</div><div class="slot unit ${lane.unit?'occupied':''} ${lane.unit?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,hideUnit,unitPower(side,i),productionForecastHtml(lane.unit,side),lane.unit&&adjacentGuard(side,i)!==undefined)}${abilityControlHtml(side,lane,i,'unit',isAi)}</div></div>`
   }).join('')
 }
 // The realm sigil: three resources at the points of a triangle, gold at its heart.
@@ -1308,10 +1451,18 @@ function renderGame(reveal=false){
   if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your',game.player.fortification);renderHealth($('#aiHealth'),game.ai.health,'Rival',game.ai.fortification);renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
   $('#playerBoard').innerHTML=boardHtml(game.player,false,reveal);$('#aiBoard').innerHTML=boardHtml(game.ai,true,reveal);
-  $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,handCost(h))?'':'unaffordable'}`,free:h.free,contract:h.contract})).join('');
-  $$('#playerHand .game-card').forEach(el=>el.onclick=()=>selectHand(el.dataset.uid));
+  $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{presentation:'hand',interactive:true,interactiveLabel:'Tap to select; tap again for full details.',uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,handCost(h))?'':'unaffordable'}`,free:h.free,contract:h.contract})).join('');
+  $$('#playerHand .game-card').forEach(el=>{
+    const action=()=>{const handCard=game.player.hand.find(card=>card.uid===el.dataset.uid);if(compactCardDetails()&&selectedUid===el.dataset.uid)return openCardDetails(handCard?.cardId||el.dataset.card,{free:handCard?.free,contract:handCard?.contract});selectHand(el.dataset.uid)};
+    el.onclick=action;el.onkeydown=event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();action()}
+  });
   const selected=game.player.hand.find(x=>x.uid===selectedUid);if(selected){$$(`#playerBoard .slot.${CARDS[selected.cardId].type}`).forEach(s=>s.classList.add('valid'))}
-  $$('#playerBoard .slot').forEach(s=>s.onclick=()=>slotClick(Number(s.dataset.lane),s.dataset.type));
+  $$('#playerBoard .slot').forEach(s=>{
+    const action=()=>{const lane=Number(s.dataset.lane),slot=game.player.board[lane][s.dataset.type];if(compactCardDetails()&&!selectedUid&&slot&&slot.round!==game.round)return openCardDetails(slot.cardId,{free:slot.handCard?.free,contract:slot.handCard?.contract});slotClick(lane,s.dataset.type)};
+    s.onclick=action;s.onkeydown=event=>{if(!['Enter',' '].includes(event.key)||event.target!==s)return;event.preventDefault();action()};
+    const face=s.querySelector('.slot-card:not(.hidden)');if(face)face.onkeydown=event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();action()}
+  });
+  $$('#aiBoard .slot-card:not(.hidden)').forEach(card=>{const action=event=>{event?.stopPropagation();if(compactCardDetails())openCardDetails(card.dataset.card,cardDetailMeta(card))};card.onclick=action;card.onkeydown=event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();action(event)}});
   $$('[data-activate]').forEach(button=>button.onclick=event=>{event.stopPropagation();openAbilityModal(Number(button.dataset.lane),button.dataset.activate)});
   settleDraws(game.player);
   const pending=game.player.pendingDraws||0,drawing=Boolean(pending)&&!game.locked;
@@ -1323,7 +1474,7 @@ function renderGame(reveal=false){
   // A card already turned up is shown inside the dialog, so it can inform the next pick.
   const revealBox=$('#drawReveal');revealBox.hidden=!drawReveal;
   if(drawReveal){
-    revealBox.innerHTML=`<span class="reveal-label">YOU DREW</span>${cardHtml(drawReveal.cardId)}${drawReveal.fallback?'<em>That pile was spent, so it came from the other.</em>':''}`;
+    revealBox.innerHTML=`<span class="reveal-label">YOU DREW</span>${cardHtml(drawReveal.cardId,{presentation:'modal'})}${drawReveal.fallback?'<em>That pile was spent, so it came from the other.</em>':''}`;
     revealBox.classList.remove('flash');void revealBox.offsetWidth;revealBox.classList.add('flash');
   }
   PILES.forEach(pile=>{
@@ -1345,8 +1496,17 @@ function log(text){game.logs.unshift({text,round:game.round});game.logs=game.log
 // The chronicle opens as a rail beside the battlefield rather than on top of it: the screen makes room.
 function setLog(open){$('#gameLog').classList.toggle('show',open);$('#gameLog').setAttribute('aria-hidden',String(!open));$('#logToggle').setAttribute('aria-pressed',String(open));$('#gameScreen').classList.toggle('log-open',open)}
 
-function showModal(html){$('#modalContent').innerHTML=html;$('#modal').classList.add('open');$('#modal').setAttribute('aria-hidden','false')}
-function closeModal(){$('#modal').classList.remove('open');$('#modal').setAttribute('aria-hidden','true')}
+function showModal(html){
+  const modal=$('#modal');
+  // Preserve the page position for keyboard users, even when one modal view replaces another.
+  if(!modal.classList.contains('open'))modalReturnFocus=document.activeElement;
+  $('#modalContent').innerHTML=html;modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  $('#closeModal').focus()
+}
+function closeModal(){
+  detailTapKey=null;const modal=$('#modal');modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+  if(modalReturnFocus?.isConnected)modalReturnFocus.focus();modalReturnFocus=null
+}
 
 $$('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 $$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{deckFilter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderDeckBuilder()}));
@@ -1388,4 +1548,4 @@ document.addEventListener('mouseover',ev=>{
   tip.style.top=(above<8?r.bottom+10:above)+'px';
 });
 document.addEventListener('mouseout',ev=>{const tip=$('#cardTip');if(tip&&!ev.relatedTarget?.closest?.('[data-card]'))tip.hidden=true});
-setupRuleSelector();applyDevMode();renderDeckBuilder();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');
+setupRuleSelector();applyDevMode();renderDeckBuilder();renderAiOpponentOptions();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');

@@ -20,6 +20,20 @@ assert.equal(COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='building').length,30,'
 assert.equal(COLLECTIBLE_IDS.filter(id=>CARDS[id].type==='unit').length,30,'the pool has thirty units');
 assert.equal(MAX_KEEP_HEALTH,20,'keeps begin with and display twenty health');
 assert.equal(createSide([]).health,MAX_KEEP_HEALTH,'new rulers enter battle at full keep health');
+assert.match(cardHtml('champion',{presentation:'hand',interactive:true}),/presentation-hand/,'hand cards declare their compact presentation');
+assert.match(cardHtml('champion',{presentation:'hand',interactive:true}),/data-presentation="hand"/,'card presentation is available to component CSS');
+assert.match(cardHtml('champion',{presentation:'hand',interactive:true}),/tabindex="0"/,'interactive compact cards are keyboard focusable');
+assert.match(slotCardHtml(testSlot('royalguard'),false,4),/presentation-battlefield/,'played cards declare their battlefield presentation');
+for(const id of Object.keys(CARDS))for(const presentation of ['catalog','hand','modal','ability']){
+  const html=cardHtml(id,{presentation,interactive:true});
+  assert.match(html,new RegExp('presentation-'+presentation),id+' renders in '+presentation+' presentation');
+  assert(!html.includes('undefined'),id+' '+presentation+' presentation has complete content');
+}
+for(const id of Object.keys(CARDS)){
+  const html=slotCardHtml(testSlot(id),false,CARDS[id].power||0);
+  assert.match(html,/presentation-battlefield/,id+' renders in battlefield presentation');
+  assert(!html.includes('undefined'),id+' battlefield presentation has complete content');
+}
 for(const id of Object.keys(CARDS)){assert(CARD_ART[id],id+' has an art mapping');assert(fs.existsSync(CARD_ART[id]),CARD_ART[id]+' exists')}
 for(const id of ['rabblerouser','levycaptain','palisade','wallwarden','royalguard','armoury','huntsman','huntinglodge','ballista','paviseguard'])assert(COLLECTIBLE_IDS.includes(id),id+' joins packs');
 assert(!CARDS.bannercaptain,'the Banner Captain stays shelved');
@@ -52,6 +66,21 @@ resetGame(2);game.player.board[0].building=testSlot('feastinghall',1);game.playe
 const generatedFuel=makeHandCard('peasant',true),contractFuel=makeHandCard('lancer',true,false,true);game.player.hand=[generatedFuel,contractFuel];
 assert(activateAbility(game.player,0,'building',generatedFuel));assert.deepEqual(game.player.discard,[],'generated fuel vanishes instead of entering a pile');
 
+assert.deepEqual(CARDS.militia.cost,{food:1,material:1});assert.equal(CARDS.militia.power,2);assert.match(CARDS.militia.text,/Farmer or Lumberjack/);
+resetGame(2);game.player.board[0].building=testSlot('feastinghall',1);game.player.board[0].unit=testSlot('soldier',1);
+const militiaFuel=makeHandCard('militia');game.player.hand=[militiaFuel];
+assert(activateAbility(game.player,0,'building',militiaFuel,'Your'),'Militia can fuel a planning ability');
+assert.deepEqual(game.player.discard,['militia'],'the discarded Militia returns to its normal unit pile');
+assert.equal(game.player.hand.length,1,'Volunteer replaces the discarded card in hand');
+assert(['farmer','lumberjack'].includes(game.player.hand[0].cardId),'Volunteer recruits from the Food–Wood worker pair');
+assert.equal(game.player.hand[0].bonus,true,'the volunteer is temporary');assert.equal(game.player.hand[0].free,false,'the volunteer retains its printed cost');
+resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);game.player.structures=['farm'];game.player.hand=[makeHandCard('militia')];
+assert(activateAbility(game.player,0,'building',game.player.hand[0],'Your'));
+assert.equal(game.player.hand[0].cardId,'farm','the Lodge completes its promised opposite-pile draw before Volunteer resolves');
+assert(['farmer','lumberjack'].includes(game.player.hand[1].cardId),'Volunteer also works when Militia cycles through the Lodge');
+const temporaryWorker=game.player.hand[1];game.player.board[1].unit=testSlot(temporaryWorker.cardId,2,{handCard:temporaryWorker});game.player.hand.splice(1,1);discardUnit(game.player,1);
+assert.deepEqual(game.player.discard,['militia'],'the temporary worker vanishes when it leaves play');
+
 // The Gold back line rewards reserves, then turns them into temporary outside hires.
 assert.deepEqual(CONTRACT_UNITS,['foreignmercenary','assassin','lancer']);assert.equal(CARDS.lancer.power,7);assert.deepEqual(CARDS.lancer.cost,{gold:3});
 resetGame(2);game.player.board[0].building=testSlot('mercenaryguild',1);drawTurnBonuses(game.player);
@@ -73,7 +102,6 @@ resetGame(2);game.player.resources.gold=4;game.player.board[0].building=testSlot
 resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('market',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'ordinary harvest lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('goldmine',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Gold Mine production lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('taxcollector',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tax Collector production lands before interest');
-resetGame(2);game.player.resources.gold=1;game.player.resources.material=1;game.player.board[0].unit=testSlot('merchant',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Merchant conversion lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('tollhouse',1);game.player.board[1].building=testSlot('bank',1);directStrike(game.player,game.ai,0,2,'You','your');harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tollhouse gold joins the next Bank snapshot');
 resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);harvest(game.player,'Your');assert.equal(game.player.resources.material,1,'the Lodge also produces one wood');
 resetGame(2);game.player.resources.gold=3;game.player.board[0].building=testSlot('treasury',1);assert.equal(turnDrawTotal(game.player),3,'a stocked Treasury adds a selectable draw');game.player.resources.gold=2;assert.equal(turnDrawTotal(game.player),2);
@@ -185,7 +213,20 @@ for(const [id,c] of Object.entries(CARDS)){
   if(carriesRules)assert(c.text,id+' has an effect and must describe it');
   else assert.equal(c.text,'',id+' only fights, so it should carry no flavour text');
 }
-assert.equal(CARDS.soldier.text,'');assert.equal(CARDS.champion.text,'');assert.equal(CARDS.royalguard.text,'');
+assert.equal(CARDS.soldier.text,'');assert.match(CARDS.champion.text,/Cleave 3/);assert.equal(CARDS.royalguard.text,'');
+assert.deepEqual(CARDS.champion.cost,{food:1,material:1,metal:1},'the Champion asks for all three basic resources');
+assert.equal(CARDS.champion.power,4,'the Champion is answerable by another 4-power unit');
+resetGame();game.player.board[1].unit=testSlot('champion');game.ai.board[2].unit=testSlot('manatarms');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH-4,'an unopposed Champion still strikes its own open lane');
+assert.equal(game.player.health,MAX_KEEP_HEALTH-3,'the adjacent unit completes its direct strike before Cleave resolves');
+assert.equal(game.ai.board[2].unit,null,'the surviving Champion then Cleaves an adjacent 3-power unit');
+resetGame();game.player.board[1].unit=testSlot('champion');game.ai.board[2].unit=testSlot('royalguard');resolveRound();
+assert.equal(game.ai.board[2].unit?.cardId,'royalguard','Cleave 3 leaves a 4-power adjacent unit standing');
+resetGame();game.player.board[1].unit=testSlot('champion');game.ai.board[2].unit=testSlot('paviseguard');resolveRound();
+assert(game.ai.board[2].unit?.damaged,'an unused Pavise reprieve protects against Cleave once');
+resetGame();game.player.board[1].unit=testSlot('champion');game.ai.board[2].unit=testSlot('manatarms');game.ai.board[3].unit=testSlot('townguard');resolveRound();
+assert.equal(game.ai.board[2].unit?.cardId,'manatarms','a Town Guard can save an adjacent Cleave target');
+assert.equal(game.ai.board[3].unit,null,'the Town Guard is spent by the Cleave');
 assert.deepEqual(CARDS.foreignmercenary.cost,{gold:1},'the Mercenary costs 1 gold');
 assert.equal(CARDS.foreignmercenary.power,3,'the Mercenary has 3 power');
 assert.equal(CARDS.foreignmercenary.name,'Mercenary','the card title does not label the mercenary as foreign');
@@ -214,12 +255,29 @@ assert.equal(game.ai.resources.gold,1);
 
 assert.deepEqual(CARDS.assassin.cost,{gold:2},'the Assassin costs 2 gold');
 assert.equal(CARDS.assassin.power,5,'the Assassin has 5 power');
+assert.deepEqual(PIERCE_UNITS,['assassin','lancer'],'only the two elite Gold units have Pierce');
+assert.match(CARDS.assassin.text,/Pierce/);assert.match(CARDS.lancer.text,/Pierce/);
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('soldier');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH-3,'an Assassin sends its three-point winning difference into the keep');
+resetGame();game.player.board[0].unit=testSlot('royalguard');game.ai.board[0].unit=testSlot('soldier');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH,'an ordinary winning unit does not deal overflow damage');
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('assassin');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH,'a tied Assassin does not Pierce');
+resetGame();game.player.board[0].unit=testSlot('lancer');game.ai.board[0].unit=testSlot('paviseguard');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH-5,'a Pavise reprieve does not cancel a Lancer’s five-point Pierce');
+assert(game.ai.board[0].unit?.damaged,'the Pavise Guard still survives according to its own rule');
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('soldier');game.ai.board[1].unit=testSlot('townguard');resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH-3,'a Town Guard saves the defender but not the keep from Pierce');
+assert.equal(game.ai.board[0].unit?.cardId,'soldier','the guarded defender remains in its lane');
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('soldier');game.ai.board[0].building=testSlot('palisade');game.ai.fortification=2;resolveRound();
+assert.equal(game.ai.health,MAX_KEEP_HEALTH,'Palisade reduction and fortification protect the keep from Pierce');
+assert.equal(game.ai.fortification,1,'only the one Pierce damage left after the Palisade reaches fortification');
 resetGame();const assassinCopy={uid:'assassin-copy',cardId:'assassin',bonus:false};
 game.player.board[0].unit=testSlot('assassin',game.round,{handCard:assassinCopy});resolveRound();
 assert.equal(game.player.board[0].unit,null,'a surviving Assassin leaves the board after the clash');
 assert.equal(game.player.hand[0],assassinCopy,'the same Assassin copy returns to hand');
 assert.deepEqual(game.player.discard,[],'returning is not a defeat');
-resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('champion');resolveRound();
+resetGame();game.player.board[0].unit=testSlot('assassin');game.ai.board[0].unit=testSlot('lancer');resolveRound();
 assert.equal(game.player.hand.length,0,'an Assassin destroyed in the clash does not return');
 assert.deepEqual(game.player.discard,['assassin']);
 
@@ -228,17 +286,6 @@ assert.equal(CARDS.taxcollector.power,1,'the Tax Collector has 1 power');
 resetGame(3);game.player.board[0].unit=testSlot('taxcollector',3);harvest(game.player,'Your');
 assert.equal(game.player.resources.gold,1,'the Tax Collector harvests on its deployment clash');
 harvest(game.player,'Your');assert.equal(game.player.resources.gold,2,'and again after every clash it survives');
-currentRule={id:'tradefair'};resetGame();game.player.board[0].unit=testSlot('taxcollector');harvest(game.player,'Your');
-assert.equal(game.player.resources.gold,1,'the Grand Fair does not increase the Tax Collector beyond its printed yield');
-currentRule={id:'none'};
-
-resetGame(3);game.player.board[0].unit=testSlot('merchant',3);game.player.resources.material=1;harvest(game.player,'Your');
-assert.equal(game.player.resources.material,0,'the Merchant spends an available basic resource');
-assert.equal(game.player.resources.gold,1,'and converts it into gold on its deployment clash');
-resetGame();game.player.board[0].unit=testSlot('merchant');game.player.resources.gold=2;harvest(game.player,'Your');
-assert.equal(game.player.resources.gold,2,'the Merchant does nothing when no basic resource is available');
-resetGame();game.player.board[0].unit=testSlot('merchant');directStrike(game.player,game.ai,0,1,'You','your');
-assert.equal(game.player.resources.gold,0,'the Merchant no longer creates gold from an unblocked hit');
 
 // A worker pays out at the end of every round it survives, the round it arrives included.
 resetGame(3);game.player.board[0].unit=testSlot('lumberjack',3);harvest(game.player,'Your');
@@ -512,7 +559,7 @@ assert.equal(CARDS.granary.cost.food,2,'effectiveCost returns a copy, not the ca
 
 // Every decree must bite for any collection; none may hinge on holding particular designs.
 assert(!META_RULES.some(r=>r.id==='guilds'),'Guild Charters is retired from the rotation');
-assert(META_RULES.length>=5,'the calendar still has a full rotation to draw from');
+assert(META_RULES.length>=4,'the calendar still has a full rotation to draw from');
 for(const rule of META_RULES)assert(rule.name&&rule.text&&rule.icon&&rule.flavour,rule.id+' is fully described');
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');
@@ -542,6 +589,29 @@ for(const [profile,deck] of Object.entries(AI_DECKS)){
   assert(AI_PROFILE_NAMES[profile],profile+' has a display name');
   const counts=deck.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{});
   for(const [id,n] of Object.entries(counts)){assert(COLLECTIBLE_IDS.includes(id),id+' is a real design');assert(n<=4,profile+' keeps '+id+' to four copies')}
+}
+assert.equal(AI_OPPONENTS.length,14,'the solo roster contains the six established and eight challenge-ready opponents');
+assert.equal(new Set(AI_OPPONENTS.map(opponent=>opponent.id)).size,14,'opponent ids are unique');
+assert.equal(new Set(AI_OPPONENTS.map(opponent=>opponent.name)).size,14,'opponent banner names are unique');
+assert.deepEqual(Object.keys(AI_DECKS),AI_OPPONENTS.map(opponent=>opponent.id),'the compatibility deck map follows registry order');
+const NEW_AI_PROFILES=['woodlandpatrol','granarymuster','longspear','stonebastion','siegeengineers','scholarsash','tollroad','gildedcourt'];
+const NEW_AI_COUNTS={
+  woodlandpatrol:{farm:3,logging:3,huntinglodge:2,feastinghall:1,wayfarerslodge:1,huntsman:4,outrider:3,ranger:3},
+  granarymuster:{farm:4,mining:2,swinecroft:2,villagecommons:1,foodgranary:1,rabblerouser:3,peasantmob:3,levycaptain:2,townguard:2},
+  longspear:{farm:3,mining:3,foundry:2,armoury:2,pikeman:4,townguard:3,knight:2,mason:1},
+  stonebastion:{farm:2,mining:3,logging:2,gatehouse:1,gaol:1,cathedral:1,ballista:1,mason:3,townguard:2,royalguard:2,paviseguard:2},
+  siegeengineers:{logging:3,mining:3,bloomery:1,carpentersyard:1,gatehouse:1,ballista:1,trebuchet:2,batteringram:2,firesapper:2,paviseguard:2,manatarms:2},
+  scholarsash:{logging:4,farm:2,university:2,lumbermill:1,wayfarerslodge:1,firesapper:4,wallwarden:2,outrider:2,archer:2},
+  tollroad:{logging:3,farm:2,goldmine:2,tollhouse:2,market:1,cutpurse:3,taxcollector:2,foreignmercenary:2,assassin:2,lancer:1},
+  gildedcourt:{logging:3,farm:2,goldmine:2,market:1,mercenaryguild:1,treasury:1,bank:1,cutpurse:2,taxcollector:2,assassin:2,foreignmercenary:2,lancer:1}
+};
+for(const profile of NEW_AI_PROFILES){
+  const deck=AI_DECKS[profile],counts=deck.reduce((all,id)=>(all[id]=(all[id]||0)+1,all),{});
+  assert.deepEqual(counts,NEW_AI_COUNTS[profile],profile+' retains its designed list');
+  assert(deck.filter(id=>CARDS[id].type==='building').length>=3,profile+' can deal three opening structures');
+  assert(deck.filter(id=>CARDS[id].type==='unit').length>=2,profile+' can deal two opening units');
+  const required=new Set(deck.flatMap(id=>Object.keys(CARDS[id].cost||{})).filter(resource=>BASIC_RESOURCES.includes(resource)));
+  for(const resource of required)assert(deck.some(id=>canProduceResource(CARDS[id],resource)),profile+' can produce required '+resource);
 }
 assert.deepEqual(AI_DECKS.timber.reduce((m,id)=>(m[id]=(m[id]||0)+1,m),{}),
   {logging:4,lumbermill:3,farm:2,university:2,lumberjack:1,archer:4,firesapper:4},'Timber Scholars runs the requested list');
@@ -620,6 +690,40 @@ game.player.board[1].building=testSlot('watchtower',1);game.player.board[1].unit
 const openWall=aiActionScore(siegeRam,0,'hardcore'),guardedWall=aiActionScore(siegeRam,1,'hardcore'),bareLane=aiActionScore(siegeRam,2,'hardcore');
 assert(openWall>guardedWall&&openWall>bareLane,'a Ram wants the unguarded wall above all');
 assert(aiActionScore(siegeSap,1,'hardcore')>aiActionScore(siegeSap,2,'hardcore'),'a Sapper opens the guarded wall rather than an empty lane');
+
+// The new banners have tactical priorities, not only legal lists.
+resetGame();game.aiProfile='woodlandpatrol';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const patrolLodge={uid:'pl',cardId:'huntinglodge',bonus:false};
+const emptyPatrolLodge=aiActionScore(patrolLodge,0,'hardcore');game.ai.board[0].unit=testSlot('huntsman',1);
+assert(aiActionScore(patrolLodge,0,'hardcore')>emptyPatrolLodge,'Woodland Patrol pairs a Hunting Lodge with an open attacker');
+
+resetGame();game.aiProfile='granarymuster';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const musterGranary={uid:'mg',cardId:'foodgranary',bonus:false},bareGranary=aiActionScore(musterGranary,0,'hardcore');
+game.ai.board[0].unit=testSlot('peasantmob',1);game.ai.board[1].unit=testSlot('rabblerouser',1);game.ai.board[2].unit=testSlot('levycaptain',1);
+assert(aiActionScore(musterGranary,3,'hardcore')>bareGranary,'Granary Muster saves its global bonus for a developed line');
+
+resetGame();game.aiProfile='longspear';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const spearGuard={uid:'lg',cardId:'townguard',bonus:false},isolatedGuard=aiActionScore(spearGuard,0,'hardcore');game.ai.board[1].unit=testSlot('pikeman',1);
+assert(aiActionScore(spearGuard,0,'hardcore')>isolatedGuard,'The Long Spear shelters an entrenched Pikeman');
+
+resetGame();game.aiProfile='stonebastion';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const bastionGaol={uid:'bg',cardId:'gaol',bonus:false},emptyGaol=aiActionScore(bastionGaol,0,'hardcore');game.player.board[0].unit=testSlot('royalguard',1);
+assert(aiActionScore(bastionGaol,0,'hardcore')>emptyGaol,'Stone Bastion reserves its Gaol for a unit');
+
+resetGame();game.aiProfile='scholarsash';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const ashSapper={uid:'as',cardId:'firesapper',bonus:false};pileUp(game.ai,['firesapper','firesapper']);const ashGuess=aiActionScore(ashSapper,0,'hardcore');game.player.board[0].unit=testSlot('royalguard',1);
+assert(aiActionScore(ashSapper,0,'hardcore')>ashGuess,'Scholars of Ash spends a Sapper on a visible threat');
+
+resetGame();game.aiProfile='tollroad';game.ai.resources={food:9,metal:9,material:9,gold:9};
+const roadPurse={uid:'rp',cardId:'cutpurse',bonus:false},openRoad=aiActionScore(roadPurse,0,'hardcore');game.player.board[0].unit=testSlot('royalguard',1);
+assert(openRoad>aiActionScore(roadPurse,0,'hardcore'),'Tollroad Company sends Cutpurses through open lanes');
+
+resetGame();game.aiProfile='gildedcourt';game.ai.resources={food:2,metal:0,material:4,gold:4};
+const courtBank={uid:'cb',cardId:'bank',bonus:false},stockedBank=aiActionScore(courtBank,0,'hardcore');game.ai.resources.gold=0;
+assert(stockedBank>aiActionScore(courtBank,0,'hardcore'),'The Gilded Court builds Banks against a real reserve');
+game.ai.resources.gold=4;game.ai.board[0].building=testSlot('treasury',1);
+const hiredLancer={uid:'hl',cardId:'lancer',bonus:true,contract:true},deckLancer={uid:'dl',cardId:'lancer',bonus:false};
+assert(aiActionScore(hiredLancer,1,'hardcore')>aiActionScore(deckLancer,1,'hardcore'),'a Contract can spend through the Court threshold when it is time to hire');
 
 resetGame();game.aiProfile='timber';game.ai.resources={food:2,metal:0,material:4,gold:0};
 const timberFarm={uid:'tf',cardId:'farm',bonus:false},timberMill={uid:'tm',cardId:'lumbermill',bonus:false};
@@ -770,6 +874,40 @@ game.ai.board.forEach(l=>l.unit=testSlot('archer',1));
 assert.equal(aiDrawChoice(game.ai),'structures','a held front line pulls back to structures');
 game.ai.board.forEach(l=>{l.unit=null});game.ai.health=4;game.ai.hand=[{uid:'x',cardId:'archer'},{uid:'y',cardId:'archer'}];
 assert.equal(aiDrawChoice(game.ai),'units','a thin castle reaches for defenders even holding units');
+
+// A compact deterministic match runner exercises both sides through the context-aware planner.
+// It is deliberately a smoke benchmark rather than a balance assertion: every new banner must
+// build, fight and find at least one route to the opposing keep across the established field.
+function seededRandom(seed){let state=seed>>>0;return()=>((state=(state*1664525+1013904223)>>>0)/4294967296)}
+function runAiSmoke(leftProfile,rightProfile,seed){
+  const originalRandom=Math.random;Math.random=seededRandom(seed);
+  try{
+    game={round:1,player:createSide(AI_DECKS[leftProfile]),ai:createSide(AI_DECKS[rightProfile]),aiProfile:rightProfile,aiDifficulty:'hard',blockedLane:null,locked:false,logs:[],wallUsed:{}};
+    drawOpeningHand(game.player);drawOpeningHand(game.ai);let leftPlacements=0,rightPlacements=0;
+    for(let round=1;round<=8&&game.player.health>0&&game.ai.health>0;round++){
+      aiPlan(game.player,game.ai,leftProfile,'hard');aiUseAbilities(game.player,game.ai,leftProfile);
+      aiPlan(game.ai,game.player,rightProfile,'hard');aiUseAbilities(game.ai,game.player,rightProfile);
+      leftPlacements+=placements(game.player);rightPlacements+=placements(game.ai);
+      commitReplacements(game.player);commitReplacements(game.ai);resolveOnBuild(game.player,'Your');resolveOnBuild(game.ai,'Rival');resolveRound();
+      if(game.player.health<=0||game.ai.health<=0)break;
+      game.round++;drawTurnBonuses(game.player);drawTurnBonuses(game.ai);
+      game.player.pendingDraws=turnDrawTotal(game.player);game.ai.pendingDraws=turnDrawTotal(game.ai);aiDrawTurn(game.player);aiDrawTurn(game.ai);
+    }
+    for(const side of [game.player,game.ai])for(const resource of ['food','metal','material','gold'])assert(side.resources[resource]>=0,'smoke match never overspends '+resource);
+    return {damage:MAX_KEEP_HEALTH-game.ai.health,leftPlacements,rightPlacements};
+  }finally{Math.random=originalRandom}
+}
+const ESTABLISHED_AI_PROFILES=['uprising','forestfire','strikesteel','metal','timber','siege'];
+for(const [newIndex,profile] of NEW_AI_PROFILES.entries()){
+  let damage=0,developed=false;
+  for(const [oldIndex,opponent] of ESTABLISHED_AI_PROFILES.entries()){
+    const result=runAiSmoke(profile,opponent,1000+newIndex*31+oldIndex);damage+=result.damage;
+    developed=developed||result.leftPlacements>0;
+    assert(result.rightPlacements>0,opponent+' develops in the head-to-head smoke match');
+  }
+  assert(developed,profile+' develops a board in the head-to-head smoke suite');
+  assert(damage>0,profile+' finds a route to opposing keep damage in the head-to-head smoke suite');
+}
 
 assert.equal(ruleById('none').id,'none','the blank modifier resolves by id for multiplayer');
 assert(!META_RULES.some(r=>r.id==='none'),'the blank modifier stays out of the calendar rotation');

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b3225'/%3E%3Cpath d='M32 15 11 51h42Z' fill='none' stroke='%23d3ad5d' stroke-width='3'/%3E%3Cpath d='M32 39 32 15M32 39 11 51M32 39 53 51' stroke='%23e6ca85' stroke-width='2' opacity='.6'/%3E%3Ccircle cx='32' cy='15' r='7' fill='%238fb04e'/%3E%3Ccircle cx='11' cy='51' r='7' fill='%23c2884b'/%3E%3Ccircle cx='53' cy='51' r='7' fill='%2392a6ba'/%3E%3Ccircle cx='32' cy='39' r='9' fill='%23e9b54c'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=44">
+  <link rel="stylesheet" href="styles.css?v=45">
 </head>
 <body>
   <div class="grain"></div>
@@ -46,7 +46,7 @@
               <button class="small-link" data-screen="deck">EDIT DECKS →</button>
             </div>
             <div class="launch-row opponent-launch" aria-label="Computer opponent settings">
-              <label>Opponent<select id="aiDeckSelect"><option value="uprising">Village uprising</option><option value="forestfire">Forest fire</option><option value="strikesteel">Strike steel</option><option value="metal">Metal iron crown</option><option value="timber">Timber scholars</option><option value="siege">Metal siege train</option></select></label>
+              <label>Opponent<select id="aiDeckSelect"></select></label>
               <label>Difficulty<select id="aiDifficultySelect"><option value="normal">Normal</option><option value="hard">Hard</option><option value="hardcore">Hardcore</option></select></label>
             </div>
             <button id="playButton" class="button primary launch-button">Play single player <span>→</span></button>
@@ -129,24 +129,26 @@
     </section>
 
     <section id="rulesScreen" class="screen panel-screen narrow">
-      <div class="section-heading"><div><p class="eyebrow">THE LAWS OF KINGDOM</p><h1>How to play</h1></div></div>
+      <div class="section-heading"><div><p class="eyebrow">THE LAWS OF KINGDOM</p><h1>How to play</h1><p>Two rulers, four lanes, one keep each. Break theirs before they break yours.</p></div></div>
       <h2 class="rules-subhead">The shape of a round</h2>
       <ol class="round-flow">
-        <li><b>❖</b><span>DRAW</span><small>Take each card from the pile you choose</small></li>
-        <li><b>✎</b><span>PLAN</span><small>Place in secret, and take it back if you think better of it</small></li>
+        <li><b>❖</b><span>DRAW</span><small>Take two cards, from whichever piles you like</small></li>
+        <li><b>✎</b><span>PLAN</span><small>Place face down, and change your mind freely</small></li>
         <li><b>⚔</b><span>COMMIT</span><small>Both plans are revealed at the same moment</small></li>
-        <li><b>✹</b><span>CLASH</span><small>Ballistas fire, then every lane west to east</small></li>
+        <li><b>✹</b><span>CLASH</span><small>Every lane fights, west to east</small></li>
         <li><b>≋</b><span>HARVEST</span><small>Buildings and surviving workers pay out</small></li>
       </ol>
 
       <h2 class="rules-subhead">The laws</h2>
       <div class="rules-grid">
-        <article><span>01</span><h3>Draw from two piles</h3><p>Your banner splits into structures and units when battle begins. You are dealt three structures and two units to open; after that <b>you choose which pile each draw comes from</b>. A round opens on the draw step and planning stays locked until you have spent it. Two draws a round, plus one for each University standing. A hand holds ten — draws into a full hand are forfeited, and the card stays on its pile.</p></article>
-        <article><span>02</span><h3>Plan in secret</h3><p>Buildings go in your back row, units in the lane in front of them. You may build over an occupied slot; the old card is sacrificed to the discard when you commit. <b>Click a card you placed this round to take it back</b> and be refunded in full. Nothing either ruler places is visible to the other until both commit.</p></article>
-        <article><span>03</span><h3>The clash, in order</h3><p>Ballistas fire first, before any unit moves. Then each lane resolves west to east. A Fire Sapper burns out and takes the opposing unit with it. Otherwise the higher power wins and the loser falls; equal power destroys both. A unit facing no one strikes the enemy ruler for its power — unless it is a Battering Ram, which breaks the building behind instead. <b>Power is counted before the first blow</b>, so adjacency bonuses are locked in as the lanes meet.</p></article>
-        <article><span>04</span><h3>Feed the realm</h3><p>Camps cost nothing and harvest one. The Mill, Sawmill and Forge harvest two and are each bought with <b>two of the very resource they make</b>, so a realm ramps on its own harvest. Workers harvest only after surviving a full round, then every second round. Gold stands in for any missing food, wood or metal.</p></article>
-        <article><span>05</span><h3>Shape your banner</h3><p>A banner is exactly twenty cards with at most four copies of any design, built from a collection of twenty designs. Win a battle and the week’s pack offers a new design — taking it means sacrificing one you already hold, so the collection stays at twenty and every banner swaps its copies over automatically.</p></article>
-        <article><span>06</span><h3>The weekly decree</h3><p>One decree rules the whole week, and it binds both rulers equally. A decree can change what you draw, what your buildings yield, or how much of the field you may use at all. They turn on the calendar, so read the Hall before you rebuild.</p></article>
+        <article><span>01</span><h3>Break the rival keep</h3><p>Each ruler holds a keep worth <b>20</b>. When one of your units has no enemy unit facing it in its lane, it strikes the rival keep for its power. Bring that keep to zero and the battle is yours.</p></article>
+        <article><span>02</span><h3>The field is four lanes</h3><p>Your half of the field is four lanes: a row of <b>buildings</b> at the back, and a row of <b>units</b> in front of them. Buildings pay you resources; units fight. Nothing ever moves sideways, so a lane only ever concerns the card directly opposite it.</p></article>
+        <article><span>03</span><h3>Draw from two piles</h3><p>Your banner splits into a structures pile and a units pile. You open with five cards — three structures and two units — then take <b>two draws a round</b>, choosing which pile each one comes from. Planning stays locked until you have spent both.</p></article>
+        <article><span>04</span><h3>Everything is paid for</h3><p>Cards cost <b>food, wood and metal</b>, and gold pays for whatever you are short of. You start with almost nothing, so build the things that harvest first: a building pays out after every clash, and that income is what buys your army.</p></article>
+        <article><span>05</span><h3>Plan in secret</h3><p>Place a card into any empty slot on your side. Nothing you place is visible to your rival until you commit, and <b>clicking a card you placed this round takes it back</b> for a full refund. Commit when the plan looks right.</p></article>
+        <article><span>06</span><h3>How a lane is decided</h3><p>Lanes resolve <b>west to east</b>. Where two units face each other the higher power wins and the loser falls; equal power destroys both. Power is counted before the first blow, so every bonus is fixed the moment plans are revealed.</p></article>
+        <article><span>07</span><h3>Shape your banner</h3><p>A banner is exactly <b>twenty cards</b>, with at most four copies of any one design, built from your collection of twenty designs. Win a battle and the week’s pack offers a new design — taking it means giving up one you already hold.</p></article>
+        <article><span>08</span><h3>The weekly decree</h3><p>One decree rules the whole week and binds both rulers equally. It can change what you draw, what your buildings yield, or how much of the field you may use at all. Read it before you rebuild.</p></article>
       </div>
       <div class="decree-banner"><div id="rulesRuleIcon">○</div><div><p class="eyebrow">CURRENT WEEKLY DECREE</p><h2 id="rulesRuleName">Reading the week…</h2><p id="rulesRuleText"></p></div></div>
       <div class="decree-archive-heading"><p class="eyebrow">DECREE ARCHIVE</p><h2>The realm never stays comfortable</h2><p>Each decree rules for one week in the live rotation. Build several banners and reshape them as the realm changes.</p></div>
@@ -175,6 +177,7 @@
         <div id="playerBoard" class="board player-board"></div>
         <div class="battle-label yours">YOUR REALM</div>
       </div>
+      <div class="lane-scroll-cue" aria-hidden="true"><span>↔</span> Swipe to view all lanes</div>
 
       <div id="handArea" class="hand-area">
         <div class="hand-heading"><small id="handHint">Select a card, then choose a slot</small><button id="drawRestore" class="draw-restore" type="button" hidden><b>❖</b><span>Resume your draw</span><small id="drawRestoreCount"></small></button></div>
@@ -209,9 +212,9 @@
   </main>
 
   <div id="cardTip" class="card-tip" hidden></div>
-  <div id="modal" class="modal" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close" type="button" aria-label="Close dialog">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=65"></script>
+  <script src="game.js?v=69"></script>
   <script src="multiplayer.js?v=12"></script>
 </body>
 </html>
