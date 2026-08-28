@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b3225'/%3E%3Cpath d='M32 15 11 51h42Z' fill='none' stroke='%23d3ad5d' stroke-width='3'/%3E%3Cpath d='M32 39 32 15M32 39 11 51M32 39 53 51' stroke='%23e6ca85' stroke-width='2' opacity='.6'/%3E%3Ccircle cx='32' cy='15' r='7' fill='%238fb04e'/%3E%3Ccircle cx='11' cy='51' r='7' fill='%23c2884b'/%3E%3Ccircle cx='53' cy='51' r='7' fill='%2392a6ba'/%3E%3Ccircle cx='32' cy='39' r='9' fill='%23e9b54c'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body>
   <div class="grain"></div>
@@ -38,7 +38,7 @@
           <div class="mode-heading"><span>CHOOSE YOUR BATTLE</span></div>
           <div class="mode-tabs" role="tablist" aria-label="Game mode">
             <button class="mode-tab active" role="tab" aria-selected="true" data-play-mode="solo"><b>⚔</b><span>Single player<small>Battle an AI kingdom</small></span></button>
-            <button class="mode-tab" role="tab" aria-selected="false" data-play-mode="online"><b>♚</b><span>Multiplayer<small>Private online room</small></span></button>
+            <button class="mode-tab" role="tab" aria-selected="false" data-play-mode="gauntlet"><b>☠</b><span>The Gauntlet<small>All 14 rivals on hardcore</small></span></button><button class="mode-tab" role="tab" aria-selected="false" data-play-mode="online"><b>♚</b><span>Multiplayer<small>Private online room</small></span></button>
           </div>
           <section class="mode-panel active" data-mode-panel="solo" role="tabpanel">
             <div class="launch-row deck-launch" aria-label="Single-player deck selection">
@@ -50,6 +50,19 @@
               <label>Difficulty<select id="aiDifficultySelect"><option value="normal">Normal</option><option value="hard">Hard</option><option value="hardcore">Hardcore</option></select></label>
             </div>
             <button id="playButton" class="button primary launch-button">Play single player <span>→</span></button>
+          </section>
+          <section class="mode-panel" data-mode-panel="gauntlet" role="tabpanel" hidden>
+            <div class="launch-row deck-launch" aria-label="Gauntlet deck selection">
+              <label>Your banner<select id="gauntletDeckSelect"></select></label>
+              <button class="small-link" data-screen="deck">EDIT DECKS →</button>
+            </div>
+            <p id="gauntletBlurb" class="gauntlet-blurb">Every rival kingdom, on hardcore, in a random order. One loss ends the run.</p>
+            <div id="gauntletTrack" class="gauntlet-track" aria-label="Gauntlet progress"></div>
+            <div id="gauntletStatus" class="gauntlet-status"></div>
+            <div class="gauntlet-actions">
+              <button id="gauntletStart" class="button primary launch-button">Begin the gauntlet <span>→</span></button>
+              <button id="gauntletAbandon" class="button ghost" hidden>Abandon run</button>
+            </div>
           </section>
           <section class="mode-panel" data-mode-panel="online" role="tabpanel" hidden>
             <div class="launch-row deck-launch" aria-label="Multiplayer deck selection">
@@ -214,7 +227,7 @@
   <div id="cardTip" class="card-tip" hidden></div>
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card"><button id="closeModal" class="modal-close" type="button" aria-label="Close dialog">×</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game.js?v=71"></script>
+  <script src="game.js?v=72"></script>
   <script src="multiplayer.js?v=12"></script>
 </body>
 </html>

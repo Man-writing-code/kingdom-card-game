@@ -1171,3 +1171,17 @@ body[data-screen="game"] .hand-area{
   .card-grid,.collection-grid{grid-template-columns:1fr}
   .game-card.presentation-catalog{min-height:240px!important}
 }
+
+/* The Gauntlet: fourteen pips reading left to right, so a run's shape is legible at a glance
+   without naming the rivals still ahead of it. */
+.gauntlet-blurb{margin:0 0 14px;color:var(--muted);font-size:var(--t-small);line-height:1.6}
+.gauntlet-track{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.gauntlet-pip{width:100%;max-width:22px;height:8px;flex:1 1 14px;background:#cfc4ab;border:1px solid #bcae91}
+.gauntlet-pip.cleared{background:var(--gold);border-color:#b78a39}
+.gauntlet-pip.current{background:transparent;border-color:var(--rust);box-shadow:inset 0 0 0 1px var(--rust)}
+.gauntlet-pip.ahead{background:#ded5c1}
+.gauntlet-status{display:flex;flex-direction:column;gap:3px;margin-bottom:16px}
+.gauntlet-status b{font:15px "MedievalSharp"}
+.gauntlet-status small{color:var(--muted);font-size:var(--t-micro)}
+.gauntlet-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gauntlet-actions .launch-button{flex:1 1 auto}

@@ -200,7 +200,7 @@ function loadMeta(){
   const unlocked=normaliseCollection(legacy?legacy.unlocked:stored.unlocked);
   // Saves before v5 held a single deck; fold it into the deck list as the first banner.
   const rawDecks=Array.isArray(stored.decks)&&stored.decks.length?stored.decks:[{name:'First Banner',cards:legacy?legacy.deck:stored.deck}];
-  meta={version:SAVE_VERSION,unlocked,decks:[],activeDeckId:stored.activeDeckId||null,packWeek:stored.packWeek||null,winWeek:stored.winWeek||null};
+  meta={version:SAVE_VERSION,unlocked,decks:[],activeDeckId:stored.activeDeckId||null,packWeek:stored.packWeek||null,winWeek:stored.winWeek||null,gauntlet:normaliseGauntlet(stored.gauntlet),gauntletBest:Math.max(0,Math.min(AI_OPPONENTS.length,Number(stored.gauntletBest)||0))};
   meta.decks=rawDecks.slice(0,12).map((d,i)=>({id:typeof d?.id==='string'&&d.id?d.id:newDeckId(),name:deckName(d?.name||`Banner ${i+1}`),cards:sanitizeDeck(d?.cards,unlocked)}));
   if(!meta.decks.length)meta.decks=[makeDeck('First Banner',buildDefaultDeck(unlocked))];
   // A first run has no stored deck, so the opening banner must be dealt a legal 20 or the player
@@ -221,12 +221,14 @@ function showScreen(name){
   document.body.dataset.screen=name;
   // A battle takes the whole viewport: the site nav is redundant next to the screen's own back arrow.
   document.body.classList.toggle('in-battle',name==='game');
+  // A gauntlet battle has no do-overs, so the restart control is taken off the board.
+  $('#restartGame').hidden=name==='game'&&Boolean(game?.gauntlet);
   document.body.classList.toggle('in-hall',name==='home');
   if(name==='deck')renderDeckBuilder(); if(name==='collection')renderCollection();
   window.scrollTo(0,0);
 }
 function setHallMode(mode){
-  const chosen=mode==='online'?'online':'solo';localStorage.setItem('kingdom-hall-mode',chosen);
+  const chosen=['online','gauntlet'].includes(mode)?mode:'solo';localStorage.setItem('kingdom-hall-mode',chosen);if(chosen==='gauntlet')renderGauntlet();
   $$('[data-play-mode]').forEach(button=>{const active=button.dataset.playMode===chosen;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
   $$('[data-mode-panel]').forEach(panel=>{const active=panel.dataset.modePanel===chosen;panel.classList.toggle('active',active);panel.hidden=!active});
 }
@@ -334,7 +336,7 @@ function renderCountdown(){
 function renderDeckOptions(){
   const active=activeDeck();
   const opts=meta.decks.map(d=>{const cards=deckCards(d);return `<option value="${d.id}"${d.id===active.id?' selected':''}>${esc(d.name)} · ${devMode?`${cards.length} cards · DEV`:`${cards.length}/${DECK_SIZE}${deckIsPlayable(d)?'':' · incomplete'}`}</option>`}).join('');
-  ['#deckSelect','#homeDeckSelect','#onlineDeckSelect'].forEach(sel=>{const el=$(sel);if(el)el.innerHTML=opts});
+  ['#deckSelect','#homeDeckSelect','#onlineDeckSelect','#gauntletDeckSelect'].forEach(sel=>{const el=$(sel);if(el)el.innerHTML=opts});
   const del=$('#deleteDeck');if(del)del.disabled=meta.decks.length<2;
   const add=$('#newDeck');if(add)add.disabled=meta.decks.length>=12;
 }
@@ -410,13 +412,74 @@ function createSide(deck){
     units:shuffle(cards.filter(id=>CARDS[id].type==='unit')),
     discard:[],hand:[],pendingDraws:0,board:Array.from({length:4},()=>({building:null,unit:null}))}
 }
+// THE GAUNTLET
+// One banner, locked at the door, against all fourteen rival kingdoms on hardcore in an order
+// drawn at the start. A single loss ends the run. The order and the banner are both stored so a
+// refresh mid-run resumes the same gauntlet rather than quietly dealing a kinder one.
+function shuffled(list){
+  const out=list.slice();
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}
+  return out;
+}
+// A stored run is only honoured if it still describes a legal gauntlet: every id must be a rival
+// that still exists, with no repeats and none missing, or a card cut since the run began could
+// strand it on an opponent that can no longer be built.
+function normaliseGauntlet(run){
+  if(!run||!Array.isArray(run.order)||!Array.isArray(run.cards))return null;
+  const ids=AI_OPPONENTS.map(o=>o.id);
+  if(run.order.length!==ids.length||new Set(run.order).size!==ids.length)return null;
+  if(run.order.some(id=>!ids.includes(id)))return null;
+  if(run.cards.length!==DECK_SIZE||run.cards.some(id=>!CARDS[id]||CARDS[id].token))return null;
+  const index=Number(run.index)||0;
+  if(index<0||index>=ids.length)return null;
+  return {order:run.order.slice(),cards:run.cards.slice(),index,name:deckName(run.name||'Gauntlet banner')};
+}
+const gauntletRun=()=>meta.gauntlet;
+const gauntletFoe=run=>run&&AI_OPPONENTS.length?run.order[run.index]:null;
+function beginGauntlet(){
+  const chosen=activeDeck();
+  if(!deckIsPlayable(chosen)){showScreen('deck');$('#deckMessage').textContent=`“${chosen.name}” holds ${deckCards(chosen).length}/${DECK_SIZE} cards. Complete it before the gauntlet.`;return}
+  // The banner is copied, not referenced: rebuilding between rounds would defeat the point.
+  meta.gauntlet={order:shuffled(AI_OPPONENTS.map(o=>o.id)),cards:deckCards(chosen).slice(),index:0,name:chosen.name};
+  saveMeta();renderGauntlet();startGauntletBattle();
+}
+function startGauntletBattle(){
+  const run=gauntletRun();if(!run)return;
+  beginBattle(run.cards.slice(),gauntletFoe(run),'hardcore',true);
+}
+function abandonGauntlet(){meta.gauntlet=null;saveMeta();renderGauntlet()}
+function renderGauntlet(){
+  const track=$('#gauntletTrack'),status=$('#gauntletStatus'),start=$('#gauntletStart'),abandon=$('#gauntletAbandon');
+  if(!track||!status||!start)return;
+  const run=gauntletRun(),total=AI_OPPONENTS.length;
+  track.innerHTML=AI_OPPONENTS.map((opponent,i)=>{
+    const state=!run?'':i<run.index?'cleared':i===run.index?'current':'ahead';
+    const label=run&&i<=run.index?AI_PROFILE_NAMES[run.order[i]]:`Rival ${i+1}`;
+    return `<span class="gauntlet-pip ${state}" title="${esc(label)}" aria-label="${esc(label)}"></span>`;
+  }).join('');
+  const best=meta.gauntletBest||0;
+  if(run){
+    status.innerHTML=`<b>${run.index} of ${total} broken</b><small>Carrying “${esc(run.name)}” · next: ${esc(AI_PROFILE_NAMES[gauntletFoe(run)]||'')}</small>`;
+    start.innerHTML='Continue the gauntlet <span>→</span>';
+  }else{
+    status.innerHTML=`<b>No run in progress</b><small>${best?`Best so far: ${best} of ${total}`:'Fourteen rivals, one banner, no second chances.'}</small>`;
+    start.innerHTML='Begin the gauntlet <span>→</span>';
+  }
+  if(abandon)abandon.hidden=!run;
+}
+// Both modes stand up a battle the same way; only the banner, the rival and the stakes differ.
+function beginBattle(cards,aiProfile,aiDifficulty,gauntlet=false){
+  game={round:1,player:createSide(cards),ai:createSide(AI_DECKS[aiProfile]||Object.values(AI_DECKS)[0]),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[],gauntlet};
+  $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
+  drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(false);renderGame();log('The rulers begin planning in secret.');
+  if(gauntlet)log(`Gauntlet: rival ${gauntletRun().index+1} of ${AI_OPPONENTS.length}. A loss ends the run.`);
+  if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
+}
 function startGame(){
   const chosen=activeDeck();
   if(!deckIsPlayable(chosen)){showScreen('deck');const cards=deckCards(chosen);$('#deckMessage').textContent=devMode?`The dev deck holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`:`“${chosen.name}” holds ${cards.length}/${DECK_SIZE} cards. Complete it before entering battle.`;return}
   const aiProfile=$('#aiDeckSelect').value||Object.keys(AI_DECKS)[0],aiDifficulty=$('#aiDifficultySelect').value||'normal';
-  game={round:1,player:createSide(deckCards(chosen)),ai:createSide(AI_DECKS[aiProfile]||Object.values(AI_DECKS)[0]),aiProfile,aiDifficulty,blockedLane:currentRule.id==='river'?3:null,locked:false,logs:[]};
-  $('#aiProfileLabel').textContent=`${AI_PROFILE_NAMES[aiProfile]||AI_PROFILE_NAMES.general} · ${aiDifficulty.toUpperCase()}`;
-  drawOpeningHand(game.player);drawOpeningHand(game.ai);showScreen('game');setLog(false);renderGame();log('The rulers begin planning in secret.');if(game.blockedLane!==null)log('The river floods the eastern lane. Only three lanes remain.');
+  beginBattle(deckCards(chosen),aiProfile,aiDifficulty);
 }
 function startOnlineGame(state,seat,names={}){
   game=JSON.parse(JSON.stringify(state));
@@ -1360,7 +1423,31 @@ function nextRound(){
     :game.player.hand.length>=HAND_LIMIT?`Your hand is full at ${HAND_LIMIT}; this round's draws are forfeited.`
     :'Both piles are spent; no cards are drawn.'}`);
 }
-function endGame(result){if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
+// A gauntlet battle answers to the run rather than to the weekly pack: a win advances the order,
+// anything else ends it. A draw counts as an ending, since neither ruler was left standing.
+function endGauntlet(result){
+  const run=gauntletRun(),total=AI_OPPONENTS.length;
+  const beaten=AI_PROFILE_NAMES[gauntletFoe(run)]||'the rival';
+  if(result==='win'){
+    run.index++;
+    meta.gauntletBest=Math.max(meta.gauntletBest||0,run.index);
+    const done=run.index>=total;
+    if(done)meta.gauntlet=null;
+    saveMeta();renderGauntlet();
+    const title=done?'The gauntlet is broken':`${esc(beaten)} falls`;
+    const text=done
+      ?`All ${total} rival kingdoms have fallen to “${esc(run.name)}”. Nothing in the realm still stands against it.`
+      :`${run.index} of ${total} broken. Next: ${esc(AI_PROFILE_NAMES[gauntletFoe(run)])}, on hardcore.`;
+    showModal(`<p class="eyebrow">GAUNTLET</p><h2>${title}</h2><p>${text}</p><div class="modal-actions">${done?'':'<button class="button primary" data-after="next">Next rival</button>'}<button class="button ghost" data-after="home">Return to hall</button></div>`);
+  }else{
+    const cleared=run.index;
+    meta.gauntlet=null;meta.gauntletBest=Math.max(meta.gauntletBest||0,cleared);
+    saveMeta();renderGauntlet();
+    showModal(`<p class="eyebrow">GAUNTLET</p><h2>The run ends here</h2><p>“${esc(run.name)}” broke ${cleared} of ${total} before ${esc(beaten)} held the field. The banner may be reshaped and the gauntlet run again.</p><div class="modal-actions"><button class="button primary" data-after="home">Return to hall</button></div>`);
+  }
+  $$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='next')startGauntletBattle();else showScreen('home')});
+}
+function endGame(result){if(game?.gauntlet&&gauntletRun())return endGauntlet(result);if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
 
 // Every Bank prices off the balance the ordinary harvest leaves behind, so a cue that read the
 // current stores would under-report on any round the realm is also earning. This walks the same
@@ -1541,7 +1628,7 @@ $('#deckNameInput').oninput=e=>{activeDeck().name=deckName(e.target.value);saveM
 $('#newDeck').onclick=()=>{if(meta.decks.length>=12)return;const d=makeDeck(`Banner ${meta.decks.length+1}`,[]);meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`New banner started — add ${DECK_SIZE} cards.`};
 $('#duplicateDeck').onclick=()=>{if(meta.decks.length>=12)return;const a=activeDeck(),d=makeDeck(`${a.name} copy`,a.cards.slice());meta.decks.push(d);meta.activeDeckId=d.id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent='Banner duplicated.'};
 $('#deleteDeck').onclick=()=>{if(meta.decks.length<2)return;const gone=activeDeck();meta.decks=meta.decks.filter(d=>d.id!==gone.id);meta.activeDeckId=meta.decks[0].id;saveMeta();renderDeckBuilder();$('#deckMessage').textContent=`“${gone.name}” disbanded.`};
-$('#playButton').onclick=startGame;$('#restartGame').onclick=startGame;$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));
+$('#playButton').onclick=startGame;$('#restartGame').onclick=()=>{if(game?.gauntlet)return;startGame()};$('#leaveGame').onclick=()=>showScreen('home');$('#commitButton').onclick=commitTurn;$('#openPackButton').onclick=openPack;$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#gameRuleBadge').onclick=()=>showModal(`<p class="eyebrow">WEEKLY DECREE</p><h2>${currentRule.icon} ${currentRule.name}</h2><p>${currentRule.text}</p>`);$('#logToggle').onclick=()=>setLog(!$('#gameLog').classList.contains('show'));$('#logClose').onclick=()=>setLog(false);$$('[data-play-mode]').forEach(button=>button.onclick=()=>setHallMode(button.dataset.playMode));$('#gauntletStart').onclick=()=>gauntletRun()?startGauntletBattle():beginGauntlet();$('#gauntletAbandon').onclick=abandonGauntlet;$('#gauntletDeckSelect').onchange=e=>{selectDeck(e.target.value);renderDeckOptions()};
 $('#drawMinimise').onclick=()=>setDrawMinimised(true);$('#drawRestore').onclick=()=>setDrawMinimised(false);
 // Escape folds the dialog away rather than dismissing a decision that still has to be made.
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&game?.player.pendingDraws&&!game.locked)setDrawMinimised(!drawMinimised)});
@@ -1567,4 +1654,4 @@ document.addEventListener('mouseover',ev=>{
   tip.style.top=(above<8?r.bottom+10:above)+'px';
 });
 document.addEventListener('mouseout',ev=>{const tip=$('#cardTip');if(tip&&!ev.relatedTarget?.closest?.('[data-card]'))tip.hidden=true});
-setupRuleSelector();applyDevMode();renderDeckBuilder();renderAiOpponentOptions();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');
+setupRuleSelector();applyDevMode();renderDeckBuilder();renderAiOpponentOptions();renderGauntlet();setHallMode(localStorage.getItem('kingdom-hall-mode')||'solo');showScreen('home');

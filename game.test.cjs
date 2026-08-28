@@ -584,6 +584,32 @@ assert.equal(CARDS.granary.cost.food,2,'effectiveCost returns a copy, not the ca
 
 // Every decree must bite for any collection; none may hinge on holding particular designs.
 assert(!META_RULES.some(r=>r.id==='guilds'),'Guild Charters is retired from the rotation');
+// THE GAUNTLET
+// The run is the only mode that carries state between battles, so what it stores has to survive
+// a reload and refuse anything it can no longer honour.
+const gauntletIds=AI_OPPONENTS.map(o=>o.id);
+assert.equal(gauntletIds.length,14,'the gauntlet is fourteen rivals long');
+for(let attempt=0;attempt<40;attempt++){
+  const order=shuffled(gauntletIds);
+  assert.equal(order.length,gauntletIds.length,'a drawn order holds every rival');
+  assert.equal(new Set(order).size,gauntletIds.length,'and never repeats one');
+  assert.deepEqual(order.slice().sort(),gauntletIds.slice().sort(),'and invents none');
+}
+assert(Array.from({length:40},()=>shuffled(gauntletIds).join()).some(o=>o!==gauntletIds.join()),'the order is actually shuffled');
+
+const legalRun={order:shuffled(gauntletIds),cards:DEFAULT_DECK.slice(),index:3,name:'Test Banner'};
+assert.equal(normaliseGauntlet(legalRun).index,3,'a legal run is restored where it left off');
+assert.equal(normaliseGauntlet(null),null,'no stored run stays no run');
+assert.equal(normaliseGauntlet({...legalRun,order:legalRun.order.slice(0,13)}),null,'a short order is refused');
+assert.equal(normaliseGauntlet({...legalRun,order:[...legalRun.order.slice(0,13),legalRun.order[0]]}),null,'a repeated rival is refused');
+assert.equal(normaliseGauntlet({...legalRun,order:[...legalRun.order.slice(0,13),'a-retired-rival']}),null,'a rival that no longer exists is refused');
+assert.equal(normaliseGauntlet({...legalRun,cards:DEFAULT_DECK.slice(0,19)}),null,'a banner short of twenty is refused');
+assert.equal(normaliseGauntlet({...legalRun,cards:[...DEFAULT_DECK.slice(0,19),'peasant']}),null,'a banner holding a token is refused');
+assert.equal(normaliseGauntlet({...legalRun,index:14}),null,'an index past the last rival is refused');
+
+// Every rival in the order must be one the gauntlet can actually stand up as an opponent.
+for(const id of gauntletIds)assert(AI_DECKS[id]&&AI_DECKS[id].length===DECK_SIZE,id+' can be dealt as a gauntlet rival');
+
 assert(META_RULES.length>=4,'the calendar still has a full rotation to draw from');
 for(const rule of META_RULES)assert(rule.name&&rule.text&&rule.icon&&rule.flavour,rule.id+' is fully described');
 
