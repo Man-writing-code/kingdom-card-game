@@ -100,7 +100,7 @@ for(let storedGold=0;storedGold<=12;storedGold++){
 }
 resetGame(2);game.player.resources.gold=4;game.player.board[0].building=testSlot('bank',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,8,'Banks share one snapshot and stack');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('market',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'ordinary harvest lands before interest');
-resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('goldmine',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Gold Mine production lands before interest');
+resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('goldmine',2);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Gold Mine production lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('taxcollector',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tax Collector production lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('tollhouse',1);game.player.board[1].building=testSlot('bank',1);directStrike(game.player,game.ai,0,2,'You','your');harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tollhouse gold joins the next Bank snapshot');
 resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);harvest(game.player,'Your');assert.equal(game.player.resources.material,1,'the Lodge also produces one wood');
@@ -155,11 +155,20 @@ game.player.board[0].unit=null;rewardClashWinner(game.player,hunter,0,'Your');as
 resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,18);assert.equal(game.player.resources.food,1);
 resetGame();game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('huntinglodge');game.ai.board[0].building=testSlot('palisade');directStrike(game.player,game.ai,0,2,'You','your');assert.equal(game.ai.health,MAX_KEEP_HEALTH);assert.equal(game.player.resources.food,0,'Lodge needs positive direct damage');
 
-resetGame(1);game.player.board[1].unit=testSlot('levycaptain',1);resolveOnBuild(game.player,'Your');
-assert.equal(unitPower(game.player,1),3,'the Levy Captain is a three-power body');
-assert.equal(game.player.board[0].unit.cardId,'peasant');assert.equal(game.player.board[2].unit.cardId,'peasant','the Captain fills both empty adjacent lanes');
-assert(game.player.board[0].unit.handCard.bonus&&game.player.board[2].unit.handCard.bonus,'mustered Peasants are generated tokens');
-resolveOnBuild(game.player,'Your');assert.equal(game.player.board.filter(lane=>lane.unit?.cardId==='peasant').length,2,'the muster resolves only once');
+const originalRandom=Math.random;
+try{
+  Math.random=()=>0;
+  resetGame(1);game.player.board[1].unit=testSlot('levycaptain',1);resolveOnBuild(game.player,'Your');
+  assert.equal(unitPower(game.player,1),3,'the Levy Captain is a three-power body');
+  assert.equal(game.player.board[0].unit.cardId,'peasant','the Captain chooses the first open adjacent lane when the roll is low');
+  assert.equal(game.player.board[2].unit,null,'the Captain musters only one Peasant');
+  assert(game.player.board[0].unit.handCard.bonus,'the mustered Peasant is a generated token');
+  resolveOnBuild(game.player,'Your');assert.equal(game.player.board.filter(lane=>lane.unit?.cardId==='peasant').length,1,'the muster resolves only once');
+  Math.random=()=>0.999;
+  resetGame(1);game.player.board[1].unit=testSlot('levycaptain',1);resolveOnBuild(game.player,'Your');
+  assert.equal(game.player.board[2].unit.cardId,'peasant','the Captain can choose the second open adjacent lane when the roll is high');
+  assert.equal(game.player.board[0].unit,null,'the random muster still creates only one Peasant');
+}finally{Math.random=originalRandom}
 resetGame(1);game.player.board[0].unit=testSlot('levycaptain',1);game.player.board[1].unit=testSlot('soldier',1);resolveOnBuild(game.player,'Your');
 assert.equal(game.player.board.filter(lane=>lane.unit?.cardId==='peasant').length,0,'occupied and board-edge lanes cannot be mustered into');
 resetGame();game.player.board[0].unit=testSlot('peasantmob',1);assert.equal(unitPower(game.player,0),2,'an edge lane with no neighbour stays at base');
@@ -192,6 +201,10 @@ resetGame();game.player.board[0].unit=testSlot('paviseguard');game.ai.board[0].u
 // Card revisions.
 assert.deepEqual(CARDS.archer.cost,{material:2},'Archer costs 2 wood');
 assert.deepEqual(CARDS.goldmine.cost,{},'the Gold Mine is free to raise');
+assert.deepEqual(CARDS.tollhouse.cost,{gold:1},'the Tollhouse no longer requires wood');
+resetGame(1);game.player.board[0].building=testSlot('goldmine',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,1,'the Gold Mine pays on the turn it is played');
+game.round=2;harvest(game.player,'Your');assert.equal(game.player.resources.gold,1,'the Gold Mine rests on the following turn');
+game.round=3;harvest(game.player,'Your');assert.equal(game.player.resources.gold,2,'the Gold Mine pays every second clash thereafter');
 assert.deepEqual(CARDS.farmer.cost,{food:1},'each worker is bought with what it produces');
 assert.deepEqual(CARDS.lumberjack.cost,{material:1});
 assert.deepEqual(CARDS.miner.cost,{metal:1});
