@@ -616,6 +616,11 @@ body[data-screen="game"] .hand-area{background:#ece1cbdc;backdrop-filter:blur(12
 .game-card h3{color:var(--ink)}
 .game-card p{color:#665f51}
 
+/* The scriptorium hangs the same trap for its other paper panels: the law headings and
+   the decree archive titles carried no colour either, so they bleached out too. */
+.rules-grid h3{color:var(--ink)}
+.decree-archive h3{color:var(--ink)}
+
 /* The stepper and the power badge are pinned to the foot of a card, so the rules text
    needs that strip reserved or a long one runs underneath them and is clipped away. */
 .card-grid .game-card,.collection-grid .game-card{padding-bottom:42px}
