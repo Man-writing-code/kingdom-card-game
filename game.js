@@ -1362,6 +1362,23 @@ function nextRound(){
 }
 function endGame(result){if(result==='win')meta.winWeek=weekKey();saveMeta();const title=result==='win'?'Victory for your kingdom':result==='loss'?'Your banner has fallen':'The realms lie in ruin';const text=result==='win'?'You have earned the right to open this week’s pack.':'Reshape your deck, learn the rival’s habits, and return to the field.';showModal(`<p class="eyebrow">BATTLE CONCLUDED</p><h2>${title}</h2><p>${text}</p><div class="modal-actions"><button class="button primary" data-after="again">Play again</button><button class="button ghost" data-after="${result==='win'?'collection':'home'}">${result==='win'?'Claim pack':'Return to hall'}</button></div>`);$$('[data-after]').forEach(b=>b.onclick=()=>{const go=b.dataset.after;closeModal();if(go==='again')startGame();else showScreen(go)})}
 
+// Every Bank prices off the balance the ordinary harvest leaves behind, so a cue that read the
+// current stores would under-report on any round the realm is also earning. This walks the same
+// gold sources the harvest does, in the same lane order, and stops short of the interest itself.
+// A Tollhouse is deliberately absent: its gold turns on a strike landing, which planning cannot know.
+function projectedGoldBeforeInterest(side){
+  let gold=side.resources.gold;
+  side.board.forEach((lane,index)=>{
+    if(!laneIsActive(index))return;
+    if(lane.building){
+      const building=CARDS[lane.building.cardId];
+      if(building.produce&&building.produce.gold)gold+=building.produce.gold;
+      if(building.special==='goldmine'&&(game.round-lane.building.round)%2===0)gold++;
+    }
+    if(lane.unit&&CARDS[lane.unit.cardId].special==='taxcollector')gold++;
+  });
+  return gold;
+}
 function productionForecastHtml(slot,side=game?.player){
   const card=CARDS[slot?.cardId];if(!card)return'';
   let resource,gain=0;
@@ -1385,8 +1402,9 @@ function productionForecastHtml(slot,side=game?.player){
     const label='Raises 1 fortification after this clash';
     return `<span class="production-cue fortify" title="${label}" aria-label="${label}"><i>▚</i><b>+1</b></span>`;
   }else if(card.special==='bank'){
-    const label='Pays 1 gold per 2 stored after harvesting, up to 6';
-    return `<span class="production-cue gold" title="${label}" aria-label="${label}">${resourceIcon('gold')}<b>≤6</b></span>`;
+    const stored=projectedGoldBeforeInterest(side),pays=Math.min(6,Math.floor(stored/2));
+    const label=`Pays ${pays} gold after this clash, read against ${stored} stored`;
+    return `<span class="production-cue gold" title="${label}" aria-label="${label}">${resourceIcon('gold')}<b>+${pays}</b></span>`;
   }
   if(!resource||gain<=0)return'';
   const name=RESOURCE_NAMES[resource].toLowerCase(),label=`Produces ${gain} ${name} after this clash`;

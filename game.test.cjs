@@ -102,6 +102,18 @@ resetGame(2);game.player.resources.gold=4;game.player.board[0].building=testSlot
 resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('market',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'ordinary harvest lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].building=testSlot('goldmine',2);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Gold Mine production lands before interest');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('taxcollector',1);game.player.board[1].building=testSlot('bank',1);harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tax Collector production lands before interest');
+// The Bank cue is a promise about the next clash, so it is checked against what the harvest
+// actually pays rather than against the formula it was written from.
+resetGame(2);game.player.resources.gold=1;
+game.player.board[0].building=testSlot('bank',1);
+game.player.board[1].building=testSlot('market',1);
+game.player.board[2].unit=testSlot('taxcollector',1);
+const bankProjected=projectedGoldBeforeInterest(game.player);
+assert.equal(bankProjected,3,'the projection looks past the stores to the Market and the Tax Collector');
+const bankPromised=Math.min(6,Math.floor(bankProjected/2));
+assert(productionForecastHtml(game.player.board[0].building,game.player).includes('<b>+'+bankPromised+'</b>'),'the cue shows the figure it will pay');
+harvest(game.player,'Your');
+assert.equal(game.player.resources.gold,bankProjected+bankPromised,'and the harvest pays exactly that');
 resetGame(2);game.player.resources.gold=1;game.player.board[0].unit=testSlot('soldier',1);game.player.board[0].building=testSlot('tollhouse',1);game.player.board[1].building=testSlot('bank',1);directStrike(game.player,game.ai,0,2,'You','your');harvest(game.player,'Your');assert.equal(game.player.resources.gold,3,'Tollhouse gold joins the next Bank snapshot');
 resetGame(2);game.player.board[0].building=testSlot('wayfarerslodge',1);harvest(game.player,'Your');assert.equal(game.player.resources.material,1,'the Lodge also produces one wood');
 resetGame(2);game.player.resources.gold=3;game.player.board[0].building=testSlot('treasury',1);assert.equal(turnDrawTotal(game.player),3,'a stocked Treasury adds a selectable draw');game.player.resources.gold=2;assert.equal(turnDrawTotal(game.player),2);
