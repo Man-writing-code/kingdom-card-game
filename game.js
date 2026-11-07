@@ -102,10 +102,15 @@ const META_RULES=[
 // Guild Charters is retired: it only ever touched the tier-two engines, so a week could
 // land on it and change nothing at all for a collection that held none of them. A decree should
 // reshape the week for every banner, not just the ones holding the right three cards.
-  {id:'winter',icon:'❄',name:'The Long Winter',text:'Food, Metal, and Wood buildings produce 1 less; surviving workers produce 1 extra.',flavour:'“Storehouses empty. Calloused hands endure.”'},
   {id:'leancourt',icon:'Ⅰ',name:'The Lean Court',text:'Each ruler draws only 1 base card at the start of a new round.',flavour:'“Every summons must earn its place at court.”'},
+  {id:'wildbeasts',icon:'🐾',name:'Wild Beasts',text:'Before every third clash, wild beasts kill one random unit on each side with units in play.',flavour:'“Tracks in the mud. Silence at the watchfire.”'},
+  {id:'wildfires',icon:'🔥',name:'Wildfires',text:'Before every third clash, fire destroys one random building on each side with buildings in play.',flavour:'“The wind carries sparks over the walls.”'},
   {id:'longmuster',icon:'Ⅲ',name:'The Long Muster',text:'Each ruler begins with 3 cards, then draws 3 base cards at the start of each new round.',flavour:'“The host assembles slowly, then all at once.”'},
-  {id:'river',icon:'≈',name:'The River Runs High',text:'The easternmost lane is flooded for both rulers, leaving only 3 active lanes.',flavour:'“The river takes no side, only ground.”'}
+  {id:'river',icon:'≈',name:'The River Runs High',text:'The easternmost lane is flooded for both rulers, leaving only 3 active lanes.',flavour:'“The river takes no side, only ground.”'},
+  {id:'truce',icon:'⚐',name:'The Truce',text:'Every third clash, units still fight and harvests continue, but strikes cannot damage either keep or its fortifications.',flavour:'“Let the walls stand until dawn.”'},
+  {id:'musterbell',icon:'♧',name:'The Muster Bell',text:'Every third round, take one extra draw from the opposite pile to your first draw, if a card is available.',flavour:'“The bell calls builders and soldiers alike.”'},
+  {id:'kingsroad',icon:'↦',name:'The King’s Road',text:'Direct damage through the marked lane is reduced by 1 for both rulers. The road starts in the westernmost lane and moves east after each clash, wrapping around.',flavour:'“Even in war, the king’s road stays open.”'},
+  {id:'openmarket',icon:'⇄',name:'The Open Market',text:'Once per battle during planning, each ruler may trade 1 food, wood, or metal for 1 of another basic resource.',flavour:'“One bargain before the gates close.”'}
 ];
 
 // Development builds may override the calendar decree. Set this to false for the live rotation.
@@ -553,7 +558,20 @@ function drawOpeningHand(side){
   for(let i=0;i<split.structures;i++)drawFromPile(side,'structures');
   for(let i=0;i<split.units;i++)drawFromPile(side,'units');
 }
-function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'university')+(side.resources.gold>=3?countBuilding(side,'treasury'):0)}
+function thirdRoundDecree(id){return currentRule.id===id&&game?.round%3===0}
+function turnDrawTotal(side){return turnDrawCount()+countBuilding(side,'university')+(side.resources.gold>=3?countBuilding(side,'treasury'):0)+(thirdRoundDecree('musterbell')?1:0)}
+function musterBellBonusPile(side){
+  return thirdRoundDecree('musterbell')&&side.pendingDraws===1&&side.firstDrawPile?otherPile(side.firstDrawPile):null;
+}
+function takeTurnDraw(side,pile){
+  const bonusPile=musterBellBonusPile(side);
+  if(bonusPile&&pile!==bonusPile)return null;
+  const id=bonusPile?drawExactPile(side,pile):drawFromPile(side,pile);
+  side.pendingDraws--;
+  if(id&&thirdRoundDecree('musterbell')&&!side.firstDrawPile)side.firstDrawPile=pileOf(id);
+  settleDraws(side);
+  return id;
+}
 // Generated cards arrive regardless of which pile the ruler chooses; they are not part of the choice.
 function drawTurnBonuses(side){
   for(let i=0;i<countBuilding(side,'townhall');i++)gainBonusCard(side,randomWorker(),true);
@@ -565,7 +583,11 @@ function makeHandCard(cardId,bonus=false,free=false,contract=false){return {card
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 // With both piles spent — or a full hand turning every draw away — there is nothing left to
 // choose, so the ruler is not held at the prompt.
-function settleDraws(side){if(side.pendingDraws&&(side.hand.length>=HAND_LIMIT||!pileCount(side,'structures')&&!pileCount(side,'units')))side.pendingDraws=0}
+function settleDraws(side){
+  if(!side.pendingDraws)return;
+  const bonusPile=musterBellBonusPile(side);
+  if(side.hand.length>=HAND_LIMIT||(!pileCount(side,'structures')&&!pileCount(side,'units'))||(bonusPile&&!pileCount(side,bonusPile)))side.pendingDraws=0;
+}
 // The draw dialog covers the battlefield, so a ruler can fold it away to study the board
 // and their hand before committing to a pile. Kept out of `game` because that object is
 // serialised to the other client in an online duel; this is one viewer's screen state.
@@ -575,13 +597,12 @@ function setDrawMinimised(state){drawMinimised=state;renderGame()}
 let drawReveal=null;
 function chooseDraw(pile){
   const side=game?.player;if(!side||game.locked||!side.pendingDraws)return;
-  const id=drawFromPile(side,pile);side.pendingDraws--;
+  const id=takeTurnDraw(side,pile);
   if(id){
     const landed=pileOf(id);
     drawReveal={cardId:id,uid:side.hand[side.hand.length-1]?.uid||null,fallback:landed!==pile};
     log(`You draw ${CARDS[id].name}${landed===pile?` from the ${PILE_LABELS[pile]} pile`:` — the ${PILE_LABELS[pile]} pile was spent, so the draw came from your ${PILE_LABELS[landed]}`}.`);
   }
-  settleDraws(side);
   // On the last draw the dialog closes, so the reveal has nowhere to sit and the card takes
   // its bow in hand instead. Noted before the render, which clears the reveal as it goes.
   const lastUid=!side.pendingDraws&&drawReveal?drawReveal.uid:null;
@@ -602,9 +623,51 @@ function aiDrawChoice(side){
   const structurePull=openGround*1.5+(game.round<4?2:0)-structuresHeld*1.2;
   return unitPull>structurePull?'units':'structures';
 }
-function aiDrawTurn(side){settleDraws(side);while(side.pendingDraws>0){drawFromPile(side,aiDrawChoice(side));side.pendingDraws--;settleDraws(side)}}
+function aiDrawTurn(side){
+  settleDraws(side);
+  while(side.pendingDraws>0)takeTurnDraw(side,musterBellBonusPile(side)||aiDrawChoice(side));
+}
 
 function canAfford(side,cost){let shortage=0;for(const r of ['food','metal','material'])shortage+=Math.max(0,(cost[r]||0)-side.resources[r]);return side.resources.gold-(cost.gold||0)>=shortage}
+function marketTrades(side){
+  if(currentRule.id!=='openmarket'||side.marketUsed||side.pendingDraws)return [];
+  return BASIC_RESOURCES.filter(from=>side.resources[from]>0)
+    .flatMap(from=>BASIC_RESOURCES.filter(to=>to!==from).map(to=>({from,to})));
+}
+function tradeAtMarket(side,from,to,label){
+  if(!marketTrades(side).some(trade=>trade.from===from&&trade.to===to))return false;
+  side.resources[from]--;
+  side.resources[to]++;
+  side.marketUsed=true;
+  log(`${label} realm trades 1 ${RESOURCE_NAMES[from].toLowerCase()} for 1 ${RESOURCE_NAMES[to].toLowerCase()} at the Open Market.`);
+  return true;
+}
+function openMarket(){
+  const side=game?.player;
+  if(!side||game.locked)return;
+  const trades=marketTrades(side);
+  if(!trades.length)return;
+  showModal(`<h2>The Open Market</h2><p>Choose one trade for this battle.</p><div class="modal-actions">${trades.map(({from,to},index)=>`<button type="button" class="button ghost" data-market-trade="${index}">${RESOURCE_NAMES[from]} → ${RESOURCE_NAMES[to]}</button>`).join('')}</div>`);
+  $$('[data-market-trade]').forEach(button=>button.onclick=()=>{
+    if(game.locked||game.player!==side)return;
+    const {from,to}=trades[Number(button.dataset.marketTrade)];
+    if(tradeAtMarket(side,from,to,'Your')){closeModal();renderGame()}
+  });
+}
+function aiTradeAtMarket(side){
+  const trades=marketTrades(side);
+  if(!trades.length)return;
+  const costs=side.hand.map(handCost);
+  const countAffordable=realm=>costs.filter(cost=>canAfford(realm,cost)).length;
+  let best=countAffordable(side),chosen;
+  for(const trade of trades){
+    const {from,to}=trade;
+    const resources={...side.resources,[from]:side.resources[from]-1,[to]:side.resources[to]+1};
+    const score=countAffordable({resources});
+    if(score>best){best=score;chosen=trade}
+  }
+  if(chosen)tradeAtMarket(side,chosen.from,chosen.to,'Rival');
+}
 function payCost(side,cost){
   const spent={food:0,metal:0,material:0,gold:0};
   for(const r of ['food','metal','material']){const needed=cost[r]||0,take=Math.min(needed,side.resources[r]);side.resources[r]-=take;spent[r]+=take;const missing=needed-take;side.resources.gold-=missing;spent.gold+=missing}
@@ -763,7 +826,10 @@ function aiActionScore(hc,lane,difficulty,side=game.ai,foe=game.player,profile=g
     const power=(c.power||0)+(c.special==='knight'&&enemy?2:0);
     if(c.special==='sapper')score+=enemy?7+aiCardValue(enemy.cardId):-5;
     else if(enemy){const ec=CARDS[enemy.cardId],enemyPower=(ec.power||0)+(ec.special==='knight'?2:0)+(ec.special==='entrench'?Math.min(ENTRENCH_CAP,Math.max(0,game.round-enemy.round)):0);score+=power>enemyPower?6+(power-enemyPower):power===enemyPower?2:-5-(enemyPower-power)}
-    else score+=power*1.25+(foe.health+(foe.fortification||0)<=power?8:0);
+    else{
+      const damage=decreeStrikeDamage(power,lane);
+      score+=damage*1.25+(foe.health+(foe.fortification||0)<=damage?8:0);
+    }
     if(c.special==='ram'&&enemyBuilding)score+=6;
     if(c.special==='trebuchet')score+=foe.board.some((target,index)=>laneIsActive(index)&&target.building)?6:-1;
     if(c.special==='levycaptain'&&[lane-1,lane+1].some(i=>i>=0&&i<4&&laneIsActive(i)&&!side.board[i].unit))score+=2.5;
@@ -963,7 +1029,6 @@ function aiActionScore(hc,lane,difficulty,side=game.ai,foe=game.player,profile=g
     if(c.special==='bank')score+=side.resources.gold>=2?6:-2;
     if(hc.contract||CONTRACT_UNITS.includes(hc.cardId))score+=side.resources.gold>=(cost.gold||0)?4:0;
   }
-  if(currentRule.id==='winter'){if(c.special==='worker')score+=3;if(c.produce&&c.type==='building'&&!c.produce.gold)score-=2}
   if(currentRule.id==='leancourt'&&c.special==='university')score+=2;
   const goldSpend=(cost.gold||0)+BASIC_RESOURCES.reduce((sum,resource)=>sum+Math.max(0,(cost[resource]||0)-side.resources[resource]),0),goldAfter=side.resources.gold-goldSpend;
   if(!hc.contract&&countBuilding(side,'treasury')&&side.resources.gold>=3&&goldAfter<3)score-=3;
@@ -973,6 +1038,7 @@ function aiActionScore(hc,lane,difficulty,side=game.ai,foe=game.player,profile=g
   return score+Math.random()*(difficulty==='hardcore'?0:aiPlaysBest(difficulty)?0.35:4.5);
 }
 function aiPlan(side=game.ai,foe=game.player,profile=game.aiProfile,difficulty=game.aiDifficulty||'normal'){
+  aiTradeAtMarket(side);
   // Four lanes times a building and a unit slot is every placement the rules allow in one round, and
   // a slot filled this round is skipped below, so Hardcore's ceiling is simply the whole board.
   const limit=difficulty==='hardcore'?8:difficulty==='hard'?4:2;let actions=0;
@@ -1012,7 +1078,8 @@ function aiUseAbilities(side=game.ai,foe=game.player,profile=game.aiProfile){
       const unit=side.board[lane].unit,burn=aiBurnCandidate(side,lane,type);if(!unit||!burn)continue;
       const visible=aiVisibleFoeSlot(foe,lane,'unit'),enemyPower=visible?(CARDS[visible.cardId].power||0):0,current=unitPower(side,lane);
       const swingsClash=visible&&current<=enemyPower&&current+2>enemyPower;
-      const createsLethal=!visible&&foe.health+(foe.fortification||0)>current&&foe.health+(foe.fortification||0)<=current+2;
+      const keep=foe.health+(foe.fortification||0);
+      const createsLethal=!visible&&keep>decreeStrikeDamage(current,lane)&&keep<=decreeStrikeDamage(current+2,lane);
       if(swingsClash||createsLethal)activateAbility(side,lane,type,burn,'Rival');
     }
   }
@@ -1183,7 +1250,7 @@ function directStrike(attacker,defender,lane,power,label,ramLabel){
 }
 function resolvePierce(attacker,defender,lane,attackerPower,defenderPower,unit,label){
   if(!unit||!PIERCE_UNITS.includes(unit.cardId)||attackerPower<=defenderPower)return 0;
-  const overflow=attackerPower-defenderPower,dmg=dealDamage(defender,overflow,lane);
+  const overflow=attackerPower-defenderPower,dmg=dealDamage(defender,overflow,lane,false);
   if(dmg>0&&CARDS[attacker.board[lane].building?.cardId]?.special==='huntinglodge'){
     attacker.resources.food++;log(`Lane ${lane+1}: ${label==='Your'?'Your':'The rival’s'} Hunting Lodge supplies 1 food.`)
   }
@@ -1273,8 +1340,28 @@ function spendGuards(side,doomed,label){
     log(`Lane ${guard+1}: ${label} Town Guard falls in place of ${name}.`);
   }
 }
+function resolveDestructiveDecree(){
+  if(game.round%3!==0)return;
+  const {id,name:decreeName}=currentRule;
+  if(id!=='wildbeasts'&&id!=='wildfires')return;
+  const targetType=id==='wildfires'?'building':'unit';
+  const discardTarget=targetType==='building'?discardBuilding:discardUnit;
+  const verb=targetType==='building'?'destroy':'kill';
+  for(const [side,owner] of [[game.player,'your'],[game.ai,'the rival’s']]){
+    const occupiedLanes=[];
+    side.board.forEach((lane,index)=>{
+      if(laneIsActive(index)&&lane[targetType])occupiedLanes.push(index);
+    });
+    if(!occupiedLanes.length)continue;
+    const lane=occupiedLanes[Math.floor(Math.random()*occupiedLanes.length)];
+    const name=CARDS[side.board[lane][targetType].cardId].name;
+    discardTarget(side,lane);
+    log(`Lane ${lane+1}: ${decreeName} ${verb} ${owner} ${name}.`);
+  }
+}
 function resolveRound(){
   const p=game.player,a=game.ai;
+  resolveDestructiveDecree();
   const pPowers=[0,1,2,3].map(lane=>unitPower(p,lane)),aPowers=[0,1,2,3].map(lane=>unitPower(a,lane));
   resolveBallistas(p,a,pPowers,aPowers);
   const doomed=predictLosses(p,a,pPowers,aPowers);
@@ -1371,8 +1458,15 @@ function adjustedDamage(side,amount,lane){
   if(CARDS[side.board[lane]?.building?.cardId]?.special==='palisade')damage=Math.max(0,damage-2);
   return damage
 }
-function dealDamage(side,amount,lane){
-  const dmg=adjustedDamage(side,amount,lane);
+function kingsRoadLane(){
+  return currentRule.id==='kingsroad'?(game.round-1)%game.player.board.length:null;
+}
+function decreeStrikeDamage(amount,lane,direct=true){
+  if(thirdRoundDecree('truce'))return 0;
+  return direct&&lane===kingsRoadLane()?Math.max(0,amount-1):amount;
+}
+function dealDamage(side,amount,lane,direct=true){
+  const dmg=adjustedDamage(side,decreeStrikeDamage(amount,lane,direct),lane);
   const target=side===game.player?'player':'ai';
   // Fortification is spent stone: it takes the blow before the keep does, and unlike health it
   // is not capped at the keep's maximum, so a well-walled ruler can stand above starting integrity.
@@ -1389,17 +1483,17 @@ function harvest(side,label){
     if(!laneIsActive(index))return;
     if(lane.building){
       const c=CARDS[lane.building.cardId];
-      if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{let gain=n;if(currentRule.id==='winter'&&r!=='gold')gain=Math.max(0,gain-1);side.resources[r]+=gain});
+      if(c.produce)Object.entries(c.produce).forEach(([r,n])=>{side.resources[r]+=n});
       if(c.special==='tradingpost'){
-        const resource=BASIC_RESOURCES[Math.floor(Math.random()*BASIC_RESOURCES.length)],gain=currentRule.id==='winter'?0:1;
-        if(gain){side.resources[resource]++;log(`${label} Trading Post supplies 1 ${RESOURCE_NAMES[resource].toLowerCase()}.`)}
+        const resource=BASIC_RESOURCES[Math.floor(Math.random()*BASIC_RESOURCES.length)];
+        side.resources[resource]++;log(`${label} Trading Post supplies 1 ${RESOURCE_NAMES[resource].toLowerCase()}.`)
       }
       if(c.special==='goldmine'&&(game.round-lane.building.round)%2===0)side.resources.gold++
     }
     // A worker pays out at the end of every round it lives through, the round it arrives included.
     if(lane.unit){
       const worker=CARDS[lane.unit.cardId];
-      if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{const gain=n+(currentRule.id==='winter'?1:0);side.resources[r]+=gain;log(`${label} ${worker.name} produces ${gain} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
+      if(worker.special==='worker')Object.entries(worker.produce).forEach(([r,n])=>{side.resources[r]+=n;log(`${label} ${worker.name} produces ${n} ${RESOURCE_NAMES[r].toLowerCase()}.`)});
       if(worker.special==='taxcollector'){side.resources.gold++;log(`${label} Tax Collector harvests 1 gold.`)}
       // A Mason lays stone rather than gathering: the yield goes on the keep, not into the stores.
       if(worker.special==='mason'){side.fortification=(side.fortification||0)+1;log(`${label} ${worker.name} raises 1 fortification.`)}
@@ -1414,6 +1508,7 @@ function harvest(side,label){
 function nextRound(){
   game.round++;game.locked=false;
   drawTurnBonuses(game.player);drawTurnBonuses(game.ai);
+  game.player.firstDrawPile=null;game.ai.firstDrawPile=null;
   game.player.pendingDraws=turnDrawTotal(game.player);game.ai.pendingDraws=turnDrawTotal(game.ai);
   // Online, the rival is a person who resolves their own draws on their own client.
   if(window.kingdomMultiplayer?.active)settleDraws(game.ai);else aiDrawTurn(game.ai);
@@ -1471,15 +1566,9 @@ function productionForecastHtml(slot,side=game?.player){
   let resource,gain=0;
   if(card.produce){
     [resource,gain]=Object.entries(card.produce)[0];
-    if(card.special==='worker'){
-      if(currentRule.id==='winter')gain++;
-    }else{
-      if(currentRule.id==='winter'&&resource!=='gold')gain=Math.max(0,gain-1);
-    }
   }else if(card.special==='goldmine'&&(game.round-slot.round)%2===0){
     resource='gold';gain=1;
   }else if(card.special==='tradingpost'){
-    if(currentRule.id==='winter')return'';
     const label='Harvests 1 random food, wood, or metal after this clash';
     return `<span class="production-cue random" title="${label}" aria-label="${label}"><i>?</i><b>+1</b></span>`;
   }else if(card.special==='taxcollector'){
@@ -1506,10 +1595,12 @@ function abilityControlHtml(side,lane,index,type,isAi){
   return used?'<span class="slot-ability used">USED</span>':`<button type="button" class="slot-ability" data-activate="${type}" data-lane="${index}">${label}</button>`
 }
 function boardHtml(side,isAi,reveal=false){
+  const roadLane=kingsRoadLane();
   return side.board.map((lane,i)=>{
     if(!laneIsActive(i))return'';
     const hideBuilding=isAi&&!reveal&&lane.building?.round===game.round,hideUnit=isAi&&!reveal&&lane.unit?.round===game.round;
-    return `<div class="lane" data-lane-column="${i}"><div class="slot building ${lane.building?'occupied':''} ${lane.building?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,hideBuilding,null,productionForecastHtml(lane.building,side))}${abilityControlHtml(side,lane,i,'building',isAi)}</div><div class="slot unit ${lane.unit?'occupied':''} ${lane.unit?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,hideUnit,unitPower(side,i),productionForecastHtml(lane.unit,side),lane.unit&&adjacentGuard(side,i)!==undefined)}${abilityControlHtml(side,lane,i,'unit',isAi)}</div></div>`
+    const roadMark=i===roadLane?' kings-road':'';
+    return `<div class="lane${roadMark}" data-lane-column="${i}"><div class="slot building ${lane.building?'occupied':''} ${lane.building?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="building">${slotCardHtml(lane.building,hideBuilding,null,productionForecastHtml(lane.building,side))}${abilityControlHtml(side,lane,i,'building',isAi)}</div><div class="slot unit ${lane.unit?'occupied':''} ${lane.unit?.lockedRound===game.round?'ability-locked':''}" data-lane="${i}" data-type="unit">${slotCardHtml(lane.unit,hideUnit,unitPower(side,i),productionForecastHtml(lane.unit,side),lane.unit&&adjacentGuard(side,i)!==undefined)}${abilityControlHtml(side,lane,i,'unit',isAi)}</div></div>`
   }).join('')
 }
 // The realm sigil: three resources at the points of a triangle, gold at its heart.
@@ -1555,6 +1646,8 @@ function renderHealth(el,value,owner,fortification=0){
 }
 function renderGame(reveal=false){
   if(!game)return;$('#roundNumber').textContent=game.round;renderHealth($('#playerHealth'),game.player.health,'Your',game.player.fortification);renderHealth($('#aiHealth'),game.ai.health,'Rival',game.ai.fortification);renderResources($('#playerResources'),game.player.resources);renderResources($('#aiResources'),game.ai.resources);$('#aiHandCount').textContent=`${game.ai.hand.length} cards`;
+  $('#gameRuleIcon').textContent=currentRule.icon;
+  $('#gameRuleName').textContent=currentRule.name;
   const riverActive=game.blockedLane!==null;$('#playerBoard').classList.toggle('three-lanes',riverActive);$('#aiBoard').classList.toggle('three-lanes',riverActive);$('#battlefieldWrap').classList.toggle('river-week',riverActive);$('#riverNotice').hidden=!riverActive;
   $('#playerBoard').innerHTML=boardHtml(game.player,false,reveal);$('#aiBoard').innerHTML=boardHtml(game.ai,true,reveal);
   $('#playerHand').innerHTML=game.player.hand.map(h=>cardHtml(h.cardId,{presentation:'hand',interactive:true,interactiveLabel:'Tap to select; tap again for full details.',uid:h.uid,className:`${selectedUid===h.uid?'selected':''} ${canAfford(game.player,handCost(h))?'':'unaffordable'}`,free:h.free,contract:h.contract})).join('');
@@ -1577,6 +1670,8 @@ function renderGame(reveal=false){
   $('#drawRestore').hidden=!drawing||!drawMinimised;
   $('#drawRestoreCount').textContent=pending===1?'1 draw left':`${pending} draws left`;
   $('#drawRemaining').textContent=pending===1?'1 draw left':`${pending} draws left`;
+  const bonusPile=musterBellBonusPile(game.player);
+  $('#drawPromptTitle').textContent=bonusPile?'MUSTER BELL · BONUS DRAW':'CHOOSE YOUR DRAW';
   // A card already turned up is shown inside the dialog, so it can inform the next pick.
   const revealBox=$('#drawReveal');revealBox.hidden=!drawReveal;
   if(drawReveal){
@@ -1585,10 +1680,20 @@ function renderGame(reveal=false){
   }
   PILES.forEach(pile=>{
     const button=$(`#drawPrompt [data-pile="${pile}"]`),remaining=pileCount(game.player,pile);
-    button.disabled=!remaining;button.querySelector('small').textContent=`${remaining} left`;
+    const lockedByBell=bonusPile&&pile!==bonusPile;
+    button.disabled=!remaining||Boolean(lockedByBell);
+    button.querySelector('small').textContent=lockedByBell?'Used for first draw':`${remaining} left`;
     button.onclick=()=>chooseDraw(pile);
   });
-  $('#handHint').textContent=pending?'Draw before you plan — pick a pile above':'Select a card, then choose a slot';
+  const roadLane=kingsRoadLane();
+  const decreeHint=thirdRoundDecree('truce')?'Truce this round · both keeps are protected':
+    roadLane!==null?`King’s Road · lane ${roadLane+1} takes 1 less direct damage`:'';
+  $('#handHint').textContent=pending?'Draw before you plan — pick a pile above':decreeHint||'Select a card, then choose a slot';
+  const marketButton=$('#marketButton');
+  marketButton.hidden=currentRule.id!=='openmarket'||game.locked||Boolean(pending);
+  marketButton.disabled=!marketTrades(game.player).length;
+  marketButton.textContent=game.player.marketUsed?'Market trade used':'Trade at the Open Market';
+  marketButton.onclick=openMarket;
   $('#commitButton').disabled=game.locked||pending>0;$('#commitButton').innerHTML=game.locked?'Resolving…':'Commit plans <span>⚔</span>';
 }
 function renderLog(){

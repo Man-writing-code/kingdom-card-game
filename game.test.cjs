@@ -225,8 +225,6 @@ assert.deepEqual(CARDS.tradingpost.cost,{},'the Trading Post is a free tier-one 
 resetGame();game.player.board[0].building=testSlot('tradingpost');harvest(game.player,'Your');
 assert.equal(game.player.resources.food+game.player.resources.material+game.player.resources.metal,1,'the Trading Post supplies exactly one basic resource');
 assert.equal(game.player.resources.gold,0,'the Trading Post never supplies gold');
-currentRule={id:'winter'};resetGame();game.player.board[0].building=testSlot('tradingpost');harvest(game.player,'Your');
-assert.equal(game.player.resources.food+game.player.resources.material+game.player.resources.metal,0,'Long Winter reduces its basic-resource yield to zero');
 currentRule={id:'none'};
 // Workers and resource buildings harvest on the same beat, so they say it the same way.
 for(const id of ['farmer','lumberjack','miner','farm','logging','mining'])
@@ -584,6 +582,106 @@ assert.equal(CARDS.granary.cost.food,2,'effectiveCost returns a copy, not the ca
 
 // Every decree must bite for any collection; none may hinge on holding particular designs.
 assert(!META_RULES.some(r=>r.id==='guilds'),'Guild Charters is retired from the rotation');
+assert(!META_RULES.some(r=>r.id==='winter'),'The Long Winter is retired from the rotation');
+
+currentRule=ruleById('wildbeasts');
+resetGame(2);
+game.player.board[0].unit=testSlot('soldier');
+game.player.board[1].unit=testSlot('soldier');
+game.ai.board[2].unit=testSlot('soldier');
+game.ai.board[3].unit=testSlot('soldier');
+resolveRound();
+assert.equal(game.player.discard.length+game.ai.discard.length,0,'Wild Beasts wait until round three');
+game.round=3;
+const randomBeforeBeasts=Math.random;
+try{
+  Math.random=()=>0.99;
+  resolveRound();
+}finally{Math.random=randomBeforeBeasts}
+assert.deepEqual(game.player.discard,['soldier']);
+assert.deepEqual(game.ai.discard,['soldier']);
+assert.equal(game.player.board[1].unit,null,'Wild Beasts can pick the second occupied player lane');
+assert.equal(game.ai.board[3].unit,null,'Wild Beasts can pick the second occupied rival lane');
+assert.equal(game.player.health,MAX_KEEP_HEALTH-6,'only the surviving rival unit strikes in round three');
+assert.equal(game.ai.health,MAX_KEEP_HEALTH-6,'only the surviving player unit strikes in round three');
+resetGame(6);
+game.player.board[0].unit=testSlot('soldier');
+resolveRound();
+assert.deepEqual(game.player.discard,['soldier'],'Wild Beasts strike again on round six');
+assert.equal(game.ai.health,MAX_KEEP_HEALTH,'an empty side is skipped and the killed unit cannot strike');
+
+currentRule=ruleById('wildfires');
+resetGame(3);
+for(const side of [game.player,game.ai]){
+  side.board[0].building=testSlot('farm');
+  side.board[2].building=testSlot('farm');
+}
+game.player.board[2].unit=testSlot('soldier');
+resolveRound();
+for(const side of [game.player,game.ai]){
+  assert.deepEqual(side.discard,['farm'],'Wildfires destroy exactly one building per side');
+  assert.equal(side.resources.food,1,'only the surviving Farm produces');
+}
+assert.equal(game.player.board[2].unit?.cardId,'soldier','Wildfires leave units in play');
+
+currentRule=ruleById('truce');
+resetGame(3);
+game.player.board[0].unit=testSlot('soldier');
+game.ai.board[0].unit=testSlot('peasant');
+game.player.board[1].unit=testSlot('soldier');
+game.player.board[2].building=testSlot('farm');
+game.ai.fortification=1;
+resolveRound();
+assert.equal(game.ai.board[0].unit,null,'units still fight during a Truce');
+assert.equal(game.player.resources.food,1,'harvests continue during a Truce');
+assert.equal(game.ai.health,MAX_KEEP_HEALTH);
+assert.equal(game.ai.fortification,1);
+game.round=4;
+assert.equal(dealDamage(game.ai,3,1),3,'normal damage resumes after the Truce');
+
+currentRule=ruleById('kingsroad');
+resetGame(1);
+assert.equal(kingsRoadLane(),0,'the road starts on the west');
+assert.equal(dealDamage(game.player,2,0),1);
+assert.equal(dealDamage(game.ai,2,0),1);
+assert.equal(dealDamage(game.ai,2,1),2);
+assert.equal(dealDamage(game.ai,2,0,false),2,'the road does not reduce piercing damage');
+game.round=2;assert.equal(kingsRoadLane(),1);
+game.round=5;assert.equal(kingsRoadLane(),0,'the road wraps after four clashes');
+
+currentRule=ruleById('openmarket');
+resetGame(1);
+game.player.resources.food=2;
+assert(!tradeAtMarket(game.player,'food','gold','Your'));
+assert(tradeAtMarket(game.player,'food','material','Your'));
+assert.deepEqual(game.player.resources,{food:1,metal:0,material:1,gold:0});
+game.round=2;
+assert(!tradeAtMarket(game.player,'food','metal','Your'),'the trade stays spent across rounds');
+game.ai.resources.material=1;
+game.ai.hand=[makeHandCard('farmer')];
+aiTradeAtMarket(game.ai);
+assert.equal(game.ai.resources.food,1,'the rival can trade independently to afford a card');
+
+currentRule=ruleById('musterbell');
+resetGame(2);
+assert.equal(turnDrawTotal(game.player),2);
+pileUp(game.player,['farm','farm','farm','soldier']);
+nextRound();
+assert.equal(game.player.pendingDraws,3,'Muster Bell adds a draw on round three');
+chooseDraw('structures');
+chooseDraw('structures');
+chooseDraw('structures');
+assert.equal(game.player.pendingDraws,1,'the bonus refuses the first pile');
+chooseDraw('units');
+assert.deepEqual(game.player.hand.map(card=>card.cardId),['farm','farm','soldier']);
+assert.equal(game.player.pendingDraws,0);
+resetGame(6);
+pileUp(game.player,['farm','farm','farm']);
+game.player.pendingDraws=turnDrawTotal(game.player);
+chooseDraw('structures');
+chooseDraw('structures');
+assert.equal(game.player.pendingDraws,0,'an empty opposite pile forfeits the bonus without blocking planning');
+currentRule={id:'none'};
 // THE GAUNTLET
 // The run is the only mode that carries state between battles, so what it stores has to survive
 // a reload and refuse anything it can no longer honour.
@@ -610,7 +708,7 @@ assert.equal(normaliseGauntlet({...legalRun,index:14}),null,'an index past the l
 // Every rival in the order must be one the gauntlet can actually stand up as an opponent.
 for(const id of gauntletIds)assert(AI_DECKS[id]&&AI_DECKS[id].length===DECK_SIZE,id+' can be dealt as a gauntlet rival');
 
-assert(META_RULES.length>=4,'the calendar still has a full rotation to draw from');
+assert(META_RULES.length>=3,'the calendar still has a varied rotation to draw from');
 for(const rule of META_RULES)assert(rule.name&&rule.text&&rule.icon&&rule.flavour,rule.id+' is fully described');
 
 const original=Array.from({length:20},(_,i)=>COLLECTIBLE_IDS[i]);assert.deepEqual(normaliseCollection(original),original,'existing 20-design collections remain unchanged');

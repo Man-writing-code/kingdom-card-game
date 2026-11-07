@@ -1185,3 +1185,7 @@ body[data-screen="game"] .hand-area{
 .gauntlet-status small{color:var(--muted);font-size:var(--t-micro)}
 .gauntlet-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .gauntlet-actions .launch-button{flex:1 1 auto}
+
+.board .lane.kings-road{outline:2px dashed #e9b54c;outline-offset:-2px;border-radius:4px}
+.hand-area #marketButton{border:1px solid currentColor;padding:5px 8px;font-size:var(--t-small)}
+.hand-area #marketButton:disabled{opacity:.55;cursor:default}
